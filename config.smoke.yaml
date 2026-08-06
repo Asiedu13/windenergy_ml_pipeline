@@ -1,0 +1,31 @@
+site:
+  name: anloga
+  latitude: 5.79
+  longitude: 0.90
+  hub_height_m: 100
+
+data:
+  source: nasa_power
+  start: "2023-01-01"
+  end: "2023-06-30"
+  cache_dir: data/raw
+
+turbine:
+  name: E-101/3050
+  source: oedb
+
+forecast:
+  horizon_hours: 6
+  timestep: hourly
+
+model:
+  stage1_algo: xgboost
+  test_split: 0.2
+  cv_folds: 3
+  lags: [1, 2, 3, 6, 12, 24]
+  rolling_windows: [3, 6, 24]
+  seed: 42
+
+paths:
+  outputs: outputs
+  processed: data/processed
