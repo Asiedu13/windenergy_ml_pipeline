@@ -5,7 +5,7 @@ site:
   hub_height_m: 100
 
 data:
-  source: era5           # era5 | nasa_power
+  source: era5
   start: "2020-01-01"
   end: "2023-12-31"
   cache_dir: data/raw
@@ -19,11 +19,13 @@ forecast:
   timestep: hourly
 
 model:
-  stage1_algo: xgboost   # xgboost | lightgbm
+  stage1_algo: xgboost
   test_split: 0.2
   cv_folds: 5
-  lags: [1, 2, 3, 6, 12, 24]
-  rolling_windows: [3, 6, 24]
+  # Trimmed feature set: dropped lag24 and roll24 (they were overfitting on
+  # the previous 6-month NASA POWER run). Kept lag1..12 + roll3/6.
+  lags: [1, 2, 3, 6, 12]
+  rolling_windows: [3, 6]
   seed: 42
 
 paths:

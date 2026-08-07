@@ -52,36 +52,61 @@ def _nasa_cache_path(cache_dir: Path, site: SiteConfig, start: str, end: str) ->
 
 
 def _fetch_era5(site: SiteConfig, start: str, end: str, cache_dir: Path) -> pd.DataFrame:
+    """Fetch ERA5 as one NetCDF per (year, month), then concatenate.
+
+    CDS enforces a per-request cost limit; hourly multi-variable multi-year
+    single requests 403 with "cost limits exceeded". Even per-year is too
+    much for 7 variables × 8760 hours. Per-month keeps each request tiny,
+    caches partial progress, and parallelises well against the CDS queue.
+    """
     import cdsapi  # imported lazily so tests don't require it
 
     ensure_dir(cache_dir)
-    nc_path = _era5_cache_path(cache_dir, site, start, end)
-    if not nc_path.exists():
-        logger.info("Downloading ERA5 to %s (this can be slow on first run)", nc_path)
-        client = cdsapi.Client()
-        pad = 0.1
-        area = [site.latitude + pad, site.longitude - pad,
-                site.latitude - pad, site.longitude + pad]  # N, W, S, E
+    client = cdsapi.Client()
+    # ERA5 grid is 0.25° × 0.25° and CDS requires the bbox to span at least
+    # one grid cell, so pad must be > 0.125°. Use 0.2° for headroom.
+    pad = 0.2
+    area = [site.latitude + pad, site.longitude - pad,
+            site.latitude - pad, site.longitude + pad]  # N, W, S, E
+    variables = [
+        "10m_u_component_of_wind",
+        "10m_v_component_of_wind",
+        "100m_u_component_of_wind",
+        "100m_v_component_of_wind",
+        "2m_temperature",
+        "surface_pressure",
+        "forecast_surface_roughness",
+    ]
+
+    months = _year_month_range(start, end)
+    n = len(months)
+    month_paths: list[Path] = []
+    for i, (year, month) in enumerate(months, start=1):
+        mpath = cache_dir / f"era5_{site.name}_{year}-{month:02d}.nc"
+        month_paths.append(mpath)
+        if mpath.exists():
+            continue
+        logger.info("Downloading ERA5 %s-%02d (%d/%d)", year, month, i, n)
         request = {
             "product_type": "reanalysis",
-            "variable": [
-                "10m_u_component_of_wind",
-                "10m_v_component_of_wind",
-                "100m_u_component_of_wind",
-                "100m_v_component_of_wind",
-                "2m_temperature",
-                "surface_pressure",
-                "forecast_surface_roughness",
-            ],
-            "year": _year_range(start, end),
-            "month": [f"{m:02d}" for m in range(1, 13)],
+            "variable": variables,
+            "year": str(year),
+            "month": f"{month:02d}",
             "day": [f"{d:02d}" for d in range(1, 32)],
             "time": [f"{h:02d}:00" for h in range(24)],
             "area": area,
             "format": "netcdf",
         }
-        client.retrieve("reanalysis-era5-single-levels", request, str(nc_path))
-    return _load_era5_netcdf(nc_path, site, start, end)
+        client.retrieve("reanalysis-era5-single-levels", request, str(mpath))
+
+    return _load_era5_netcdf_multi(month_paths, site, start, end)
+
+
+def _year_month_range(start: str, end: str) -> list[tuple[int, int]]:
+    s = pd.Timestamp(start)
+    e = pd.Timestamp(end)
+    months = pd.period_range(start=s.to_period("M"), end=e.to_period("M"), freq="M")
+    return [(p.year, p.month) for p in months]
 
 
 def _year_range(start: str, end: str) -> list[str]:
@@ -90,7 +115,16 @@ def _year_range(start: str, end: str) -> list[str]:
     return [str(y) for y in range(y0, y1 + 1)]
 
 
-def _load_era5_netcdf(path: Path, site: SiteConfig, start: str, end: str) -> pd.DataFrame:
+def _load_era5_netcdf_multi(paths: list[Path], site: SiteConfig,
+                            start: str, end: str) -> pd.DataFrame:
+    frames = [_load_era5_netcdf(p, site, start, end, clip=False) for p in paths]
+    df = pd.concat(frames).sort_index()
+    df = df[~df.index.duplicated(keep="first")]
+    return df.loc[start:end][TIDY_COLUMNS]
+
+
+def _load_era5_netcdf(path: Path, site: SiteConfig, start: str, end: str,
+                      clip: bool = True) -> pd.DataFrame:
     import xarray as xr
 
     ds = xr.open_dataset(path)
@@ -129,7 +163,8 @@ def _load_era5_netcdf(path: Path, site: SiteConfig, start: str, end: str) -> pd.
         index=times,
     )
     df.index.name = "timestamp"
-    df = df.loc[start:end]
+    if clip:
+        df = df.loc[start:end]
     return df[TIDY_COLUMNS]
 
 
