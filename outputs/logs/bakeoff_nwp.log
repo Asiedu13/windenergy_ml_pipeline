@@ -1,0 +1,195 @@
+2026-08-11 13:16:37,303 | INFO | pipeline | Loading weather for anloga (nasa_power)
+2026-08-11 13:16:37,519 | INFO | src.data_ingest | Wrote tidy weather: data\processed\nasa_power_anloga_2024-03-01_2025-12-31.parquet (16104 rows, 36 cols)
+2026-08-11 13:16:37,688 | WARNING | src.data_ingest | Open-Meteo: 3/54 columns are all-NaN (archive starts 2024-03; earlier windows return nulls): nwp_ecmwf_ifs025_wind_gusts_10m_d1, nwp_ecmwf_ifs025_wind_gusts_10m_d2, nwp_ecmwf_ifs025_wind_gusts_10m_d3
+2026-08-11 13:16:37,725 | INFO | src.data_ingest | Wrote NWP forecasts: data\processed\nwp_anloga_2024-03-01_2025-12-31.parquet (16104 rows, 54 cols)
+2026-08-11 13:16:37,725 | INFO | pipeline | NWP forecasts: 16104 rows, 54 cols from ecmwf_ifs025, gfs_global, icon_global
+2026-08-11 13:16:37,725 | INFO | pipeline | Building feature frame (mode=forecast)
+2026-08-11 13:16:37,821 | INFO | pipeline | Feature-influence analysis (Pearson + SHAP)
+C:\Users\Dell\Documents\creations\personal\finalYearProject\windenergy_ml_pipeline\src\stage1_windspeed.py:245: FutureWarning: The NumPy global RNG was seeded by calling `np.random.seed`. In a future version this function will no longer use the global RNG. Pass `rng` explicitly to opt-in to the new behaviour and silence this warning.
+  shap.summary_plot(
+2026-08-11 13:16:40,062 | INFO | pipeline | Training Stage 1 (xgboost)
+2026-08-11 13:16:40,750 | INFO | src.stage1_windspeed | CV fold 1: MAE=0.915 RMSE=1.163 R2=0.255
+2026-08-11 13:16:41,328 | INFO | src.stage1_windspeed | CV fold 2: MAE=0.918 RMSE=1.219 R2=0.469
+2026-08-11 13:16:41,911 | INFO | src.stage1_windspeed | CV fold 3: MAE=0.818 RMSE=1.083 R2=0.590
+2026-08-11 13:16:42,597 | INFO | src.stage1_windspeed | CV fold 4: MAE=0.666 RMSE=0.882 R2=0.499
+2026-08-11 13:16:43,350 | INFO | src.stage1_windspeed | CV fold 5: MAE=0.653 RMSE=0.854 R2=0.640
+2026-08-11 13:16:44,150 | INFO | pipeline | Training Stage 1 (dlinear)
+2026-08-11 13:16:45,938 | INFO | src.stage1_deep | dlinear: 72 past-covariate columns (target lags included)
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+`Trainer.fit` stopped: `max_epochs=6` reached.
+2026-08-11 13:16:55,156 | INFO | src.stage1_deep |   LR sweep dlinear: lr=0.0003 → val_loss=0.00678
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+`Trainer.fit` stopped: `max_epochs=6` reached.
+2026-08-11 13:17:01,771 | INFO | src.stage1_deep |   LR sweep dlinear: lr=0.001 → val_loss=0.00854
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+`Trainer.fit` stopped: `max_epochs=6` reached.
+2026-08-11 13:17:08,345 | INFO | src.stage1_deep |   LR sweep dlinear: lr=0.003 → val_loss=0.06939
+2026-08-11 13:17:08,345 | INFO | src.stage1_deep | LR sweep dlinear: best lr=0.0003 (val_loss=0.00678)
+2026-08-11 13:17:08,352 | INFO | src.stage1_deep | Fitting dlinear — 200 epochs max, lr=0.0003, batch=128, 10819 fit points, 1957 validation points
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+2026-08-11 13:17:49,751 | INFO | src.stage1_deep | dlinear: training stopped after 31 epochs (max 200)
+2026-08-11 13:17:50,025 | INFO | src.stage1_deep | Backtesting dlinear on the test window (3183 points)
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+2026-08-11 13:17:50,484 | INFO | src.stage1_deep | dlinear: test MAE=0.969 RMSE=1.158 R2=0.466 (persistence MAE=1.110)
+2026-08-11 13:17:50,488 | INFO | pipeline | Training Stage 1 (lstm)
+2026-08-11 13:17:50,558 | INFO | src.stage1_deep | lstm: 72 past-covariate columns (target lags included)
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\nn\modules\rnn.py:123: UserWarning: dropout option adds dropout after all but last recurrent layer, so non-zero dropout expects num_layers greater than 1, but got dropout=0.2 and num_layers=1
+  warnings.warn(
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+`Trainer.fit` stopped: `max_epochs=6` reached.
+2026-08-11 13:18:32,312 | INFO | src.stage1_deep |   LR sweep lstm: lr=0.0003 → val_loss=0.00724
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\nn\modules\rnn.py:123: UserWarning: dropout option adds dropout after all but last recurrent layer, so non-zero dropout expects num_layers greater than 1, but got dropout=0.2 and num_layers=1
+  warnings.warn(
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+`Trainer.fit` stopped: `max_epochs=6` reached.
+2026-08-11 13:19:18,788 | INFO | src.stage1_deep |   LR sweep lstm: lr=0.001 → val_loss=0.00710
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\nn\modules\rnn.py:123: UserWarning: dropout option adds dropout after all but last recurrent layer, so non-zero dropout expects num_layers greater than 1, but got dropout=0.2 and num_layers=1
+  warnings.warn(
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+`Trainer.fit` stopped: `max_epochs=6` reached.
+2026-08-11 13:20:01,151 | INFO | src.stage1_deep |   LR sweep lstm: lr=0.003 → val_loss=0.00668
+2026-08-11 13:20:01,151 | INFO | src.stage1_deep | LR sweep lstm: best lr=0.003 (val_loss=0.00668)
+2026-08-11 13:20:01,159 | INFO | src.stage1_deep | Fitting lstm — 200 epochs max, lr=0.003, batch=128, 10819 fit points, 1957 validation points
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\nn\modules\rnn.py:123: UserWarning: dropout option adds dropout after all but last recurrent layer, so non-zero dropout expects num_layers greater than 1, but got dropout=0.2 and num_layers=1
+  warnings.warn(
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+2026-08-11 13:22:41,899 | INFO | src.stage1_deep | lstm: training stopped after 24 epochs (max 200)
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\nn\modules\rnn.py:123: UserWarning: dropout option adds dropout after all but last recurrent layer, so non-zero dropout expects num_layers greater than 1, but got dropout=0.2 and num_layers=1
+  warnings.warn(
+2026-08-11 13:22:41,980 | INFO | src.stage1_deep | Backtesting lstm on the test window (3183 points)
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+2026-08-11 13:22:43,002 | INFO | src.stage1_deep | lstm: test MAE=0.903 RMSE=1.089 R2=0.527 (persistence MAE=1.110)
+2026-08-11 13:22:43,005 | INFO | pipeline | Training Stage 1 (nbeats)
+2026-08-11 13:22:43,071 | INFO | src.stage1_deep | nbeats: 72 past-covariate columns (target lags included)
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+`Trainer.fit` stopped: `max_epochs=4` reached.
+2026-08-11 13:24:00,834 | INFO | src.stage1_deep |   LR sweep nbeats: lr=0.0003 → val_loss=0.01314
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+`Trainer.fit` stopped: `max_epochs=4` reached.
+2026-08-11 13:25:21,599 | INFO | src.stage1_deep |   LR sweep nbeats: lr=0.001 → val_loss=0.01135
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+`Trainer.fit` stopped: `max_epochs=4` reached.
+2026-08-11 13:26:39,349 | INFO | src.stage1_deep |   LR sweep nbeats: lr=0.003 → val_loss=0.00846
+2026-08-11 13:26:39,349 | INFO | src.stage1_deep | LR sweep nbeats: best lr=0.003 (val_loss=0.00846)
+2026-08-11 13:26:39,356 | INFO | src.stage1_deep | Fitting nbeats — 100 epochs max, lr=0.003, batch=256, 10819 fit points, 1957 validation points
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+2026-08-11 13:36:27,908 | INFO | src.stage1_deep | nbeats: training stopped after 28 epochs (max 100)
+2026-08-11 13:36:28,251 | INFO | src.stage1_deep | Backtesting nbeats on the test window (3183 points)
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+2026-08-11 13:36:30,383 | INFO | src.stage1_deep | nbeats: test MAE=0.942 RMSE=1.141 R2=0.481 (persistence MAE=1.110)
+2026-08-11 13:36:30,387 | INFO | pipeline | Training Stage 1 (tft)
+2026-08-11 13:36:30,478 | INFO | src.stage1_deep | tft: 72 past-covariate columns (target lags included)
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+`Trainer.fit` stopped: `max_epochs=3` reached.
+2026-08-11 13:50:08,980 | INFO | src.stage1_deep |   LR sweep tft: lr=0.0003 → val_loss=0.01103
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+`Trainer.fit` stopped: `max_epochs=3` reached.
+2026-08-11 14:02:24,173 | INFO | src.stage1_deep |   LR sweep tft: lr=0.001 → val_loss=0.01142
+2026-08-11 14:02:24,175 | INFO | src.stage1_deep | LR sweep tft: best lr=0.0003 (val_loss=0.01103)
+2026-08-11 14:02:24,305 | INFO | src.stage1_deep | Fitting tft — 60 epochs max, lr=0.0003, batch=256, 10819 fit points, 1957 validation points
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+2026-08-11 18:09:32,892 | INFO | src.stage1_deep | tft: training stopped after 49 epochs (max 60)
+2026-08-11 18:09:34,470 | INFO | src.stage1_deep | Backtesting tft on the test window (3183 points)
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing [litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically to the Lightning Experiments platform.
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\torch\utils\data\dataloader.py:665: UserWarning: 'pin_memory' argument is set as true but no accelerator is found, then device pinned memory won't be used.
+  warnings.warn(warn_msg)
+2026-08-11 18:10:17,748 | INFO | src.stage1_deep | tft: test MAE=0.827 RMSE=1.024 R2=0.582 (persistence MAE=1.110)
+2026-08-11 18:10:17,757 | INFO | pipeline | Best model: xgboost (test MAE 0.678) — used for downstream two-stage
+2026-08-11 18:10:17,854 | INFO | pipeline | Saved Stage 1 model → outputs\models\stage1.pkl
+2026-08-11 18:10:17,861 | INFO | pipeline | Loading turbine E-101/3050
+2026-08-11 18:10:17,969 | INFO | pipeline | Evaluating three variants
+2026-08-11 18:10:22,797 | INFO | pipeline | Wrote report → outputs\reports\report.md

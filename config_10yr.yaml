@@ -1,0 +1,59 @@
+# Extended-history variant of config.yaml — recommendation #5 of
+# docs/09_why_deep_learning_underperformed.md ("10+ years of data").
+#
+# Identical to config.yaml except for `data.start`. Its only job today is to
+# drive the ERA5 download so the 2010–2019 months land in data/raw/ alongside
+# the existing 2020–2023 cache:
+#
+#     python -m src.data_ingest_extend --config config_10yr.yaml
+#
+# Downloads are cached per (year, month) per request family, so re-runs resume
+# and the 48 months already on disk are never re-fetched. Once the cache is
+# complete this config can be passed straight to `python -m src.pipeline`.
+
+site:
+  name: anloga
+  latitude: 5.79
+  longitude: 0.90
+  hub_height_m: 100
+
+data:
+  source: era5
+  start: "2010-01-01"
+  end: "2023-12-31"
+  cache_dir: data/raw
+
+turbine:
+  name: E-101/3050
+  source: oedb
+
+forecast:
+  horizon_hours: 24
+  timestep: hourly
+
+model:
+  stage1_algo: xgboost
+  test_split: 0.2
+  cv_folds: 5
+  lags: [1, 2, 3, 6, 12]
+  rolling_windows: [3, 6]
+  seed: 42
+  tune_xgboost: true
+  tune_n_trials: 50
+  compare_algos: [xgboost, lstm, tft, nbeats, dlinear]
+  deep:
+    input_chunk_length: 48
+    hidden_size: 64
+    n_epochs: 200
+    batch_size: 128
+    dropout: 0.2
+    nbeats:
+      num_stacks: 3
+      num_blocks: 3
+      layer_widths: 256
+    dlinear:
+      kernel_size: 25
+
+paths:
+  outputs: outputs
+  processed: data/processed

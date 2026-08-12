@@ -1,0 +1,532 @@
+2026-08-11 02:13:42,031 | INFO | data_ingest_extend | ERA5 extension: 22 months (2024-03-01 → 2025-12-31), cache=data\raw
+2026-08-11 02:13:42,033 | INFO | src.data_ingest | Downloading ERA5 core 2024-07 (5/22) (attempt 1/5)
+2026-08-11 02:13:42,939 INFO Request ID is 3e380b99-5a29-42b2-8b19-6facf8c68e1b
+2026-08-11 02:13:46,477 INFO status has been updated to accepted
+2026-08-11 02:24:10,648 INFO status has been updated to successful
+e737938d512bd3a332805d35a54dab59.nc:   0%|          | 0.00/154k [00:00<?, ?B/s]e737938d512bd3a332805d35a54dab59.nc: 100%|██████████| 154k/154k [00:01<00:00, 130kB/s]                                                                                      2026-08-11 02:24:13,073 | INFO | src.data_ingest | Downloading ERA5 extras 2024-07 (5/22) (attempt 1/5)
+2026-08-11 02:24:13,856 INFO Request ID is a083a414-6592-438c-9777-b0009eb4ec37
+2026-08-11 02:24:14,744 INFO status has been updated to accepted
+2026-08-11 02:27:10,832 INFO status has been updated to running
+2026-08-11 02:30:38,646 INFO status has been updated to successful
+f03e0751e4bb676697652a2478b65318.zip:   0%|          | 0.00/170k [00:00<?, ?B/s]f03e0751e4bb676697652a2478b65318.zip: 100%|██████████| 170k/170k [00:01<00:00, 164kB/s]                                                                                       2026-08-11 02:30:40,850 | INFO | src.data_ingest | Downloading ERA5 pressure 2024-07 (5/22) (attempt 1/5)
+2026-08-11 02:30:41,357 INFO Request ID is 09da552f-1204-42f6-98a9-c925a860b67d
+2026-08-11 02:30:41,556 INFO status has been updated to accepted
+2026-08-11 02:37:05,563 INFO status has been updated to running
+2026-08-11 02:43:10,438 INFO status has been updated to successful
+244db59b38f3ddde7e753d77a67a2b3f.nc:   0%|          | 0.00/120k [00:00<?, ?B/s]244db59b38f3ddde7e753d77a67a2b3f.nc: 100%|██████████| 120k/120k [00:01<00:00, 78.6kB/s]                                                                                       2026-08-11 02:43:13,054 | INFO | src.data_ingest | Downloading ERA5 pressure 2024-08 (6/22) (attempt 1/5)
+2026-08-11 02:43:13,630 INFO Request ID is 29fb5b1c-32ee-4638-8f76-3f7803ba24d0
+2026-08-11 02:43:13,892 INFO status has been updated to accepted
+2026-08-11 02:44:32,715 INFO status has been updated to successful
+75fbcc0d6c862a87f41e9948773b2597.nc:   0%|          | 0.00/120k [00:00<?, ?B/s]75fbcc0d6c862a87f41e9948773b2597.nc: 100%|██████████| 120k/120k [00:01<00:00, 110kB/s]                                                                                      2026-08-11 02:44:37,026 | INFO | src.data_ingest | Downloading ERA5 core 2024-09 (7/22) (attempt 1/5)
+2026-08-11 02:44:40,627 INFO Request ID is 5d732139-8aa5-4c96-9849-7e10a4cddb25
+2026-08-11 02:44:40,826 INFO status has been updated to accepted
+2026-08-11 02:45:32,095 INFO status has been updated to running
+2026-08-11 02:51:02,681 INFO status has been updated to successful
+84ccbc90986238e2445e4e1d0a14ccae.nc:   0%|          | 0.00/153k [00:00<?, ?B/s]84ccbc90986238e2445e4e1d0a14ccae.nc: 100%|██████████| 153k/153k [00:01<00:00, 155kB/s]                                                                                      2026-08-11 02:51:04,998 | INFO | src.data_ingest | Downloading ERA5 extras 2024-09 (7/22) (attempt 1/5)
+2026-08-11 02:51:05,776 INFO Request ID is ea2a2ce6-f605-4bf6-a70c-573e1e3443c2
+2026-08-11 02:51:05,987 INFO status has been updated to accepted
+2026-08-11 02:52:23,144 INFO status has been updated to running
+2026-08-11 02:57:28,208 INFO status has been updated to successful
+4fe22e15fa5f0a50de2c3f0ea415c1e4.zip:   0%|          | 0.00/169k [00:00<?, ?B/s]4fe22e15fa5f0a50de2c3f0ea415c1e4.zip: 100%|██████████| 169k/169k [00:01<00:00, 140kB/s]                                                                                       2026-08-11 02:57:30,554 | INFO | src.data_ingest | Downloading ERA5 pressure 2024-09 (7/22) (attempt 1/5)
+2026-08-11 02:57:32,000 INFO Request ID is 674ad5af-f022-4c73-8c95-f3abb174a807
+2026-08-11 02:57:33,137 INFO status has been updated to accepted
+2026-08-11 02:58:24,245 INFO status has been updated to running
+2026-08-11 03:03:54,868 INFO status has been updated to successful
+1c871b6b05dd59fdadc4ab50d9581263.nc:   0%|          | 0.00/119k [00:00<?, ?B/s]1c871b6b05dd59fdadc4ab50d9581263.nc: 100%|██████████| 119k/119k [00:00<00:00, 128kB/s]                                                                                      2026-08-11 03:03:59,228 | INFO | src.data_ingest | Downloading ERA5 core 2024-10 (8/22) (attempt 1/5)
+2026-08-11 03:04:00,073 INFO Request ID is 916716c2-128c-4797-a56a-b1dd8e4de3a6
+2026-08-11 03:04:00,281 INFO status has been updated to accepted
+2026-08-11 03:04:51,736 INFO status has been updated to running
+2026-08-11 03:10:22,495 INFO status has been updated to successful
+3414cf9f54efd18de13d8e0aa0058203.nc:   0%|          | 0.00/155k [00:00<?, ?B/s]3414cf9f54efd18de13d8e0aa0058203.nc: 100%|██████████| 155k/155k [00:01<00:00, 122kB/s]                                                                                      2026-08-11 03:10:26,884 | INFO | src.data_ingest | Downloading ERA5 extras 2024-10 (8/22) (attempt 1/5)
+2026-08-11 03:10:27,607 INFO Request ID is 6a8c80ed-6998-4523-b267-367c9a7f36a2
+2026-08-11 03:10:27,816 INFO status has been updated to accepted
+2026-08-11 03:14:51,528 INFO status has been updated to running
+2026-08-11 03:18:52,900 INFO status has been updated to successful
+f8dd9121ffdd70e6b6bacac60da69ab1.zip:   0%|          | 0.00/170k [00:00<?, ?B/s]f8dd9121ffdd70e6b6bacac60da69ab1.zip: 100%|██████████| 170k/170k [00:01<00:00, 123kB/s]                                                                                       2026-08-11 03:18:55,611 | INFO | src.data_ingest | Downloading ERA5 pressure 2024-10 (8/22) (attempt 1/5)
+2026-08-11 03:18:56,125 INFO Request ID is a9c342f4-2e03-4e55-bf71-d54922429cc5
+2026-08-11 03:18:56,371 INFO status has been updated to accepted
+2026-08-11 03:19:20,218 INFO status has been updated to running
+2026-08-11 03:25:21,089 INFO status has been updated to successful
+d1b0393d4685c55ddd96774df969e2fa.nc:   0%|          | 0.00/120k [00:00<?, ?B/s]d1b0393d4685c55ddd96774df969e2fa.nc: 100%|██████████| 120k/120k [00:01<00:00, 112kB/s]                                                                                      2026-08-11 03:25:23,197 | INFO | src.data_ingest | Downloading ERA5 core 2024-11 (9/22) (attempt 1/5)
+2026-08-11 03:25:25,521 INFO Request ID is ec718dc8-538f-4847-9d3a-6c3f1de24a2f
+2026-08-11 03:25:25,736 INFO status has been updated to accepted
+2026-08-11 03:28:23,775 INFO status has been updated to running
+2026-08-11 03:35:53,542 INFO status has been updated to successful
+f542116f7509a0daf34a08529bc35252.nc:   0%|          | 0.00/153k [00:00<?, ?B/s]f542116f7509a0daf34a08529bc35252.nc: 100%|██████████| 153k/153k [00:01<00:00, 132kB/s]                                                                                      2026-08-11 03:35:55,756 | INFO | src.data_ingest | Downloading ERA5 extras 2024-11 (9/22) (attempt 1/5)
+2026-08-11 03:35:56,501 INFO Request ID is a30f453b-1da6-444f-a80f-0032d42b64b5
+2026-08-11 03:35:56,717 INFO status has been updated to accepted
+2026-08-11 03:37:55,476 INFO status has been updated to running
+2026-08-11 03:42:21,914 INFO status has been updated to successful
+725252842a16ce500e2e1daeadd6ef86.zip:   0%|          | 0.00/169k [00:00<?, ?B/s]725252842a16ce500e2e1daeadd6ef86.zip: 100%|██████████| 169k/169k [00:01<00:00, 132kB/s]                                                                                       2026-08-11 03:42:24,228 | INFO | src.data_ingest | Downloading ERA5 pressure 2024-11 (9/22) (attempt 1/5)
+2026-08-11 03:42:24,993 INFO Request ID is 6eaf820e-76fb-4194-b922-324a55cd3bda
+2026-08-11 03:42:25,215 INFO status has been updated to accepted
+2026-08-11 03:43:00,308 INFO status has been updated to running
+2026-08-11 03:48:48,762 INFO status has been updated to successful
+3d480b5081512d127f9b5cb905259dc0.nc:   0%|          | 0.00/118k [00:00<?, ?B/s]3d480b5081512d127f9b5cb905259dc0.nc: 100%|██████████| 118k/118k [00:01<00:00, 102kB/s]                                                                                      2026-08-11 03:48:51,526 | INFO | src.data_ingest | Downloading ERA5 core 2024-12 (10/22) (attempt 1/5)
+2026-08-11 03:48:52,386 INFO Request ID is 38449475-140a-4fa7-9bd0-877a0fd9ed61
+2026-08-11 03:48:52,622 INFO status has been updated to accepted
+2026-08-11 03:51:46,940 INFO status has been updated to running
+2026-08-11 03:57:15,542 INFO status has been updated to successful
+33baa85905da0aea706a9ac30d83f1fc.nc:   0%|          | 0.00/155k [00:00<?, ?B/s]33baa85905da0aea706a9ac30d83f1fc.nc: 100%|██████████| 155k/155k [00:01<00:00, 122kB/s]                                                                                      2026-08-11 03:57:18,201 | INFO | src.data_ingest | Downloading ERA5 extras 2024-12 (10/22) (attempt 1/5)
+2026-08-11 03:57:19,830 INFO Request ID is aa4970fa-8b5f-427c-ab35-45f1e259b22b
+2026-08-11 03:57:20,117 INFO status has been updated to accepted
+2026-08-11 04:11:47,325 INFO status has been updated to running
+2026-08-11 04:13:47,968 INFO status has been updated to successful
+f3ef7ba7ea342308db2984ba7dfbd0ee.zip:   0%|          | 0.00/170k [00:00<?, ?B/s]f3ef7ba7ea342308db2984ba7dfbd0ee.zip: 100%|██████████| 170k/170k [00:01<00:00, 143kB/s]                                                                                       2026-08-11 04:13:53,627 | INFO | src.data_ingest | Downloading ERA5 pressure 2024-12 (10/22) (attempt 1/5)
+2026-08-11 04:13:54,205 INFO Request ID is 808019d4-d25f-4d1e-b059-512094b2d78c
+2026-08-11 04:13:54,451 INFO status has been updated to accepted
+2026-08-11 04:34:25,233 INFO status has been updated to running
+2026-08-11 04:40:27,436 INFO status has been updated to successful
+e61334ac03b3f9f98946a6da5ff3d4c4.nc:   0%|          | 0.00/119k [00:00<?, ?B/s]e61334ac03b3f9f98946a6da5ff3d4c4.nc: 100%|██████████| 119k/119k [00:01<00:00, 103kB/s]                                                                                      2026-08-11 04:40:29,829 | INFO | src.data_ingest | Downloading ERA5 core 2025-01 (11/22) (attempt 1/5)
+2026-08-11 04:40:30,617 INFO Request ID is 87cbf69a-5043-4a46-a23f-7293512a82d5
+2026-08-11 04:40:30,975 INFO status has been updated to accepted
+2026-08-11 05:09:01,672 INFO status has been updated to running
+2026-08-11 05:15:04,078 INFO status has been updated to successful
+122a4cf6b524f7dcb0e81e0f97804e36.nc:   0%|          | 0.00/155k [00:00<?, ?B/s]122a4cf6b524f7dcb0e81e0f97804e36.nc: 100%|██████████| 155k/155k [00:01<00:00, 136kB/s]                                                                                      2026-08-11 05:15:06,344 | INFO | src.data_ingest | Downloading ERA5 extras 2025-01 (11/22) (attempt 1/5)
+2026-08-11 05:15:07,048 INFO Request ID is 57c1c8f3-9f68-411a-9fdf-c32b6cf03262
+2026-08-11 05:15:07,269 INFO status has been updated to accepted
+2026-08-11 05:43:40,896 INFO status has been updated to running
+2026-08-11 05:47:42,086 INFO status has been updated to successful
+daa5200700467c7ec814583a1757863c.zip:   0%|          | 0.00/170k [00:00<?, ?B/s]daa5200700467c7ec814583a1757863c.zip: 100%|██████████| 170k/170k [00:02<00:00, 72.4kB/s]                                                                                        2026-08-11 05:47:45,572 | INFO | src.data_ingest | Downloading ERA5 pressure 2025-01 (11/22) (attempt 1/5)
+2026-08-11 05:47:46,025 INFO Request ID is 59105292-44fb-419e-bf22-d87b1abf7501
+2026-08-11 05:47:46,221 INFO status has been updated to accepted
+2026-08-11 06:26:19,418 INFO status has been updated to running
+2026-08-11 06:32:22,171 INFO status has been updated to successful
+49d1bdff1f79fdd2fbd33be473c890.nc:   0%|          | 0.00/120k [00:00<?, ?B/s]49d1bdff1f79fdd2fbd33be473c890.nc: 100%|██████████| 120k/120k [00:01<00:00, 104kB/s]                                                                                    2026-08-11 06:32:24,393 | INFO | src.data_ingest | Downloading ERA5 core 2025-02 (12/22) (attempt 1/5)
+2026-08-11 06:32:25,109 INFO Request ID is c3cf57e6-d217-4fd1-b9d2-626e779f3889
+2026-08-11 06:32:25,555 INFO status has been updated to accepted
+2026-08-11 07:19:05,813 INFO status has been updated to running
+2026-08-11 07:23:07,288 INFO status has been updated to successful
+156b8465168a8d8cd4ed0f4a619ec2bf.nc:   0%|          | 0.00/150k [00:00<?, ?B/s]156b8465168a8d8cd4ed0f4a619ec2bf.nc: 100%|██████████| 150k/150k [00:01<00:00, 139kB/s]                                                                                      2026-08-11 07:23:09,566 | INFO | src.data_ingest | Downloading ERA5 extras 2025-02 (12/22) (attempt 1/5)
+2026-08-11 07:23:12,225 INFO Request ID is 0bc002f4-f470-47bd-9c20-cfa4ce75c419
+2026-08-11 07:23:12,447 INFO status has been updated to accepted
+2026-08-11 08:19:55,822 INFO status has been updated to running
+2026-08-11 08:21:57,060 INFO status has been updated to successful
+9a544cab75f4349c9af26769198b0818.zip:   0%|          | 0.00/166k [00:00<?, ?B/s]9a544cab75f4349c9af26769198b0818.zip: 100%|██████████| 166k/166k [00:01<00:00, 135kB/s]                                                                                       2026-08-11 08:21:59,398 | INFO | src.data_ingest | Downloading ERA5 pressure 2025-02 (12/22) (attempt 1/5)
+2026-08-11 08:21:59,870 INFO Request ID is ab274abd-0ae3-4764-bb81-3c3158142cbb
+2026-08-11 08:22:00,245 INFO status has been updated to accepted
+2026-08-11 09:34:58,476 INFO status has been updated to running
+2026-08-11 09:38:59,735 INFO status has been updated to successful
+2ba084fd1dd75040bbe7f7b0732b623e.nc:   0%|          | 0.00/116k [00:00<?, ?B/s]2ba084fd1dd75040bbe7f7b0732b623e.nc: 100%|██████████| 116k/116k [00:01<00:00, 108kB/s]                                                                                      2026-08-11 09:39:01,859 | INFO | src.data_ingest | Downloading ERA5 core 2025-03 (13/22) (attempt 1/5)
+2026-08-11 09:39:02,715 INFO Request ID is 2a366c5b-a813-475a-acad-26ef65b6d6cf
+2026-08-11 09:39:04,085 INFO status has been updated to accepted
+2026-08-11 11:04:14,305 INFO status has been updated to running
+2026-08-11 11:08:16,442 INFO status has been updated to successful
+2d411203dcc1211534bcdf8644203284.nc:   0%|          | 0.00/154k [00:00<?, ?B/s]2d411203dcc1211534bcdf8644203284.nc: 100%|██████████| 154k/154k [00:01<00:00, 123kB/s]                                                                                      2026-08-11 11:08:20,074 | INFO | src.data_ingest | Downloading ERA5 extras 2025-03 (13/22) (attempt 1/5)
+2026-08-11 11:08:21,028 INFO Request ID is 49e55153-9433-4bfa-97e1-421329f61e4d
+2026-08-11 11:08:21,847 INFO status has been updated to accepted
+2026-08-11 12:33:27,333 INFO status has been updated to running
+2026-08-11 12:35:28,174 INFO status has been updated to successful
+1873cbfc180cc3625534dd3b289ad5ae.zip:   0%|          | 0.00/170k [00:00<?, ?B/s]1873cbfc180cc3625534dd3b289ad5ae.zip: 100%|██████████| 170k/170k [00:01<00:00, 114kB/s]                                                                                       2026-08-11 12:35:30,887 | INFO | src.data_ingest | Downloading ERA5 pressure 2025-03 (13/22) (attempt 1/5)
+2026-08-11 12:35:31,402 INFO Request ID is 5fe9d292-8193-4b29-8671-f875c9956679
+2026-08-11 12:35:31,719 INFO status has been updated to accepted
+2026-08-11 14:00:38,127 INFO status has been updated to running
+2026-08-11 14:06:40,704 INFO status has been updated to successful
+e68d140e5441d81b2ae949efeef910a8.nc:   0%|          | 0.00/120k [00:00<?, ?B/s]e68d140e5441d81b2ae949efeef910a8.nc: 100%|██████████| 120k/120k [00:01<00:00, 94.1kB/s]                                                                                       2026-08-11 14:06:43,873 | INFO | src.data_ingest | Downloading ERA5 core 2025-04 (14/22) (attempt 1/5)
+2026-08-11 14:06:44,873 INFO Request ID is 02d26ec2-f957-4af2-84a3-8095a67ff996
+2026-08-11 14:06:45,125 INFO status has been updated to accepted
+Recovering from connection error [('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))], attempt 1 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/02d26ec2-f957-4af2-84a3-8095a67ff996?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A26850>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 2 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/02d26ec2-f957-4af2-84a3-8095a67ff996?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A26FD0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 3 of 500
+Retrying in 120 seconds
+2026-08-11 14:53:58,470 INFO status has been updated to running
+2026-08-11 14:58:00,147 INFO status has been updated to successful
+d20333c913871319e63a9f77acb18c76.nc:   0%|          | 0.00/153k [00:00<?, ?B/s]d20333c913871319e63a9f77acb18c76.nc: 100%|██████████| 153k/153k [00:01<00:00, 100kB/s]                                                                                      2026-08-11 14:58:03,030 | INFO | src.data_ingest | Downloading ERA5 extras 2025-04 (14/22) (attempt 1/5)
+2026-08-11 14:58:03,997 INFO Request ID is 420f5351-edc3-4a87-96af-44576b7ed4a9
+2026-08-11 14:58:04,229 INFO status has been updated to accepted
+2026-08-11 15:20:37,657 INFO status has been updated to running
+2026-08-11 15:24:39,172 INFO status has been updated to successful
+f6aa4e474f3afcc7e4554da4c8d5a58d.zip:   0%|          | 0.00/169k [00:00<?, ?B/s]f6aa4e474f3afcc7e4554da4c8d5a58d.zip: 100%|██████████| 169k/169k [00:01<00:00, 131kB/s]                                                                                       2026-08-11 15:24:41,783 | INFO | src.data_ingest | Downloading ERA5 pressure 2025-04 (14/22) (attempt 1/5)
+2026-08-11 15:24:42,507 INFO Request ID is b3bbf08b-44ed-4405-88c7-e2a61c236b33
+2026-08-11 15:24:42,784 INFO status has been updated to accepted
+2026-08-11 15:35:08,130 INFO status has been updated to running
+2026-08-11 15:37:08,856 INFO status has been updated to accepted
+2026-08-11 15:39:09,600 INFO status has been updated to running
+2026-08-11 15:43:11,001 INFO status has been updated to successful
+bb43471e166ed616a737203868ba4d94.nc:   0%|          | 0.00/119k [00:00<?, ?B/s]bb43471e166ed616a737203868ba4d94.nc: 100%|██████████| 119k/119k [00:01<00:00, 91.9kB/s]                                                                                       2026-08-11 15:43:13,682 | INFO | src.data_ingest | Downloading ERA5 core 2025-05 (15/22) (attempt 1/5)
+2026-08-11 15:43:15,326 INFO Request ID is 817f8750-0528-44e6-baf7-a2294c741b50
+2026-08-11 15:43:15,631 INFO status has been updated to accepted
+2026-08-11 15:53:43,696 INFO status has been updated to running
+2026-08-11 15:57:45,252 INFO status has been updated to successful
+563bfca85cb268bd46753f07533db4f.nc:   0%|          | 0.00/155k [00:00<?, ?B/s]563bfca85cb268bd46753f07533db4f.nc: 100%|██████████| 155k/155k [00:01<00:00, 111kB/s]                                                                                     2026-08-11 15:57:47,792 | INFO | src.data_ingest | Downloading ERA5 extras 2025-05 (15/22) (attempt 1/5)
+2026-08-11 15:57:48,518 INFO Request ID is ed964649-2b68-482e-9f4e-d5d1b45b60e0
+2026-08-11 15:57:48,747 INFO status has been updated to accepted
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Read timed out. (read timeout=60)], attempt 1 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A27390>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 2 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A27750>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 3 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A27B10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 4 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A27ED0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 5 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E102D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 6 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E10690>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 7 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E10A50>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 8 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E10E10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 9 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E111D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 10 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E11590>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 11 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E11950>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 12 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E11D10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 13 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E120D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 14 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E12490>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 15 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E12850>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 16 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E12C10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 17 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E12FD0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 18 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E13390>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 19 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E13750>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 20 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E13B10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 21 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A27D90>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 22 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A279D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 23 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A27610>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 24 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A27250>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 25 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A26FD0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 26 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A26850>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 27 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E139D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 28 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E13610>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 29 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E13250>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 30 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E12E90>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 31 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E12AD0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 32 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E12710>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 33 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E12350>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 34 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E11F90>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 35 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E11BD0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 36 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E11810>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 37 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E11450>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 38 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E11090>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 39 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E10CD0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 40 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E10910>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 41 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E10550>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 42 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E10190>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 43 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E13ED0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 44 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E182D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 45 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E18690>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 46 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E18A50>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 47 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E18E10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 48 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E191D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 49 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E19590>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 50 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E19950>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 51 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E19D10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 52 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1A0D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 53 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1A490>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 54 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1A850>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 55 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1AC10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 56 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1AFD0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 57 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A26990>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 58 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A26C10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 59 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A26E90>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 60 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A274D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 61 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A27890>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 62 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A27C50>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 63 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A27ED0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 64 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E282D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 65 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E28690>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 66 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E28A50>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 67 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E28E10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 68 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E291D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 69 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E29590>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 70 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E29950>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 71 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E29D10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 72 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E2A0D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 73 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E2A490>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 74 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E2A850>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 75 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E2AC10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 76 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E2AFD0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 77 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E2B390>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 78 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E2B750>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 79 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E2BB10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 80 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E2BED0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 81 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1B110>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 82 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1AD50>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 83 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1A990>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 84 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1A5D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 85 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1A210>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 86 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E19E50>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 87 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E19A90>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 88 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E196D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 89 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E19310>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 90 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E18F50>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 91 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E18B90>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 92 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E187D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 93 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E18410>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 94 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1B390>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 95 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1B750>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 96 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A27B10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 97 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A27750>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 98 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A27390>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 99 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A27110>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 100 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A26D50>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 101 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981A26AD0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 102 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1B610>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 103 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E18050>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 104 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E182D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 105 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E18690>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 106 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E18A50>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 107 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E18E10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 108 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E191D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 109 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E19590>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 110 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E19950>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 111 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E19D10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 112 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1A0D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 113 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1A490>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 114 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1A850>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 115 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1AC10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 116 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1AFD0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 117 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1BB10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 118 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981E1BED0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 119 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981AB42D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 120 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981AB4690>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 121 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981AB4A50>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 122 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981AB4E10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 123 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981AB51D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 124 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981AB5590>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 125 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981AB5950>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 126 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981AB5D10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 127 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981AB60D0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 128 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981AB6490>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 129 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981AB6850>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 130 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981AB6C10>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 131 of 500
+Retrying in 120 seconds
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/ed964649-2b68-482e-9f4e-d5d1b45b60e0?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001E981AB6FD0>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 132 of 500
+Retrying in 120 seconds
+2026-08-11 20:24:10,692 INFO status has been updated to successful
+db2dd0536d08cfb6b09c24ef4684caf.zip:   0%|          | 0.00/170k [00:00<?, ?B/s]db2dd0536d08cfb6b09c24ef4684caf.zip: 100%|██████████| 170k/170k [00:01<00:00, 95.4kB/s]                                                                                       2026-08-11 20:24:14,578 | INFO | src.data_ingest | Downloading ERA5 pressure 2025-05 (15/22) (attempt 1/5)
+2026-08-11 20:24:15,388 INFO Request ID is daa7a7e1-cb27-46af-bf5a-ac776668da26
+2026-08-11 20:24:15,694 INFO status has been updated to accepted
+2026-08-11 20:24:38,962 INFO status has been updated to running
+2026-08-11 20:30:44,519 INFO status has been updated to successful
+dd69936fe72841120d3450260ed52e0b.nc:   0%|          | 0.00/120k [00:00<?, ?B/s]dd69936fe72841120d3450260ed52e0b.nc: 100%|██████████| 120k/120k [00:01<00:00, 67.2kB/s]                                                                                       2026-08-11 20:30:50,764 | INFO | src.data_ingest | Downloading ERA5 core 2025-06 (16/22) (attempt 1/5)
+2026-08-11 20:30:52,206 INFO Request ID is 2e34c1c9-9601-4167-95ac-e9e92863663c
+2026-08-11 20:30:52,602 INFO status has been updated to accepted
+2026-08-11 20:31:09,806 INFO status has been updated to running
+2026-08-11 20:37:22,343 INFO status has been updated to successful
+ba7a13c8c5b1a340b4ea052d86d481d1.nc:   0%|          | 0.00/154k [00:00<?, ?B/s]ba7a13c8c5b1a340b4ea052d86d481d1.nc: 100%|██████████| 154k/154k [00:01<00:00, 84.6kB/s]                                                                                       2026-08-11 20:37:25,742 | INFO | src.data_ingest | Downloading ERA5 extras 2025-06 (16/22) (attempt 1/5)
+2026-08-11 20:37:27,668 INFO Request ID is f4075659-d17f-49b9-8798-36c73a8e06ad
+2026-08-11 20:37:27,975 INFO status has been updated to accepted
+2026-08-11 20:38:19,920 INFO status has been updated to running
+2026-08-11 20:41:51,561 INFO status has been updated to successful
+d3c08103fca4d5d0b67a554e92b5de14.zip:   0%|          | 0.00/169k [00:00<?, ?B/s]d3c08103fca4d5d0b67a554e92b5de14.zip: 100%|██████████| 169k/169k [00:01<00:00, 94.1kB/s]                                                                                        2026-08-11 20:41:54,965 | INFO | src.data_ingest | Downloading ERA5 pressure 2025-06 (16/22) (attempt 1/5)
+2026-08-11 20:41:55,753 INFO Request ID is 8dd47823-95c5-406f-b460-58da844289da
+2026-08-11 20:41:56,882 INFO status has been updated to accepted
+2026-08-11 20:42:12,998 INFO status has been updated to running
+2026-08-11 20:48:24,986 INFO status has been updated to successful
+c019c80bc7e05d34f38ecd07e60bec20.nc:   0%|          | 0.00/119k [00:00<?, ?B/s]c019c80bc7e05d34f38ecd07e60bec20.nc: 100%|██████████| 119k/119k [00:01<00:00, 66.1kB/s]                                                                                       2026-08-11 20:48:28,477 | INFO | src.data_ingest | Downloading ERA5 core 2025-07 (17/22) (attempt 1/5)
+2026-08-11 20:48:29,702 INFO Request ID is ce1dd056-c26c-46da-8a73-288a6d7e32fd
+2026-08-11 20:48:30,002 INFO status has been updated to accepted
+2026-08-11 20:48:59,512 INFO status has been updated to running
+2026-08-11 20:55:03,650 INFO status has been updated to successful
+6b1767fb3c981e2f60c40f1f1a5f0a91.nc:   0%|          | 0.00/154k [00:00<?, ?B/s]6b1767fb3c981e2f60c40f1f1a5f0a91.nc: 100%|██████████| 154k/154k [00:01<00:00, 81.5kB/s]                                                                                       2026-08-11 20:55:07,162 | INFO | src.data_ingest | Downloading ERA5 extras 2025-07 (17/22) (attempt 1/5)
+2026-08-11 20:55:08,163 INFO Request ID is 218d9cc5-d186-406c-8bcf-9b9710a9600d
+2026-08-11 20:55:08,570 INFO status has been updated to accepted
+2026-08-11 20:55:31,398 INFO status has been updated to running
+2026-08-11 20:59:32,145 INFO status has been updated to successful
+ea25ed2c445068b37b75206a5ec2722d.zip:   0%|          | 0.00/170k [00:00<?, ?B/s]ea25ed2c445068b37b75206a5ec2722d.zip: 100%|██████████| 170k/170k [00:01<00:00, 89.8kB/s]                                                                                        2026-08-11 20:59:35,950 | INFO | src.data_ingest | Downloading ERA5 pressure 2025-07 (17/22) (attempt 1/5)
+2026-08-11 20:59:36,760 INFO Request ID is 9fc85458-e801-4000-a2ba-eec77e1ee13e
+2026-08-11 20:59:37,162 INFO status has been updated to accepted
+2026-08-11 21:00:02,351 INFO status has been updated to running
+2026-08-11 21:06:06,596 INFO status has been updated to successful
+c8ecd7c573bfeba188b46a83c5a3ecd0.nc:   0%|          | 0.00/120k [00:00<?, ?B/s]c8ecd7c573bfeba188b46a83c5a3ecd0.nc: 100%|██████████| 120k/120k [00:02<00:00, 54.7kB/s]                                                                                       2026-08-11 21:06:11,019 | INFO | src.data_ingest | Downloading ERA5 core 2025-08 (18/22) (attempt 1/5)
+2026-08-11 21:06:12,129 INFO Request ID is c64feca4-f63f-4380-a6be-b6bf733eead6
+2026-08-11 21:06:12,439 INFO status has been updated to accepted
+2026-08-11 21:06:30,659 INFO status has been updated to running
+2026-08-11 21:12:45,251 INFO status has been updated to successful
+c463685cf30f7ae0d45e4095737a9915.nc:   0%|          | 0.00/154k [00:00<?, ?B/s]c463685cf30f7ae0d45e4095737a9915.nc: 100%|██████████| 154k/154k [00:01<00:00, 90.6kB/s]                                                                                       2026-08-11 21:12:49,252 | INFO | src.data_ingest | Downloading ERA5 extras 2025-08 (18/22) (attempt 1/5)
+2026-08-11 21:12:50,669 INFO Request ID is 0bcad14c-8a32-4f38-a663-6b1609e65426
+2026-08-11 21:12:51,081 INFO status has been updated to accepted
+2026-08-11 21:13:25,898 INFO status has been updated to running
+2026-08-11 21:17:16,923 INFO status has been updated to successful
+fdc0a616c4c33d2fc1bf8109426ebdd7.zip:   0%|          | 0.00/170k [00:00<?, ?B/s]fdc0a616c4c33d2fc1bf8109426ebdd7.zip: 100%|██████████| 170k/170k [00:03<00:00, 46.1kB/s]                                                                                        2026-08-11 21:17:25,944 | INFO | src.data_ingest | Downloading ERA5 pressure 2025-08 (18/22) (attempt 1/5)
+2026-08-11 21:17:28,297 INFO Request ID is e648b0c8-1762-4d1d-a4e0-324faddb1eaf
+2026-08-11 21:17:28,811 INFO status has been updated to accepted
+2026-08-11 21:17:53,477 INFO status has been updated to running
+2026-08-11 21:23:57,824 INFO status has been updated to successful
+3fcc5fac64c29340ec027051f9b92df0.nc:   0%|          | 0.00/120k [00:00<?, ?B/s]3fcc5fac64c29340ec027051f9b92df0.nc: 100%|██████████| 120k/120k [00:03<00:00, 32.4kB/s]                                                                                       2026-08-11 21:24:04,681 | INFO | src.data_ingest | Downloading ERA5 core 2025-09 (19/22) (attempt 1/5)
+2026-08-11 21:24:06,522 INFO Request ID is ad14bb6c-28d5-4506-bf2a-db1c21172a54
+2026-08-11 21:24:06,930 INFO status has been updated to accepted
+2026-08-11 21:24:42,362 INFO status has been updated to running
+2026-08-11 21:30:37,798 INFO status has been updated to successful
+e0ca336bd0f1ef97346f7466776933d9.nc:   0%|          | 0.00/153k [00:00<?, ?B/s]e0ca336bd0f1ef97346f7466776933d9.nc: 100%|██████████| 153k/153k [00:01<00:00, 80.2kB/s]                                                                                       2026-08-11 21:30:43,849 | INFO | src.data_ingest | Downloading ERA5 extras 2025-09 (19/22) (attempt 1/5)
+2026-08-11 21:30:44,965 INFO Request ID is 952243f3-2b0b-4252-90dd-4efc1dbe4747
+2026-08-11 21:30:45,375 INFO status has been updated to accepted
+2026-08-11 21:31:08,827 INFO status has been updated to running
+2026-08-11 21:33:42,429 INFO status has been updated to successful
+ac2186d49a1e0ef541235ddef1986066.zip:   0%|          | 0.00/169k [00:00<?, ?B/s]ac2186d49a1e0ef541235ddef1986066.zip: 100%|██████████| 169k/169k [00:01<00:00, 89.0kB/s]                                                                                        2026-08-11 21:33:48,264 | INFO | src.data_ingest | Downloading ERA5 pressure 2025-09 (19/22) (attempt 1/5)
+2026-08-11 21:33:48,979 INFO Request ID is 2145f39b-7e15-4d10-8907-86713e229144
+2026-08-11 21:33:49,387 INFO status has been updated to accepted
+2026-08-11 21:34:25,228 INFO status has been updated to running
+2026-08-11 21:40:18,207 INFO status has been updated to successful
+3c20b752b89120e2dc589ddc32de9af5.nc:   0%|          | 0.00/119k [00:00<?, ?B/s]3c20b752b89120e2dc589ddc32de9af5.nc: 100%|██████████| 119k/119k [00:02<00:00, 59.6kB/s]                                                                                       2026-08-11 21:40:22,620 | INFO | src.data_ingest | Downloading ERA5 core 2025-10 (20/22) (attempt 1/5)
+2026-08-11 21:40:26,194 INFO Request ID is f1b641a4-429b-46e7-b7dc-96731d28c52a
+2026-08-11 21:40:26,706 INFO status has been updated to accepted
+2026-08-11 21:40:42,380 INFO status has been updated to running
+2026-08-11 21:40:54,054 INFO status has been updated to successful
+30417dcd22ce16a3b748a752c12cf179.nc:   0%|          | 0.00/155k [00:00<?, ?B/s]30417dcd22ce16a3b748a752c12cf179.nc: 100%|██████████| 155k/155k [00:02<00:00, 55.5kB/s]                                                                                       2026-08-11 21:40:59,281 | INFO | src.data_ingest | Downloading ERA5 extras 2025-10 (20/22) (attempt 1/5)
+2026-08-11 21:41:00,908 INFO Request ID is 38295c6c-7952-4d7e-bcc1-a34e3cfd56fa
+2026-08-11 21:41:01,215 INFO status has been updated to accepted
+2026-08-11 21:41:36,749 INFO status has been updated to running
+2026-08-11 21:45:28,483 INFO status has been updated to successful
+714443b31646a10bf29dc2cce71535be.zip:   0%|          | 0.00/170k [00:00<?, ?B/s]714443b31646a10bf29dc2cce71535be.zip: 100%|██████████| 170k/170k [00:02<00:00, 74.4kB/s]                                                                                        2026-08-11 21:45:32,698 | INFO | src.data_ingest | Downloading ERA5 pressure 2025-10 (20/22) (attempt 1/5)
+2026-08-11 21:45:33,500 INFO Request ID is dc8d727d-97b6-4186-95ba-9005494620d7
+2026-08-11 21:45:34,219 INFO status has been updated to accepted
+2026-08-11 21:46:11,290 INFO status has been updated to running
+2026-08-11 21:52:09,297 INFO status has been updated to successful
+f7577a55db1669d4a8b0a996f334ba95.nc:   0%|          | 0.00/120k [00:00<?, ?B/s]f7577a55db1669d4a8b0a996f334ba95.nc: 100%|██████████| 120k/120k [00:02<00:00, 54.5kB/s]                                                                                       2026-08-11 21:52:13,587 | INFO | src.data_ingest | Downloading ERA5 core 2025-11 (21/22) (attempt 1/5)
+2026-08-11 21:52:14,813 INFO Request ID is 716997f1-4a81-40c9-a54e-420644ad1fc5
+2026-08-11 21:52:15,323 INFO status has been updated to accepted
+2026-08-11 21:52:39,399 INFO status has been updated to running
+2026-08-11 21:58:46,397 INFO status has been updated to successful
+b8a9587d35e7e1c28988011949c48f0e.nc:   0%|          | 0.00/153k [00:00<?, ?B/s]b8a9587d35e7e1c28988011949c48f0e.nc: 100%|██████████| 153k/153k [00:02<00:00, 61.3kB/s]                                                                                       2026-08-11 21:58:51,826 | INFO | src.data_ingest | Downloading ERA5 extras 2025-11 (21/22) (attempt 1/5)
+2026-08-11 21:58:54,895 INFO Request ID is 31d82988-9b46-4af9-98ee-a323623e4696
+2026-08-11 21:58:55,209 INFO status has been updated to accepted
+2026-08-11 21:59:19,676 INFO status has been updated to running
+2026-08-11 22:03:23,081 INFO status has been updated to successful
+1631bc7f3b90b2d761bd576b889f97a8.zip:   0%|          | 0.00/169k [00:00<?, ?B/s]1631bc7f3b90b2d761bd576b889f97a8.zip: 100%|██████████| 169k/169k [00:02<00:00, 80.1kB/s]                                                                                        2026-08-11 22:03:26,889 | INFO | src.data_ingest | Downloading ERA5 pressure 2025-11 (21/22) (attempt 1/5)
+2026-08-11 22:03:28,610 INFO Request ID is 161df278-01f9-4eb1-a34a-11f8e11d2702
+2026-08-11 22:03:29,640 INFO status has been updated to accepted
+2026-08-11 22:03:53,600 INFO status has been updated to running
+2026-08-11 22:09:58,357 INFO status has been updated to successful
+2efa8b3c2d889f6c2e5a27d9e0727e2a.nc:   0%|          | 0.00/118k [00:00<?, ?B/s]2efa8b3c2d889f6c2e5a27d9e0727e2a.nc: 100%|██████████| 118k/118k [00:02<00:00, 49.2kB/s]                                                                                       2026-08-11 22:10:02,574 | INFO | src.data_ingest | Downloading ERA5 core 2025-12 (22/22) (attempt 1/5)
+2026-08-11 22:10:06,955 INFO Request ID is b89d56bb-3c0b-4c23-9b5b-c7dab4ea5690
+2026-08-11 22:10:07,362 INFO status has been updated to accepted
+2026-08-11 22:10:45,873 INFO status has been updated to running
+2026-08-11 22:16:40,796 INFO status has been updated to successful
+e76db817aad95bd4e1a558059dd2ebd6.nc:   0%|          | 0.00/154k [00:00<?, ?B/s]e76db817aad95bd4e1a558059dd2ebd6.nc: 100%|██████████| 154k/154k [00:01<00:00, 85.6kB/s]                                                                                       2026-08-11 22:16:44,803 | INFO | src.data_ingest | Downloading ERA5 extras 2025-12 (22/22) (attempt 1/5)
+2026-08-11 22:16:46,219 INFO Request ID is 7ee27549-1ea0-4f8d-9233-3a50ee68f869
+2026-08-11 22:16:46,634 INFO status has been updated to accepted
+2026-08-11 22:17:24,723 INFO status has been updated to running
+2026-08-11 22:21:15,125 INFO status has been updated to successful
+6d4e6217319687cbf68ece12c1c805c6.zip:   0%|          | 0.00/170k [00:00<?, ?B/s]6d4e6217319687cbf68ece12c1c805c6.zip: 100%|██████████| 170k/170k [00:02<00:00, 85.3kB/s]                                                                                        2026-08-11 22:21:19,235 | INFO | src.data_ingest | Downloading ERA5 pressure 2025-12 (22/22) (attempt 1/5)
+2026-08-11 22:21:20,447 INFO Request ID is 84b21072-1983-4c18-ac1e-2cc4577fa04e
+2026-08-11 22:21:20,859 INFO status has been updated to accepted
+2026-08-11 22:21:58,232 INFO status has been updated to running
+2026-08-11 22:27:51,730 INFO status has been updated to successful
+13d744be1f34dbf3d770db254e0cb127.nc:   0%|          | 0.00/120k [00:00<?, ?B/s]13d744be1f34dbf3d770db254e0cb127.nc: 100%|██████████| 120k/120k [00:02<00:00, 56.9kB/s]                                                                                       2026-08-11 22:27:56,048 | INFO | data_ingest_extend | ERA5 extension pass done: 14 already cached, 52 downloaded, 0 still missing
+2026-08-11 22:27:56,049 | INFO | data_ingest_extend | Cache complete for this date range.

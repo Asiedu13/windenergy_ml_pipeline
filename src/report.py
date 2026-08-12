@@ -27,7 +27,7 @@ def _git_sha(cwd: Path) -> str:
 def _fmt_metrics_row(row: dict[str, float]) -> str:
     return (
         f"| {row['variant']} | {row['MAE']:.1f} W | {row['RMSE']:.1f} W | "
-        f"{row['MAPE']:.2f}% | {row['R2']:+.3f} | {row['nMAE_%']:.2f}% | "
+        f"{row['MAPE']:.2f}% | {row['R2']:.3f} | {row['nMAE_%']:.2f}% | "
         f"{row['nRMSE_%']:.2f}% |"
     )
 
@@ -40,6 +40,8 @@ def write_report(
     variants_summary: dict[str, Any],
     figure_paths: dict[str, Path],
     output_dir: str | Path,
+    stage1_comparison: list[tuple[str, Stage1Result]] | None = None,
+    stage1_algo_label: str | None = None,
 ) -> Path:
     reports = ensure_dir(Path(output_dir) / "reports")
     out_path = reports / "report.md"
@@ -72,9 +74,37 @@ def write_report(
     lines.append(f"- **Cut-in / rated / cut-out:** {spec.cut_in_ms:.1f} / {spec.rated_ms:.1f} / {spec.cut_out_ms:.1f} m/s")
     lines.append("")
 
+    # Optional head-to-head model comparison (from --compare)
+    if stage1_comparison and len(stage1_comparison) > 1:
+        lines.append("## Stage 1 — model comparison (head-to-head)")
+        lines.append("")
+        lines.append("| Rank | Model | Test MAE (m/s) | Test RMSE | Test R² | Beats persistence? |")
+        lines.append("|---:|:---|---:|---:|---:|:---:|")
+        pers_mae = stage1_comparison[0][1].metrics_persistence.mae
+        # Sort by ascending test MAE and bold the winner
+        ranked = sorted(stage1_comparison, key=lambda t: t[1].metrics_test.mae)
+        best_name = ranked[0][0]
+        for rank, (name, res) in enumerate(ranked, start=1):
+            beat = "yes" if res.metrics_test.mae < pers_mae else "**NO**"
+            label = f"**{name}**" if name == best_name else name
+            lines.append(
+                f"| {rank} | {label} | {res.metrics_test.mae:.3f} | {res.metrics_test.rmse:.3f} | "
+                f"{res.metrics_test.r2:.3f} | {beat} |"
+            )
+        lines.append(f"| — | Persistence baseline | {pers_mae:.3f} | "
+                     f"{stage1_comparison[0][1].metrics_persistence.rmse:.3f} | "
+                     f"{stage1_comparison[0][1].metrics_persistence.r2:.3f} | — |")
+        lines.append("")
+        lines.append(f"**Downstream two-stage variants use: {best_name}**")
+        lines.append("")
+
+    # In --compare mode the reported Stage 1 is the *winner*, which need not be
+    # the algo named in the config.
+    algo_label = stage1_algo_label or config.model.stage1_algo
+
     lines.append("## Stage 1 — hub wind speed")
     lines.append(f"- **Mode:** {stage1.mode} (horizon {config.forecast.horizon_hours} h)")
-    lines.append(f"- **Algorithm:** {config.model.stage1_algo}")
+    lines.append(f"- **Algorithm:** {algo_label}")
     lines.append(f"- **Beats persistence on test?** {'yes' if stage1.beats_persistence else '**NO — flag**'}")
     lines.append("")
     lines.append("| Model | MAE (m/s) | RMSE (m/s) | MAPE (%) | R² |")
@@ -82,10 +112,10 @@ def write_report(
     for label, m in [
         ("Persistence", stage1.metrics_persistence),
         ("Climatology", stage1.metrics_climatology),
-        ("XGBoost (train)", stage1.metrics_train),
-        ("XGBoost (test)", stage1.metrics_test),
+        (f"{algo_label} (train)", stage1.metrics_train),
+        (f"{algo_label} (test)", stage1.metrics_test),
     ]:
-        lines.append(f"| {label} | {m.mae:.3f} | {m.rmse:.3f} | {m.mape:.2f} | {m.r2:+.3f} |")
+        lines.append(f"| {label} | {m.mae:.3f} | {m.rmse:.3f} | {m.mape:.2f} | {m.r2:.3f} |")
     lines.append("")
 
     lines.append("### Top 15 features (by mean|SHAP|)")

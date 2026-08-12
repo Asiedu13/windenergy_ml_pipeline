@@ -1,6 +1,11 @@
 numpy>=1.24
 pandas>=2.0
 scikit-learn>=1.3
+scipy>=1.11
+# Classical forecasters (SARIMAX) — src/traditional.py
+statsmodels>=0.14
+# XGBoost hyperparameter search — src/stage1_windspeed.tune_xgboost
+optuna>=3.4
 matplotlib>=3.7
 windpowerlib>=0.2.2
 cdsapi>=0.7.0
@@ -14,3 +19,5 @@ netCDF4>=1.6
 xarray>=2023.1
 joblib>=1.3
 pytest>=7.4
+# Deep-learning sequence models (LSTM / TFT) via darts (optional):
+darts[torch]>=0.30

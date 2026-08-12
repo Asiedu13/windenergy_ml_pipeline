@@ -11,16 +11,21 @@ import pandas as pd
 import pytest
 
 from src.data_ingest import (
+    NASA_POWER_TIME_OFFSET_H,
     TIDY_COLUMNS,
     _parse_nasa_power,
+    _parse_open_meteo,
     _uv_to_speed_dir,
+    load_nwp_forecasts,
     load_weather,
+    nwp_column,
 )
 from src.utils import (
     Config,
     DataConfig,
     ForecastConfig,
     ModelConfig,
+    NWPConfig,
     PathsConfig,
     SiteConfig,
     TurbineConfig,
@@ -124,3 +129,98 @@ def test_load_weather_unknown_source(tmp_path):
     cfg = _make_config(tmp_path, "bogus")
     with pytest.raises(ValueError, match="Unknown data.source"):
         load_weather(cfg)
+
+
+# ---------------------------------------------------------------------------
+# Open-Meteo previous-runs (archived NWP forecasts)
+# ---------------------------------------------------------------------------
+
+
+def _fake_open_meteo_payload(hours: int = 48) -> dict:
+    idx = pd.date_range("2024-03-01", periods=hours, freq="h", tz="UTC")
+    t = np.arange(hours)
+    return {
+        "hourly": {
+            "time": [x.strftime("%Y-%m-%dT%H:%M") for x in idx],
+            "wind_speed_100m_previous_day1": (8 + 2 * np.sin(t / 6)).tolist(),
+            "wind_speed_100m_previous_day2": (8 + 2 * np.sin(t / 6 + 0.3)).tolist(),
+            "temperature_2m_previous_day1": (28 + 3 * np.sin(t / 12)).tolist(),
+        }
+    }
+
+
+def test_nasa_power_timestamps_shifted_onto_era5_clock():
+    """NASA POWER hourly stamps run 1 h late; the parser must correct that.
+
+    MERRA-2 hourly values are hour-averaged and labelled at the end of the interval.
+    Measured over 8,760 overlapping hours: ERA5(t) matches NASA(t+1), and every NWP
+    model's cross-correlation peak sits exactly +1 h against NASA versus ERA5. Without
+    this correction the alignment gate in src.validate_nwp fails.
+    """
+    payload = _fake_nasa_payload(24)
+    raw_first = pd.to_datetime(
+        sorted(payload["properties"]["parameter"]["WS10M"].keys())[0],
+        format="%Y%m%d%H", utc=True,
+    )
+    df = _parse_nasa_power(payload)
+    assert df.index[0] == raw_first + pd.Timedelta(hours=NASA_POWER_TIME_OFFSET_H)
+    assert NASA_POWER_TIME_OFFSET_H == -1
+    # values themselves must be untouched — this is a relabelling, not a resample
+    assert len(df) == 24
+    assert df["wind_speed_10m"].notna().all()
+
+
+def test_parse_open_meteo_column_naming_and_index():
+    df = _parse_open_meteo(_fake_open_meteo_payload(24), "ecmwf_ifs025")
+    assert list(df.columns) == [
+        "nwp_ecmwf_ifs025_wind_speed_100m_d1",
+        "nwp_ecmwf_ifs025_wind_speed_100m_d2",
+        "nwp_ecmwf_ifs025_temperature_2m_d1",
+    ]
+    assert df.index.tz is not None and str(df.index.tz) == "UTC"
+    assert len(df) == 24
+    assert not df.isna().any().any()
+
+
+def test_nwp_column_helper_roundtrips():
+    # Variable names contain underscores and digits; the parser splits on the
+    # "_previous_day" marker, not on underscores, so the two must agree.
+    assert (nwp_column("gfs_global", "wind_speed_100m", 1)
+            == "nwp_gfs_global_wind_speed_100m_d1")
+    df = _parse_open_meteo(_fake_open_meteo_payload(6), "gfs_global")
+    assert nwp_column("gfs_global", "wind_speed_100m", 1) in df.columns
+
+
+def test_load_nwp_forecasts_disabled_returns_empty(tmp_path):
+    cfg = _make_config(tmp_path, "era5")
+    assert cfg.nwp.enabled is False
+    with patch("src.data_ingest.requests.get") as mocked:
+        assert load_nwp_forecasts(cfg).empty
+        mocked.assert_not_called()
+
+
+def test_load_nwp_forecasts_caches_per_model_and_year(tmp_path):
+    cfg = _make_config(tmp_path, "era5")
+    cfg.data.start, cfg.data.end = "2024-03-01", "2024-03-02"
+    cfg.nwp = NWPConfig(enabled=True, models=["ecmwf_ifs025", "gfs_global"],
+                        lead_days=[1], variables=["wind_speed_100m"])
+
+    resp = MagicMock()
+    resp.json.return_value = _fake_open_meteo_payload(48)
+    resp.raise_for_status.return_value = None
+
+    with patch("src.data_ingest.requests.get", return_value=resp) as mocked:
+        df = load_nwp_forecasts(cfg)
+        assert mocked.call_count == 2  # one request per model, one year
+
+    # Both models present, side by side on a shared valid-time index.
+    assert "nwp_ecmwf_ifs025_wind_speed_100m_d1" in df.columns
+    assert "nwp_gfs_global_wind_speed_100m_d1" in df.columns
+    for model in ("ecmwf_ifs025", "gfs_global"):
+        assert (Path(cfg.data.cache_dir) / f"openmeteo_test_{model}_2024.json").exists()
+
+    # Second call is served entirely from cache.
+    with patch("src.data_ingest.requests.get") as mocked:
+        again = load_nwp_forecasts(cfg)
+        mocked.assert_not_called()
+    pd.testing.assert_frame_equal(df, again)

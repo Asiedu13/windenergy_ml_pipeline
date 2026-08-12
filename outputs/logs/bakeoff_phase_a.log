@@ -1,0 +1,420 @@
+﻿python : C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\ecmwf\datastores\client.py:88: 
+UserWarning: HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: 
+/api/catalogue/v1/messages (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in 
+violation of protocol (_ssl.c:1028)')))
+At line:1 char:441
++ ... ct -Last 2; python -u -m src.bakeoff --config config_bakeoff.yaml --f ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\Dell\A...ssl.c:1028)'))):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  warnings.warn(str(exc), UserWarning)
+2026-08-12 02:33:45,073 | INFO | src.data_ingest | Wrote tidy weather: 
+data\processed\era5_anloga_2024-03-01_2025-12-31.parquet (16104 rows, 36 cols)
+2026-08-12 02:33:45,232 | WARNING | src.data_ingest | Open-Meteo: 3/54 columns are all-NaN (archive starts 2024-03; 
+earlier windows return nulls): nwp_ecmwf_ifs025_wind_gusts_10m_d1, nwp_ecmwf_ifs025_wind_gusts_10m_d2, 
+nwp_ecmwf_ifs025_wind_gusts_10m_d3
+2026-08-12 02:33:45,264 | INFO | src.data_ingest | Wrote NWP forecasts: 
+data\processed\nwp_anloga_2024-03-01_2025-12-31.parquet (16104 rows, 54 cols)
+2026-08-12 02:33:45,336 | INFO | __main__ | feature frame: 15912 rows x 104 cols (51 NWP); 4 rolling folds
+2026-08-12 02:33:45,338 | INFO | __main__ |   fold1: train 7004 rows -> test 2227 rows [2024-12-24 .. 2025-03-27]
+2026-08-12 02:33:45,338 | INFO | __main__ |   fold2: train 9231 rows -> test 2227 rows [2025-03-27 .. 2025-06-28]
+2026-08-12 02:33:45,338 | INFO | __main__ |   fold3: train 11458 rows -> test 2227 rows [2025-06-28 .. 2025-09-29]
+2026-08-12 02:33:45,338 | INFO | __main__ |   fold4: train 13685 rows -> test 2227 rows [2025-09-29 .. 2025-12-30]
+2026-08-12 02:33:45,341 | INFO | __main__ | === feature set 'study': 94 columns ===
+2026-08-12 02:33:45,342 | INFO | __main__ | persistence        study        fold1  seed=42    MAE=1.1129 R2=+0.3644 
+skill=+0.000 (0.0s)
+2026-08-12 02:33:45,343 | INFO | __main__ | damped_persistence study        fold1  seed=42    MAE=1.0345 R2=+0.4499 
+skill=+0.070 (0.0s)
+2026-08-12 02:33:45,347 | INFO | __main__ | climatology        study        fold1  seed=42    MAE=1.2826 R2=+0.1537 
+skill=-0.152 (0.0s)
+2026-08-12 02:33:45,349 | INFO | __main__ | mos_single         study        fold1  seed=42    MAE=1.0308 R2=+0.4745 
+skill=+0.074 (0.0s)
+2026-08-12 02:33:45,354 | INFO | __main__ | mos_multi          study        fold1  seed=42    MAE=0.8743 R2=+0.6240 
+skill=+0.214 (0.0s)
+2026-08-12 02:33:45,448 | INFO | __main__ | kalman_mos         study        fold1  seed=42    MAE=0.7823 R2=+0.6826 
+skill=+0.297 (0.1s)
+2026-08-12 02:33:45,499 | INFO | __main__ | analog_ensemble    study        fold1  seed=42    MAE=0.8578 R2=+0.6222 
+skill=+0.229 (0.1s)
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\statsmodels\base\model.py:607: 
+ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals
+  warnings.warn("Maximum Likelihood optimization failed to "
+2026-08-12 02:33:50,182 | INFO | __main__ | sarimax_nwp        study        fold1  seed=42    MAE=1.5990 R2=-0.1583 
+skill=-0.437 (4.7s)
+2026-08-12 02:33:50,306 | INFO | __main__ | ridge              study        fold1  seed=42    MAE=0.8831 R2=+0.6204 
+skill=+0.207 (0.1s)
+2026-08-12 02:33:51,337 | INFO | __main__ | xgboost            study        fold1  seed=42    MAE=0.7793 R2=+0.6956 
+skill=+0.300 (1.0s)
+2026-08-12 02:33:52,323 | INFO | __main__ | xgboost            study        fold1  seed=7     MAE=0.7869 R2=+0.6887 
+skill=+0.293 (1.0s)
+2026-08-12 02:33:53,303 | INFO | __main__ | xgboost            study        fold1  seed=1234  MAE=0.7902 R2=+0.6883 
+skill=+0.290 (1.0s)
+2026-08-12 02:33:54,300 | INFO | __main__ | xgboost            study        fold1  seed=2024  MAE=0.7912 R2=+0.6854 
+skill=+0.289 (1.0s)
+2026-08-12 02:33:55,330 | INFO | __main__ | xgboost            study        fold1  seed=31337 MAE=0.7837 R2=+0.6927 
+skill=+0.296 (1.0s)
+2026-08-12 02:33:56,180 | INFO | __main__ | lightgbm           study        fold1  seed=42    MAE=0.7956 R2=+0.6773 
+skill=+0.285 (0.8s)
+2026-08-12 02:33:56,955 | INFO | __main__ | lightgbm           study        fold1  seed=7     MAE=0.7973 R2=+0.6790 
+skill=+0.284 (0.8s)
+2026-08-12 02:33:57,728 | INFO | __main__ | lightgbm           study        fold1  seed=1234  MAE=0.7808 R2=+0.6910 
+skill=+0.298 (0.8s)
+2026-08-12 02:33:58,575 | INFO | __main__ | lightgbm           study        fold1  seed=2024  MAE=0.7880 R2=+0.6876 
+skill=+0.292 (0.8s)
+2026-08-12 02:33:59,351 | INFO | __main__ | lightgbm           study        fold1  seed=31337 MAE=0.7824 R2=+0.6906 
+skill=+0.297 (0.8s)
+2026-08-12 02:33:59,353 | INFO | __main__ | persistence        study        fold2  seed=42    MAE=1.6274 R2=-0.3232 
+skill=+0.000 (0.0s)
+2026-08-12 02:33:59,355 | INFO | __main__ | damped_persistence study        fold2  seed=42    MAE=1.3827 R2=+0.0419 
+skill=+0.150 (0.0s)
+2026-08-12 02:33:59,367 | INFO | __main__ | climatology        study        fold2  seed=42    MAE=1.3818 R2=+0.1110 
+skill=+0.151 (0.0s)
+2026-08-12 02:33:59,371 | INFO | __main__ | mos_single         study        fold2  seed=42    MAE=1.1191 R2=+0.3565 
+skill=+0.312 (0.0s)
+2026-08-12 02:33:59,380 | INFO | __main__ | mos_multi          study        fold2  seed=42    MAE=0.9866 R2=+0.5030 
+skill=+0.394 (0.0s)
+2026-08-12 02:33:59,554 | INFO | __main__ | kalman_mos         study        fold2  seed=42    MAE=1.0464 R2=+0.4595 
+skill=+0.357 (0.2s)
+2026-08-12 02:33:59,617 | INFO | __main__ | analog_ensemble    study        fold2  seed=42    MAE=1.0540 R2=+0.4547 
+skill=+0.352 (0.1s)
+2026-08-12 02:34:05,527 | INFO | __main__ | sarimax_nwp        study        fold2  seed=42    MAE=1.3358 R2=+0.1283 
+skill=+0.179 (5.9s)
+2026-08-12 02:34:05,695 | INFO | __main__ | ridge              study        fold2  seed=42    MAE=0.9762 R2=+0.5198 
+skill=+0.400 (0.2s)
+2026-08-12 02:34:06,776 | INFO | __main__ | xgboost            study        fold2  seed=42    MAE=0.9603 R2=+0.5195 
+skill=+0.410 (1.1s)
+2026-08-12 02:34:07,848 | INFO | __main__ | xgboost            study        fold2  seed=7     MAE=0.9695 R2=+0.5102 
+skill=+0.404 (1.1s)
+2026-08-12 02:34:08,944 | INFO | __main__ | xgboost            study        fold2  seed=1234  MAE=0.9700 R2=+0.5086 
+skill=+0.404 (1.1s)
+2026-08-12 02:34:10,049 | INFO | __main__ | xgboost            study        fold2  seed=2024  MAE=0.9670 R2=+0.5134 
+skill=+0.406 (1.1s)
+2026-08-12 02:34:11,212 | INFO | __main__ | xgboost            study        fold2  seed=31337 MAE=0.9651 R2=+0.5132 
+skill=+0.407 (1.2s)
+2026-08-12 02:34:12,004 | INFO | __main__ | lightgbm           study        fold2  seed=42    MAE=0.9714 R2=+0.5130 
+skill=+0.403 (0.8s)
+2026-08-12 02:34:12,803 | INFO | __main__ | lightgbm           study        fold2  seed=7     MAE=0.9706 R2=+0.5097 
+skill=+0.404 (0.8s)
+2026-08-12 02:34:13,632 | INFO | __main__ | lightgbm           study        fold2  seed=1234  MAE=0.9762 R2=+0.5040 
+skill=+0.400 (0.8s)
+2026-08-12 02:34:14,569 | INFO | __main__ | lightgbm           study        fold2  seed=2024  MAE=0.9746 R2=+0.5050 
+skill=+0.401 (0.9s)
+2026-08-12 02:34:15,258 | INFO | __main__ | lightgbm           study        fold2  seed=31337 MAE=0.9763 R2=+0.5064 
+skill=+0.400 (0.7s)
+2026-08-12 02:34:15,260 | INFO | __main__ | persistence        study        fold3  seed=42    MAE=1.2001 R2=-0.1970 
+skill=+0.000 (0.0s)
+2026-08-12 02:34:15,263 | INFO | __main__ | damped_persistence study        fold3  seed=42    MAE=1.1725 R2=-0.0502 
+skill=+0.023 (0.0s)
+2026-08-12 02:34:15,271 | INFO | __main__ | climatology        study        fold3  seed=42    MAE=1.1480 R2=-0.0593 
+skill=+0.043 (0.0s)
+2026-08-12 02:34:15,276 | INFO | __main__ | mos_single         study        fold3  seed=42    MAE=0.8646 R2=+0.3945 
+skill=+0.280 (0.0s)
+2026-08-12 02:34:15,285 | INFO | __main__ | mos_multi          study        fold3  seed=42    MAE=0.7043 R2=+0.6007 
+skill=+0.413 (0.0s)
+2026-08-12 02:34:15,461 | INFO | __main__ | kalman_mos         study        fold3  seed=42    MAE=0.7035 R2=+0.6081 
+skill=+0.414 (0.2s)
+2026-08-12 02:34:15,527 | INFO | __main__ | analog_ensemble    study        fold3  seed=42    MAE=0.6847 R2=+0.6160 
+skill=+0.430 (0.1s)
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\statsmodels\base\model.py:607: 
+ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals
+  warnings.warn("Maximum Likelihood optimization failed to "
+2026-08-12 02:34:22,967 | INFO | __main__ | sarimax_nwp        study        fold3  seed=42    MAE=1.0562 R2=+0.1622 
+skill=+0.120 (7.4s)
+2026-08-12 02:34:23,174 | INFO | __main__ | ridge              study        fold3  seed=42    MAE=0.7138 R2=+0.5998 
+skill=+0.405 (0.2s)
+2026-08-12 02:34:24,288 | INFO | __main__ | xgboost            study        fold3  seed=42    MAE=0.7031 R2=+0.6081 
+skill=+0.414 (1.1s)
+2026-08-12 02:34:25,498 | INFO | __main__ | xgboost            study        fold3  seed=7     MAE=0.6986 R2=+0.6116 
+skill=+0.418 (1.2s)
+2026-08-12 02:34:26,713 | INFO | __main__ | xgboost            study        fold3  seed=1234  MAE=0.6977 R2=+0.6131 
+skill=+0.419 (1.2s)
+2026-08-12 02:34:27,913 | INFO | __main__ | xgboost            study        fold3  seed=2024  MAE=0.6935 R2=+0.6186 
+skill=+0.422 (1.2s)
+2026-08-12 02:34:29,117 | INFO | __main__ | xgboost            study        fold3  seed=31337 MAE=0.6899 R2=+0.6254 
+skill=+0.425 (1.2s)
+2026-08-12 02:34:30,089 | INFO | __main__ | lightgbm           study        fold3  seed=42    MAE=0.7072 R2=+0.6070 
+skill=+0.411 (1.0s)
+2026-08-12 02:34:31,046 | INFO | __main__ | lightgbm           study        fold3  seed=7     MAE=0.7068 R2=+0.6026 
+skill=+0.411 (1.0s)
+2026-08-12 02:34:32,177 | INFO | __main__ | lightgbm           study        fold3  seed=1234  MAE=0.6989 R2=+0.6145 
+skill=+0.418 (1.1s)
+2026-08-12 02:34:33,119 | INFO | __main__ | lightgbm           study        fold3  seed=2024  MAE=0.7097 R2=+0.6042 
+skill=+0.409 (0.9s)
+2026-08-12 02:34:34,097 | INFO | __main__ | lightgbm           study        fold3  seed=31337 MAE=0.7117 R2=+0.6023 
+skill=+0.407 (1.0s)
+2026-08-12 02:34:34,098 | INFO | __main__ | persistence        study        fold4  seed=42    MAE=1.3330 R2=-0.2754 
+skill=+0.000 (0.0s)
+2026-08-12 02:34:34,101 | INFO | __main__ | damped_persistence study        fold4  seed=42    MAE=1.1546 R2=+0.0030 
+skill=+0.134 (0.0s)
+2026-08-12 02:34:34,110 | INFO | __main__ | climatology        study        fold4  seed=42    MAE=1.2774 R2=-0.1929 
+skill=+0.042 (0.0s)
+2026-08-12 02:34:34,116 | INFO | __main__ | mos_single         study        fold4  seed=42    MAE=0.9469 R2=+0.3277 
+skill=+0.290 (0.0s)
+2026-08-12 02:34:34,128 | INFO | __main__ | mos_multi          study        fold4  seed=42    MAE=0.7997 R2=+0.4749 
+skill=+0.400 (0.0s)
+2026-08-12 02:34:34,335 | INFO | __main__ | kalman_mos         study        fold4  seed=42    MAE=0.8965 R2=+0.3947 
+skill=+0.327 (0.2s)
+2026-08-12 02:34:34,413 | INFO | __main__ | analog_ensemble    study        fold4  seed=42    MAE=0.8683 R2=+0.4021 
+skill=+0.349 (0.1s)
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\statsmodels\base\model.py:607: 
+ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals
+  warnings.warn("Maximum Likelihood optimization failed to "
+2026-08-12 02:34:42,535 | INFO | __main__ | sarimax_nwp        study        fold4  seed=42    MAE=1.0307 R2=+0.2004 
+skill=+0.227 (8.1s)
+2026-08-12 02:34:42,802 | INFO | __main__ | ridge              study        fold4  seed=42    MAE=0.7958 R2=+0.4980 
+skill=+0.403 (0.3s)
+2026-08-12 02:34:44,052 | INFO | __main__ | xgboost            study        fold4  seed=42    MAE=0.7656 R2=+0.5381 
+skill=+0.426 (1.2s)
+2026-08-12 02:34:45,311 | INFO | __main__ | xgboost            study        fold4  seed=7     MAE=0.7707 R2=+0.5321 
+skill=+0.422 (1.3s)
+2026-08-12 02:34:46,576 | INFO | __main__ | xgboost            study        fold4  seed=1234  MAE=0.7649 R2=+0.5368 
+skill=+0.426 (1.3s)
+2026-08-12 02:34:47,800 | INFO | __main__ | xgboost            study        fold4  seed=2024  MAE=0.7619 R2=+0.5393 
+skill=+0.428 (1.2s)
+2026-08-12 02:34:49,021 | INFO | __main__ | xgboost            study        fold4  seed=31337 MAE=0.7657 R2=+0.5329 
+skill=+0.426 (1.2s)
+2026-08-12 02:34:50,077 | INFO | __main__ | lightgbm           study        fold4  seed=42    MAE=0.7696 R2=+0.5274 
+skill=+0.423 (1.1s)
+2026-08-12 02:34:50,892 | INFO | __main__ | lightgbm           study        fold4  seed=7     MAE=0.7639 R2=+0.5363 
+skill=+0.427 (0.8s)
+2026-08-12 02:34:51,922 | INFO | __main__ | lightgbm           study        fold4  seed=1234  MAE=0.7688 R2=+0.5313 
+skill=+0.423 (1.0s)
+2026-08-12 02:34:52,847 | INFO | __main__ | lightgbm           study        fold4  seed=2024  MAE=0.7619 R2=+0.5357 
+skill=+0.428 (0.9s)
+2026-08-12 02:34:53,851 | INFO | __main__ | lightgbm           study        fold4  seed=31337 MAE=0.7612 R2=+0.5367 
+skill=+0.429 (1.0s)
+2026-08-12 02:34:53,854 | INFO | __main__ | === feature set 'operational': 55 columns ===
+2026-08-12 02:34:53,856 | INFO | __main__ | persistence        operational  fold1  seed=42    MAE=1.1129 R2=+0.3644 
+skill=+0.000 (0.0s)
+2026-08-12 02:34:53,858 | INFO | __main__ | damped_persistence operational  fold1  seed=42    MAE=1.0345 R2=+0.4499 
+skill=+0.070 (0.0s)
+2026-08-12 02:34:53,864 | INFO | __main__ | climatology        operational  fold1  seed=42    MAE=1.2826 R2=+0.1537 
+skill=-0.152 (0.0s)
+2026-08-12 02:34:53,867 | INFO | __main__ | mos_single         operational  fold1  seed=42    MAE=1.0308 R2=+0.4745 
+skill=+0.074 (0.0s)
+2026-08-12 02:34:53,873 | INFO | __main__ | mos_multi          operational  fold1  seed=42    MAE=0.8743 R2=+0.6240 
+skill=+0.214 (0.0s)
+2026-08-12 02:34:54,016 | INFO | __main__ | kalman_mos         operational  fold1  seed=42    MAE=0.7823 R2=+0.6826 
+skill=+0.297 (0.1s)
+2026-08-12 02:34:54,073 | INFO | __main__ | analog_ensemble    operational  fold1  seed=42    MAE=0.8578 R2=+0.6222 
+skill=+0.229 (0.1s)
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\statsmodels\base\model.py:607: 
+ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals
+  warnings.warn("Maximum Likelihood optimization failed to "
+2026-08-12 02:34:58,733 | INFO | __main__ | sarimax_nwp        operational  fold1  seed=42    MAE=1.5990 R2=-0.1583 
+skill=-0.437 (4.7s)
+2026-08-12 02:34:58,797 | INFO | __main__ | ridge              operational  fold1  seed=42    MAE=0.8447 R2=+0.6494 
+skill=+0.241 (0.1s)
+2026-08-12 02:34:59,466 | INFO | __main__ | xgboost            operational  fold1  seed=42    MAE=0.7688 R2=+0.7012 
+skill=+0.309 (0.7s)
+2026-08-12 02:35:00,145 | INFO | __main__ | xgboost            operational  fold1  seed=7     MAE=0.7685 R2=+0.7023 
+skill=+0.309 (0.7s)
+2026-08-12 02:35:00,786 | INFO | __main__ | xgboost            operational  fold1  seed=1234  MAE=0.7736 R2=+0.6977 
+skill=+0.305 (0.6s)
+2026-08-12 02:35:01,506 | INFO | __main__ | xgboost            operational  fold1  seed=2024  MAE=0.7710 R2=+0.6992 
+skill=+0.307 (0.7s)
+2026-08-12 02:35:02,168 | INFO | __main__ | xgboost            operational  fold1  seed=31337 MAE=0.7651 R2=+0.7066 
+skill=+0.312 (0.7s)
+2026-08-12 02:35:02,672 | INFO | __main__ | lightgbm           operational  fold1  seed=42    MAE=0.7665 R2=+0.7024 
+skill=+0.311 (0.5s)
+2026-08-12 02:35:03,157 | INFO | __main__ | lightgbm           operational  fold1  seed=7     MAE=0.7743 R2=+0.6977 
+skill=+0.304 (0.5s)
+2026-08-12 02:35:03,718 | INFO | __main__ | lightgbm           operational  fold1  seed=1234  MAE=0.7689 R2=+0.7008 
+skill=+0.309 (0.6s)
+2026-08-12 02:35:04,223 | INFO | __main__ | lightgbm           operational  fold1  seed=2024  MAE=0.7649 R2=+0.7038 
+skill=+0.313 (0.5s)
+2026-08-12 02:35:04,620 | INFO | __main__ | lightgbm           operational  fold1  seed=31337 MAE=0.7646 R2=+0.7030 
+skill=+0.313 (0.4s)
+2026-08-12 02:35:04,622 | INFO | __main__ | persistence        operational  fold2  seed=42    MAE=1.6274 R2=-0.3232 
+skill=+0.000 (0.0s)
+2026-08-12 02:35:04,626 | INFO | __main__ | damped_persistence operational  fold2  seed=42    MAE=1.3827 R2=+0.0419 
+skill=+0.150 (0.0s)
+2026-08-12 02:35:04,633 | INFO | __main__ | climatology        operational  fold2  seed=42    MAE=1.3818 R2=+0.1110 
+skill=+0.151 (0.0s)
+2026-08-12 02:35:04,638 | INFO | __main__ | mos_single         operational  fold2  seed=42    MAE=1.1191 R2=+0.3565 
+skill=+0.312 (0.0s)
+2026-08-12 02:35:04,647 | INFO | __main__ | mos_multi          operational  fold2  seed=42    MAE=0.9866 R2=+0.5030 
+skill=+0.394 (0.0s)
+2026-08-12 02:35:04,818 | INFO | __main__ | kalman_mos         operational  fold2  seed=42    MAE=1.0464 R2=+0.4595 
+skill=+0.357 (0.2s)
+2026-08-12 02:35:04,881 | INFO | __main__ | analog_ensemble    operational  fold2  seed=42    MAE=1.0540 R2=+0.4547 
+skill=+0.352 (0.1s)
+2026-08-12 02:35:10,954 | INFO | __main__ | sarimax_nwp        operational  fold2  seed=42    MAE=1.3358 R2=+0.1283 
+skill=+0.179 (6.1s)
+2026-08-12 02:35:11,043 | INFO | __main__ | ridge              operational  fold2  seed=42    MAE=0.9745 R2=+0.5177 
+skill=+0.401 (0.1s)
+2026-08-12 02:35:11,757 | INFO | __main__ | xgboost            operational  fold2  seed=42    MAE=0.9598 R2=+0.5210 
+skill=+0.410 (0.7s)
+2026-08-12 02:35:12,465 | INFO | __main__ | xgboost            operational  fold2  seed=7     MAE=0.9566 R2=+0.5232 
+skill=+0.412 (0.7s)
+2026-08-12 02:35:13,150 | INFO | __main__ | xgboost            operational  fold2  seed=1234  MAE=0.9543 R2=+0.5267 
+skill=+0.414 (0.7s)
+2026-08-12 02:35:13,937 | INFO | __main__ | xgboost            operational  fold2  seed=2024  MAE=0.9615 R2=+0.5197 
+skill=+0.409 (0.8s)
+2026-08-12 02:35:14,668 | INFO | __main__ | xgboost            operational  fold2  seed=31337 MAE=0.9595 R2=+0.5206 
+skill=+0.410 (0.7s)
+2026-08-12 02:35:15,201 | INFO | __main__ | lightgbm           operational  fold2  seed=42    MAE=0.9674 R2=+0.5135 
+skill=+0.406 (0.5s)
+2026-08-12 02:35:15,752 | INFO | __main__ | lightgbm           operational  fold2  seed=7     MAE=0.9644 R2=+0.5139 
+skill=+0.407 (0.5s)
+2026-08-12 02:35:16,280 | INFO | __main__ | lightgbm           operational  fold2  seed=1234  MAE=0.9709 R2=+0.5102 
+skill=+0.403 (0.5s)
+2026-08-12 02:35:16,835 | INFO | __main__ | lightgbm           operational  fold2  seed=2024  MAE=0.9623 R2=+0.5155 
+skill=+0.409 (0.6s)
+2026-08-12 02:35:17,362 | INFO | __main__ | lightgbm           operational  fold2  seed=31337 MAE=0.9673 R2=+0.5139 
+skill=+0.406 (0.5s)
+2026-08-12 02:35:17,363 | INFO | __main__ | persistence        operational  fold3  seed=42    MAE=1.2001 R2=-0.1970 
+skill=+0.000 (0.0s)
+2026-08-12 02:35:17,366 | INFO | __main__ | damped_persistence operational  fold3  seed=42    MAE=1.1725 R2=-0.0502 
+skill=+0.023 (0.0s)
+2026-08-12 02:35:17,374 | INFO | __main__ | climatology        operational  fold3  seed=42    MAE=1.1480 R2=-0.0593 
+skill=+0.043 (0.0s)
+2026-08-12 02:35:17,378 | INFO | __main__ | mos_single         operational  fold3  seed=42    MAE=0.8646 R2=+0.3945 
+skill=+0.280 (0.0s)
+2026-08-12 02:35:17,386 | INFO | __main__ | mos_multi          operational  fold3  seed=42    MAE=0.7043 R2=+0.6007 
+skill=+0.413 (0.0s)
+2026-08-12 02:35:17,566 | INFO | __main__ | kalman_mos         operational  fold3  seed=42    MAE=0.7035 R2=+0.6081 
+skill=+0.414 (0.2s)
+2026-08-12 02:35:17,631 | INFO | __main__ | analog_ensemble    operational  fold3  seed=42    MAE=0.6847 R2=+0.6160 
+skill=+0.430 (0.1s)
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\statsmodels\base\model.py:607: 
+ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals
+  warnings.warn("Maximum Likelihood optimization failed to "
+2026-08-12 02:35:25,385 | INFO | __main__ | sarimax_nwp        operational  fold3  seed=42    MAE=1.0562 R2=+0.1622 
+skill=+0.120 (7.8s)
+2026-08-12 02:35:25,478 | INFO | __main__ | ridge              operational  fold3  seed=42    MAE=0.7328 R2=+0.5795 
+skill=+0.389 (0.1s)
+2026-08-12 02:35:26,126 | INFO | __main__ | xgboost            operational  fold3  seed=42    MAE=0.7170 R2=+0.5820 
+skill=+0.403 (0.6s)
+2026-08-12 02:35:26,833 | INFO | __main__ | xgboost            operational  fold3  seed=7     MAE=0.7165 R2=+0.5881 
+skill=+0.403 (0.7s)
+2026-08-12 02:35:27,470 | INFO | __main__ | xgboost            operational  fold3  seed=1234  MAE=0.7069 R2=+0.5956 
+skill=+0.411 (0.6s)
+2026-08-12 02:35:28,171 | INFO | __main__ | xgboost            operational  fold3  seed=2024  MAE=0.7070 R2=+0.5992 
+skill=+0.411 (0.7s)
+2026-08-12 02:35:28,848 | INFO | __main__ | xgboost            operational  fold3  seed=31337 MAE=0.7157 R2=+0.5875 
+skill=+0.404 (0.7s)
+2026-08-12 02:35:29,690 | INFO | __main__ | lightgbm           operational  fold3  seed=42    MAE=0.7158 R2=+0.5867 
+skill=+0.404 (0.8s)
+2026-08-12 02:35:30,818 | INFO | __main__ | lightgbm           operational  fold3  seed=7     MAE=0.7123 R2=+0.5883 
+skill=+0.406 (1.1s)
+2026-08-12 02:35:31,863 | INFO | __main__ | lightgbm           operational  fold3  seed=1234  MAE=0.7179 R2=+0.5852 
+skill=+0.402 (1.0s)
+2026-08-12 02:35:33,021 | INFO | __main__ | lightgbm           operational  fold3  seed=2024  MAE=0.7127 R2=+0.5911 
+skill=+0.406 (1.2s)
+2026-08-12 02:35:33,967 | INFO | __main__ | lightgbm           operational  fold3  seed=31337 MAE=0.7118 R2=+0.5930 
+skill=+0.407 (0.9s)
+2026-08-12 02:35:33,969 | INFO | __main__ | persistence        operational  fold4  seed=42    MAE=1.3330 R2=-0.2754 
+skill=+0.000 (0.0s)
+2026-08-12 02:35:33,972 | INFO | __main__ | damped_persistence operational  fold4  seed=42    MAE=1.1546 R2=+0.0030 
+skill=+0.134 (0.0s)
+2026-08-12 02:35:33,983 | INFO | __main__ | climatology        operational  fold4  seed=42    MAE=1.2774 R2=-0.1929 
+skill=+0.042 (0.0s)
+2026-08-12 02:35:33,988 | INFO | __main__ | mos_single         operational  fold4  seed=42    MAE=0.9469 R2=+0.3277 
+skill=+0.290 (0.0s)
+2026-08-12 02:35:34,001 | INFO | __main__ | mos_multi          operational  fold4  seed=42    MAE=0.7997 R2=+0.4749 
+skill=+0.400 (0.0s)
+2026-08-12 02:35:34,271 | INFO | __main__ | kalman_mos         operational  fold4  seed=42    MAE=0.8965 R2=+0.3947 
+skill=+0.327 (0.3s)
+2026-08-12 02:35:34,370 | INFO | __main__ | analog_ensemble    operational  fold4  seed=42    MAE=0.8683 R2=+0.4021 
+skill=+0.349 (0.1s)
+C:\Users\Dell\AppData\Local\Programs\Python\Python313\Lib\site-packages\statsmodels\base\model.py:607: 
+ConvergenceWarning: Maximum Likelihood optimization failed to converge. Check mle_retvals
+  warnings.warn("Maximum Likelihood optimization failed to "
+2026-08-12 02:35:44,304 | INFO | __main__ | sarimax_nwp        operational  fold4  seed=42    MAE=1.0307 R2=+0.2004 
+skill=+0.227 (9.9s)
+2026-08-12 02:35:44,448 | INFO | __main__ | ridge              operational  fold4  seed=42    MAE=0.8011 R2=+0.4813 
+skill=+0.399 (0.1s)
+2026-08-12 02:35:45,678 | INFO | __main__ | xgboost            operational  fold4  seed=42    MAE=0.7631 R2=+0.5318 
+skill=+0.427 (1.2s)
+2026-08-12 02:35:46,991 | INFO | __main__ | xgboost            operational  fold4  seed=7     MAE=0.7607 R2=+0.5350 
+skill=+0.429 (1.3s)
+2026-08-12 02:35:48,221 | INFO | __main__ | xgboost            operational  fold4  seed=1234  MAE=0.7636 R2=+0.5312 
+skill=+0.427 (1.2s)
+2026-08-12 02:35:49,433 | INFO | __main__ | xgboost            operational  fold4  seed=2024  MAE=0.7640 R2=+0.5332 
+skill=+0.427 (1.2s)
+2026-08-12 02:35:50,603 | INFO | __main__ | xgboost            operational  fold4  seed=31337 MAE=0.7642 R2=+0.5313 
+skill=+0.427 (1.2s)
+2026-08-12 02:35:51,667 | INFO | __main__ | lightgbm           operational  fold4  seed=42    MAE=0.7678 R2=+0.5270 
+skill=+0.424 (1.1s)
+2026-08-12 02:35:52,669 | INFO | __main__ | lightgbm           operational  fold4  seed=7     MAE=0.7575 R2=+0.5379 
+skill=+0.432 (1.0s)
+2026-08-12 02:35:53,742 | INFO | __main__ | lightgbm           operational  fold4  seed=1234  MAE=0.7680 R2=+0.5283 
+skill=+0.424 (1.1s)
+2026-08-12 02:35:54,778 | INFO | __main__ | lightgbm           operational  fold4  seed=2024  MAE=0.7620 R2=+0.5327 
+skill=+0.428 (1.0s)
+2026-08-12 02:35:56,157 | INFO | __main__ | lightgbm           operational  fold4  seed=31337 MAE=0.7674 R2=+0.5278 
+skill=+0.424 (1.4s)
+2026-08-12 02:35:56,207 | INFO | __main__ | Wrote outputs\reports\bakeoff.md and bakeoff.csv (2.8 min)
+# Bakeoff — classical vs ML, one protocol
+
+- window: **2024-03-01 → 2025-12-31** (era5 truth), horizon **24 h**
+- folds: **4 rolling-origin**, seeds: **[42, 7, 1234, 2024, 31337]** (deterministic models run once per fold)
+- lower MAE is better; skill is `1 − MAE/MAE_persistence`, higher better
+
+### study
+
+| Rank | Tier | Model | MAE (m/s) | sd | RMSE | R² | Skill vs persistence |
+|---:|:---|:---|---:|---:|---:|---:|---:|
+| 1 | 2 ML | `xgboost` | **0.8037** | 0.1023 | 1.0337 | 0.5886 | +0.386 |
+| 2 | 2 ML | `lightgbm` | **0.8086** | 0.1026 | 1.0407 | 0.5831 | +0.382 |
+| 3 | 1 classical | `mos_multi` | **0.8412** | 0.1193 | 1.0821 | 0.5506 | +0.355 |
+| 4 | 2 ML | `ridge` | **0.8422** | 0.1129 | 1.0723 | 0.5595 | +0.354 |
+| 5 | 1 classical | `kalman_mos` | **0.8572** | 0.1489 | 1.0912 | 0.5362 | +0.349 |
+| 6 | 1 classical | `analog_ensemble` | **0.8662** | 0.1509 | 1.1114 | 0.5238 | +0.340 |
+| 7 | 1 classical | `mos_single` | **0.9904** | 0.1094 | 1.2626 | 0.3883 | +0.239 |
+| 8 | 0 reference | `damped_persistence` | **1.1861** | 0.1447 | 1.5035 | 0.1111 | +0.094 |
+| 9 | 1 classical | `sarimax_nwp` | **1.2554** | 0.2675 | 1.5539 | 0.0831 | +0.022 |
+| 10 | 0 reference | `climatology` | **1.2725** | 0.0959 | 1.6021 | 0.0031 | +0.021 |
+| 11 | 0 reference | `persistence` | **1.3183** | 0.2250 | 1.6785 | -0.1078 | +0.000 |
+
+### Diebold–Mariano vs `xgboost` (study)
+
+Negative statistic means the row model has **lower** loss than the reference. `p < 0.05` is a real difference in forecast accuracy.
+
+| Model | DM statistic | p-value | verdict |
+|:---|---:|---:|:---|
+| `lightgbm` | -2.209 | 0.0272 | `xgboost` better |
+| `mos_multi` | -4.816 | 0.0000 | `xgboost` better |
+| `ridge` | -5.202 | 0.0000 | `xgboost` better |
+| `kalman_mos` | -4.021 | 0.0001 | `xgboost` better |
+| `analog_ensemble` | -6.692 | 0.0000 | `xgboost` better |
+| `mos_single` | -14.453 | 0.0000 | `xgboost` better |
+| `damped_persistence` | -15.174 | 0.0000 | `xgboost` better |
+| `sarimax_nwp` | -16.527 | 0.0000 | `xgboost` better |
+| `climatology` | -14.887 | 0.0000 | `xgboost` better |
+| `persistence` | -16.368 | 0.0000 | `xgboost` better |
+
+### operational
+
+| Rank | Tier | Model | MAE (m/s) | sd | RMSE | R² | Skill vs persistence |
+|---:|:---|:---|---:|---:|---:|---:|---:|
+| 1 | 2 ML | `xgboost` | **0.8009** | 0.0960 | 1.0341 | 0.5867 | +0.388 |
+| 2 | 2 ML | `lightgbm` | **0.8032** | 0.0992 | 1.0379 | 0.5836 | +0.387 |
+| 3 | 2 ML | `ridge` | **0.8383** | 0.1018 | 1.0722 | 0.5570 | +0.358 |
+| 4 | 1 classical | `mos_multi` | **0.8412** | 0.1193 | 1.0821 | 0.5506 | +0.355 |
+| 5 | 1 classical | `kalman_mos` | **0.8572** | 0.1489 | 1.0912 | 0.5362 | +0.349 |
+| 6 | 1 classical | `analog_ensemble` | **0.8662** | 0.1509 | 1.1114 | 0.5238 | +0.340 |
+| 7 | 1 classical | `mos_single` | **0.9904** | 0.1094 | 1.2626 | 0.3883 | +0.239 |
+| 8 | 0 reference | `damped_persistence` | **1.1861** | 0.1447 | 1.5035 | 0.1111 | +0.094 |
+| 9 | 1 classical | `sarimax_nwp` | **1.2554** | 0.2675 | 1.5539 | 0.0831 | +0.022 |
+| 10 | 0 reference | `climatology` | **1.2725** | 0.0959 | 1.6021 | 0.0031 | +0.021 |
+| 11 | 0 reference | `persistence` | **1.3183** | 0.2250 | 1.6785 | -0.1078 | +0.000 |
+
+### Diebold–Mariano vs `xgboost` (operational)
+
+Negative statistic means the row model has **lower** loss than the reference. `p < 0.05` is a real difference in forecast accuracy.
+
+| Model | DM statistic | p-value | verdict |
+|:---|---:|---:|:---|
+| `lightgbm` | -0.903 | 0.3665 | tie |
+| `ridge` | -5.299 | 0.0000 | `xgboost` better |
+| `mos_multi` | -5.167 | 0.0000 | `xgboost` better |
+| `kalman_mos` | -4.194 | 0.0000 | `xgboost` better |
+| `analog_ensemble` | -6.898 | 0.0000 | `xgboost` better |
+| `mos_single` | -14.982 | 0.0000 | `xgboost` better |
+| `damped_persistence` | -15.381 | 0.0000 | `xgboost` better |
+| `sarimax_nwp` | -16.591 | 0.0000 | `xgboost` better |
+| `climatology` | -14.887 | 0.0000 | `xgboost` better |
+| `persistence` | -16.231 | 0.0000 | `xgboost` better |
+

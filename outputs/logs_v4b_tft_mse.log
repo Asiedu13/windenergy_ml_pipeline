@@ -1,0 +1,53 @@
+﻿python : 2026-08-09 09:01:16,654 | INFO | src.data_ingest | Wrote tidy weather: 
+data\processed\era5_anloga_2020-01-01_2023-12-31.parquet (35064 rows, 36 cols)
+At line:1 char:323
++ ... ONPATH="."; python "C:\Users\Dell\AppData\Local\Temp\claude\c--Users- ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2026-08-09 09:0... rows, 36 cols):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+X (35028, 53)
+tft cfg: loss_fn=mse n_epochs=60 batch=256 sweep={'enabled': True, 'candidates': [0.0003, 0.001], 'epochs': 3}
+2026-08-09 09:01:16,851 | INFO | src.stage1_deep | tft: 48 past-covariate columns (target lags included)
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing 
+[litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically 
+to the Lightning Experiments platform.
+`Trainer.fit` stopped: `max_epochs=3` reached.
+2026-08-09 09:22:06,608 | INFO | src.stage1_deep |   LR sweep tft: lr=0.0003 → val_loss=0.01127
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing 
+[litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically 
+to the Lightning Experiments platform.
+`Trainer.fit` stopped: `max_epochs=3` reached.
+2026-08-09 09:54:46,528 | INFO | src.stage1_deep |   LR sweep tft: lr=0.001 → val_loss=0.01033
+2026-08-09 09:54:46,528 | INFO | src.stage1_deep | LR sweep tft: best lr=0.001 (val_loss=0.01033)
+2026-08-09 09:54:46,577 | INFO | src.stage1_deep | Fitting tft — 60 epochs max, lr=0.001, batch=256, 23819 fit points, 
+4251 validation points
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing 
+[litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically 
+to the Lightning Experiments platform.
+2026-08-09 18:56:22,710 | INFO | src.stage1_deep | tft: training stopped after 29 epochs (max 60)
+2026-08-09 18:56:24,375 | INFO | src.stage1_deep | Backtesting tft on the test window (7006 points)
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing 
+[litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically 
+to the Lightning Experiments platform.
+GPU available: False, used: False
+TPU available: False, using: 0 TPU cores
+💡 Tip: For seamless cloud logging and experiment tracking, try installing 
+[litlogger](https://pypi.org/project/litlogger/) to enable LitLogger, which logs metrics and artifacts automatically 
+to the Lightning Experiments platform.
+2026-08-09 18:57:17,239 | INFO | src.stage1_deep | tft: test MAE=1.171 RMSE=1.498 R2=+0.330 (persistence MAE=1.440)
+
+=== TFT (loss_fn=mse, deterministic) in 596.0 min ===
+  test  MAE 1.171  RMSE 1.498  R2 +0.330  MAPE 28.49
+  train MAE 1.044
+  persistence MAE 1.440
+  beats persistence: True
+  --- v4 TFT with QuantileRegression was MAE 1.551 / R2 -0.163 ---

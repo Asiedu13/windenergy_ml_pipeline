@@ -48,6 +48,39 @@ class ModelConfig:
     lags: list[int] = field(default_factory=lambda: [1, 2, 3, 6, 12, 24])
     rolling_windows: list[int] = field(default_factory=lambda: [3, 6, 24])
     seed: int = 42
+    # deep-model knobs (ignored for tree algos)
+    deep: dict[str, Any] = field(default_factory=dict)
+    # Optuna XGBoost sweep
+    tune_xgboost: bool = False
+    tune_n_trials: int = 50
+    # Compare-all algo list — used when --compare is passed
+    compare_algos: list[str] = field(default_factory=list)
+
+
+@dataclass
+class NWPConfig:
+    """Operational NWP forecast features (Open-Meteo Previous Runs API).
+
+    Disabled by default so the ERA5-only path stays the control. `lead_days`
+    are `_previous_day{N}` offsets: N=1 is the forecast issued ~24 h before the
+    valid time, which is what a 24 h horizon needs.
+    """
+
+    enabled: bool = False
+    models: list[str] = field(
+        default_factory=lambda: ["ecmwf_ifs025", "gfs_global", "icon_global"]
+    )
+    lead_days: list[int] = field(default_factory=lambda: [1, 2, 3])
+    variables: list[str] = field(
+        default_factory=lambda: [
+            "wind_speed_100m",
+            "wind_direction_100m",
+            "wind_speed_10m",
+            "temperature_2m",
+            "surface_pressure",
+            "wind_gusts_10m",
+        ]
+    )
 
 
 @dataclass
@@ -64,6 +97,7 @@ class Config:
     forecast: ForecastConfig
     model: ModelConfig
     paths: PathsConfig
+    nwp: NWPConfig = field(default_factory=NWPConfig)
     raw: dict[str, Any] = field(default_factory=dict)
 
     def hash(self) -> str:
@@ -82,6 +116,7 @@ def load_config(path: str | os.PathLike) -> Config:
         forecast=ForecastConfig(**raw["forecast"]),
         model=ModelConfig(**raw["model"]),
         paths=PathsConfig(**raw.get("paths", {})),
+        nwp=NWPConfig(**raw.get("nwp", {})),
         raw=raw,
     )
 

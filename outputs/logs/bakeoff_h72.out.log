@@ -1,0 +1,40 @@
+# Bakeoff — classical vs ML, horizon 72 h
+
+- window: **2024-03-01 → 2025-12-31** (era5 truth), horizon **72 h**
+- folds: **4 rolling-origin**, seeds: **[42, 7, 1234, 2024, 31337]** (deterministic models run once per fold)
+- lower MAE is better; skill is `1 − MAE/MAE_persistence`, higher better
+- **NWP lead guard active:** only `_d{N}` columns with `24·N ≥ 72` are used, so every forecast feature was issued at or before the feature time
+
+### operational — horizon 72 h
+
+| Rank | Tier | Model | MAE (m/s) | sd | RMSE | R² | Skill vs persistence |
+|---:|:---|:---|---:|---:|---:|---:|---:|
+| 1 | 2 ML | `xgboost` | **0.9280** | 0.0791 | 1.1871 | 0.4460 | +0.414 |
+| 2 | 2 ML | `lightgbm` | **0.9431** | 0.0788 | 1.2041 | 0.4299 | +0.404 |
+| 3 | 2 ML | `ridge` | **0.9645** | 0.0795 | 1.2228 | 0.4163 | +0.390 |
+| 4 | 1 classical | `mos_multi` | **0.9658** | 0.0796 | 1.2243 | 0.4152 | +0.390 |
+| 5 | 1 classical | `kalman_mos` | **0.9829** | 0.1123 | 1.2413 | 0.3921 | +0.379 |
+| 6 | 1 classical | `analog_ensemble` | **0.9998** | 0.0752 | 1.2757 | 0.3673 | +0.368 |
+| 7 | 1 classical | `mos_single` | **1.0422** | 0.0959 | 1.3283 | 0.3095 | +0.341 |
+| 8 | 1 classical | `sarimax_nwp` | **1.3043** | 0.2560 | 1.6147 | 0.0075 | +0.174 |
+| 9 | 0 reference | `climatology` | **1.3050** | 0.0923 | 1.6406 | -0.0461 | +0.174 |
+| 10 | 0 reference | `damped_persistence` | **1.3439** | 0.0981 | 1.6810 | -0.1042 | +0.149 |
+| 11 | 0 reference | `persistence` | **1.5873** | 0.1883 | 1.9798 | -0.5137 | +0.000 |
+
+### Diebold–Mariano vs `xgboost` (operational, horizon 72 h)
+
+Negative statistic means the row model has **lower** loss than the reference. `p < 0.05` is a real difference in forecast accuracy.
+
+| Model | DM statistic | p-value | verdict |
+|:---|---:|---:|:---|
+| `lightgbm` | -5.366 | 0.0000 | `xgboost` better |
+| `ridge` | -4.193 | 0.0000 | `xgboost` better |
+| `mos_multi` | -4.243 | 0.0000 | `xgboost` better |
+| `kalman_mos` | -2.822 | 0.0048 | `xgboost` better |
+| `analog_ensemble` | -5.888 | 0.0000 | `xgboost` better |
+| `mos_single` | -7.976 | 0.0000 | `xgboost` better |
+| `sarimax_nwp` | -9.710 | 0.0000 | `xgboost` better |
+| `climatology` | -9.429 | 0.0000 | `xgboost` better |
+| `damped_persistence` | -11.761 | 0.0000 | `xgboost` better |
+| `persistence` | -13.924 | 0.0000 | `xgboost` better |
+

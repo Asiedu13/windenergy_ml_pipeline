@@ -1,0 +1,127 @@
+# ⚠️ PILOT CONFIG — its outputs are NOT v5 results. Never quote a number from a run of
+# this file as a project result, and never place its MAE in a table beside an ERA5 figure.
+#
+# Purpose. The v5 experiment is blocked on a multi-day ERA5 download. NASA POWER returns
+# the same period instantly, so this config runs the whole chain today against NASA POWER
+# truth to answer two questions early:
+#
+#   1. Is the NWP alignment actually correct on live data?  (the real prize — this
+#      project already lost two iterations to a 24-hour misalignment, docs/10)
+#   2. Does adding an NWP forecast help, directionally?
+#
+# It does NOT answer "what is v5's score?". config_nwp.yaml with ERA5 truth does that.
+#
+#   python -m src.validate_nwp --config config_nwp_pilot.yaml
+#
+# ── Why its numbers are not comparable to ERA5 runs ──────────────────────────────────
+# NASA POWER's highest wind level is 50 m (verified: no WS80M/WS100M). The hub target is
+# therefore WS50M put through the log law to 100 m with the default 0.15 m roughness,
+# which is a *constant* 1.119 multiplier. Consequences:
+#
+#   * absolute MAE is inflated ~12% versus a WS50M-scale target -> NOT comparable to ERA5
+#   * R² and *relative* improvement ARE comparable (both scale-invariant) -> use these
+#   * the grid is ~55 km here vs ~25 km for ERA5, and the target is an extrapolation
+#     rather than a directly modelled 100 m wind
+#
+# Reading a run: trust "NWP improved R² by X" and "cut MAE by Y%". Ignore the absolute m/s.
+
+site:
+  name: anloga
+  latitude: 5.79
+  longitude: 0.90
+  hub_height_m: 100
+
+data:
+  source: nasa_power        # <- the only meaningful difference from config_nwp.yaml
+  start: "2024-03-01"
+  end: "2025-12-31"
+  cache_dir: data/raw
+
+# Identical to config_nwp.yaml so the forecast side is like-for-like.
+nwp:
+  enabled: true
+  models: [ecmwf_ifs025, gfs_global, icon_global]
+  lead_days: [1, 2, 3]
+  variables:
+    - wind_speed_100m
+    - wind_direction_100m
+    - wind_speed_10m
+    - temperature_2m
+    - surface_pressure
+    - wind_gusts_10m
+
+turbine:
+  name: E-101/3050
+  source: oedb
+
+forecast:
+  horizon_hours: 24
+  timestep: hourly
+
+model:
+  stage1_algo: xgboost
+  test_split: 0.2
+  cv_folds: 5
+  lags: [1, 2, 3, 6, 12]
+  rolling_windows: [3, 6]
+  seed: 42
+  # Optuna off for the pilot — the question is "does NWP help?", not "what is the best
+  # possible score?", and both arms must use identical hyperparameters to be comparable.
+  tune_xgboost: false
+
+  # Cheapest-first, so a crash in TFT still leaves four usable results.
+  compare_algos: [xgboost, dlinear, lstm, nbeats, tft]
+
+  # ⚠️ This block is NOT optional for a --compare run. Without it, resolve_deep_cfg
+  # falls back to DEEP_DEFAULTS, which differs in two costly ways:
+  #   * `overrides` is empty  -> TFT would run 200 epochs instead of 60 (~12 h, not ~4)
+  #   * `lr_sweep.enabled` is False -> loses the one v4 recommendation that measurably
+  #     helped (it picked a different LR for each of the four architectures)
+  # DEEP_DEFAULTS does set `loss_fn: mse`, so TFT is at least protected from silently
+  # reverting to darts' 17-quantile objective — the v4b bug worth 0.380 m/s.
+  # Copied from config_nwp.yaml so the two runs stay comparable.
+  deep:
+    input_chunk_length: 48
+    hidden_size: 64
+    n_rnn_layers: 1
+    batch_size: 128
+    dropout: 0.2
+    learning_rate: 0.001
+    gradient_clip_val: 1.0
+    loss_fn: mse
+    include_target_lags: true
+    n_epochs: 200
+    val_fraction: 0.15
+    early_stopping:
+      enabled: true
+      patience: 20
+      min_delta: 0.0001
+    scheduler:
+      enabled: true
+      warmup_epochs: 5
+      min_lr_factor: 0.02
+    lr_sweep:
+      enabled: true
+      candidates: [0.0003, 0.001, 0.003]
+      epochs: 6
+    nbeats:
+      num_stacks: 3
+      num_blocks: 3
+      layer_widths: 256
+    dlinear:
+      kernel_size: 25
+    overrides:
+      nbeats:
+        n_epochs: 100
+        batch_size: 256
+        early_stopping: {patience: 15}
+        lr_sweep: {epochs: 4}
+      tft:
+        n_epochs: 60
+        batch_size: 256
+        early_stopping: {patience: 10}
+        lr_sweep: {candidates: [0.0003, 0.001], epochs: 3}
+
+paths:
+  outputs: outputs
+  processed: data/processed

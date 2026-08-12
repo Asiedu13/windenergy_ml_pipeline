@@ -85,25 +85,85 @@ class ClimatologyForecaster:
 # ML model
 # ---------------------------------------------------------------------------
 
-def _make_regressor(algo: str, seed: int):
+def _make_regressor(algo: str, seed: int, params: dict | None = None):
     algo = algo.lower()
     if algo == "xgboost":
         from xgboost import XGBRegressor
-        return XGBRegressor(
+        defaults = dict(
             n_estimators=200, max_depth=5, learning_rate=0.05,
             subsample=0.8, colsample_bytree=0.8,
             min_child_weight=10, reg_alpha=0.1, reg_lambda=1.0,
             random_state=seed, tree_method="hist", n_jobs=-1,
         )
+        if params:
+            defaults.update(params)
+        return XGBRegressor(**defaults)
     if algo == "lightgbm":
         from lightgbm import LGBMRegressor
-        return LGBMRegressor(
+        defaults = dict(
             n_estimators=300, num_leaves=31, learning_rate=0.05,
             subsample=0.8, colsample_bytree=0.8,
             min_child_samples=20, reg_alpha=0.1, reg_lambda=1.0,
             random_state=seed, n_jobs=-1, verbose=-1,
         )
+        if params:
+            defaults.update(params)
+        return LGBMRegressor(**defaults)
     raise ValueError(f"Unknown stage1 algo: {algo!r}")
+
+
+# ---------------------------------------------------------------------------
+# Optuna hyperparameter tuning
+# ---------------------------------------------------------------------------
+
+def tune_xgboost(X_train: pd.DataFrame, y_train: pd.Series,
+                 config: "Config", n_trials: int = 50) -> dict:
+    """Optuna sweep with 3-fold TimeSeriesSplit CV — returns best params dict.
+
+    Search space is deliberately narrower than an unconstrained grid so the
+    50-trial default finishes in ~30 min on CPU. The final model still trains
+    with `TimeSeriesSplit(cv_folds)` from config; this function only picks
+    the hyperparameters.
+    """
+    import optuna
+    from optuna.samplers import TPESampler
+    from xgboost import XGBRegressor
+
+    tscv = TimeSeriesSplit(n_splits=3)
+
+    def _objective(trial) -> float:
+        params = {
+            "max_depth": trial.suggest_int("max_depth", 3, 8),
+            "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.15, log=True),
+            "n_estimators": trial.suggest_int("n_estimators", 100, 500, step=50),
+            "min_child_weight": trial.suggest_int("min_child_weight", 1, 20),
+            "subsample": trial.suggest_float("subsample", 0.6, 1.0),
+            "colsample_bytree": trial.suggest_float("colsample_bytree", 0.6, 1.0),
+            "reg_alpha": trial.suggest_float("reg_alpha", 1e-3, 1.0, log=True),
+            "reg_lambda": trial.suggest_float("reg_lambda", 0.1, 3.0, log=True),
+        }
+        maes = []
+        for tr, va in tscv.split(X_train):
+            model = XGBRegressor(
+                **params,
+                random_state=config.model.seed,
+                tree_method="hist",
+                n_jobs=-1,
+            )
+            model.fit(X_train.iloc[tr], y_train.iloc[tr])
+            pred = model.predict(X_train.iloc[va])
+            maes.append(float(np.mean(np.abs(y_train.iloc[va].to_numpy() - pred))))
+        return float(np.mean(maes))
+
+    optuna.logging.set_verbosity(optuna.logging.WARNING)
+    study = optuna.create_study(
+        direction="minimize",
+        sampler=TPESampler(seed=config.model.seed),
+    )
+    logger.info("Starting Optuna XGBoost sweep (%d trials, 3-fold TSCV)", n_trials)
+    study.optimize(_objective, n_trials=n_trials, show_progress_bar=False)
+    logger.info("Optuna best MAE=%.4f with params=%s", study.best_value, study.best_params)
+    return study.best_params
 
 
 # ---------------------------------------------------------------------------
@@ -259,8 +319,16 @@ def train_stage1(
     m_pers = compute_metrics(y_test.to_numpy(), pred_pers)
     m_clim = compute_metrics(y_test.to_numpy(), pred_clim)
 
+    # Optional: Optuna hyperparameter tuning before final training
+    tuned_params: dict = {}
+    if (config.model.stage1_algo.lower() == "xgboost"
+            and getattr(config.model, "tune_xgboost", False)):
+        n_trials = int(getattr(config.model, "tune_n_trials", 50))
+        tuned_params = tune_xgboost(X_train, y_train, config, n_trials=n_trials)
+
     # ML with time-series CV
-    model = _make_regressor(config.model.stage1_algo, config.model.seed)
+    model = _make_regressor(config.model.stage1_algo, config.model.seed,
+                            params=tuned_params or None)
     cv_metrics: list[RegressionMetrics] = []
     tscv = TimeSeriesSplit(n_splits=config.model.cv_folds)
     for fold, (tr, va) in enumerate(tscv.split(X_train), start=1):
@@ -305,20 +373,41 @@ def train_stage1(
 # Persistence (of the model itself)
 # ---------------------------------------------------------------------------
 
+def _is_darts_model(model: object) -> bool:
+    return type(model).__module__.startswith("darts.")
+
+
 def save_stage1(result: Stage1Result, path: str | Path, config: Config) -> Path:
     p = Path(path)
     ensure_dir(p.parent)
-    joblib.dump(
-        {
-            "model": result.model,
-            "features": result.features,
-            "mode": result.mode,
-            "config_raw": config.raw,
-        },
-        p,
-    )
+    payload: dict = {
+        "model": result.model,
+        "features": result.features,
+        "mode": result.mode,
+        "config_raw": config.raw,
+    }
+    if _is_darts_model(result.model):
+        # darts' __getstate__ drops the LightningModule and Trainer, so a plain
+        # joblib.dump would write a model with no weights — and fail silently.
+        # Use darts' own serializer and keep a sidecar reference.
+        sidecar = p.with_suffix(".darts.pt")
+        result.model.save(str(sidecar))
+        payload["model"] = None
+        payload["darts_model_file"] = sidecar.name
+        payload["darts_model_class"] = (
+            f"{type(result.model).__module__}:{type(result.model).__qualname__}"
+        )
+    joblib.dump(payload, p)
     return p
 
 
 def load_stage1(path: str | Path) -> dict:
-    return joblib.load(path)
+    p = Path(path)
+    payload = joblib.load(p)
+    sidecar = payload.get("darts_model_file")
+    if sidecar:
+        import importlib
+        module_name, qualname = payload["darts_model_class"].split(":")
+        cls = getattr(importlib.import_module(module_name), qualname)
+        payload["model"] = cls.load(str(p.parent / sidecar))
+    return payload

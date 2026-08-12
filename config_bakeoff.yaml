@@ -1,0 +1,117 @@
+# Head-to-head bakeoff config — classical vs ML vs deep, one protocol.
+#
+#   python -m src.bakeoff --config config_bakeoff.yaml            # phase A
+#   python -m src.pipeline --config config_bakeoff.yaml --mode forecast --compare
+#
+# Why a separate config from config_nwp.yaml:
+#   * `tune_xgboost` is OFF here. A 50-trial Optuna sweep and the untuned defaults
+#     both scored 0.6780 m/s on this window — identical to four decimals — so
+#     tuning one arm of a comparison buys nothing and costs comparability.
+#   * The evaluation is rolling-origin (see `bakeoff:` below), not the single
+#     `model.test_split`. That split covered 2025-08-20 -> 2025-12-30 only: four
+#     months of one season, which is a thin basis for ranking a dozen predictors.
+#
+# ⚠️ Window is fixed by data availability, not by choice. The Open-Meteo
+# previous-runs archive is all-null before 2024-03, and ERA5 truth is complete
+# through 2025-12. The overlap IS the study window; nothing here is comparable to
+# the v1–v4 tables in RESULTS.md, which are on 2020–2023.
+
+site:
+  name: anloga
+  latitude: 5.79
+  longitude: 0.90
+  hub_height_m: 100
+
+data:
+  source: era5
+  start: "2024-03-01"
+  end: "2025-12-31"
+  cache_dir: data/raw
+
+nwp:
+  enabled: true
+  models: [ecmwf_ifs025, gfs_global, icon_global]
+  lead_days: [1, 2, 3]
+  variables:
+    - wind_speed_100m
+    - wind_direction_100m
+    - wind_speed_10m
+    - temperature_2m
+    - surface_pressure
+    - wind_gusts_10m
+
+turbine:
+  name: E-101/3050
+  source: oedb
+
+forecast:
+  horizon_hours: 24
+  timestep: hourly
+
+# Rolling-origin protocol. Deterministic predictors (persistence, MOS, Kalman,
+# SARIMAX, analog ensemble, ridge) run once per fold — repeating them across seeds
+# would fake a precision they do not have. Stochastic ones run over every seed and
+# are reported as mean ± sd.
+bakeoff:
+  n_folds: 4
+  test_span: 0.56          # last 56% of the record becomes four ~3-month blocks
+  seeds: [42, 7, 1234, 2024, 31337]
+  deep_seeds: [42, 7, 1234]
+  feature_sets: [study, operational]
+
+model:
+  stage1_algo: xgboost
+  test_split: 0.2          # used only by the deep-model path (phase B)
+  cv_folds: 5
+  lags: [1, 2, 3, 6, 12]
+  rolling_windows: [3, 6]
+  seed: 42
+  tune_xgboost: false      # deliberately off — see header
+  tune_n_trials: 50
+  compare_algos: [xgboost, dlinear, lstm, nbeats, tft]
+  deep:
+    input_chunk_length: 48
+    hidden_size: 64
+    n_rnn_layers: 1
+    batch_size: 128
+    dropout: 0.2
+    learning_rate: 0.001
+    gradient_clip_val: 1.0
+    loss_fn: mse           # NOT the darts default — a 17-quantile objective cost
+                           # TFT 0.380 m/s in v4 and made the bakeoff invalid
+    include_target_lags: true
+    n_epochs: 200
+    val_fraction: 0.15
+    early_stopping:
+      enabled: true
+      patience: 20
+      min_delta: 0.0001
+    scheduler:
+      enabled: true
+      warmup_epochs: 5
+      min_lr_factor: 0.02
+    lr_sweep:
+      enabled: true
+      candidates: [0.0003, 0.001, 0.003]
+      epochs: 6
+    nbeats:
+      num_stacks: 3
+      num_blocks: 3
+      layer_widths: 256
+    dlinear:
+      kernel_size: 25
+    overrides:
+      nbeats:
+        n_epochs: 100
+        batch_size: 256
+        early_stopping: {patience: 15}
+        lr_sweep: {epochs: 4}
+      tft:
+        n_epochs: 60
+        batch_size: 256
+        early_stopping: {patience: 10}
+        lr_sweep: {candidates: [0.0003, 0.001], epochs: 3}
+
+paths:
+  outputs: outputs
+  processed: data/processed

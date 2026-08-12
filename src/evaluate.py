@@ -64,8 +64,14 @@ def evaluate_variants(
     turbine: WindTurbine,
     spec: TurbineSpec,
     config: Config,
+    nwp_df: pd.DataFrame | None = None,
 ) -> dict[str, VariantResult]:
-    """Compute all three variants aligned on stage1's held-out test index."""
+    """Compute all three variants aligned on stage1's held-out test index.
+
+    `nwp_df` must be the same forecast frame Stage 1 was trained on, otherwise
+    the `direct` variant is fitted on a different feature set and the
+    three-variant comparison stops being like-for-like.
+    """
     test_idx = stage1.y_test.index
 
     # Density on the test window (from actual observed weather)
@@ -112,7 +118,7 @@ def evaluate_variants(
     )
 
     # Variant C — direct: retrain ML on the same features but predicting power
-    X, _, _ = build_feature_frame(weather_df, config, mode=stage1.mode)
+    X, _, _ = build_feature_frame(weather_df, config, mode=stage1.mode, nwp_df=nwp_df)
     # Align to Stage 1's train/test split by index
     X_aligned = X.loc[X.index.intersection(stage1.y_test.index.union(stage1.pred_test.index))]
     # Build direct target = physics-derived power from actual weather (density-adjusted)

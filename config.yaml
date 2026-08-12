@@ -19,14 +19,91 @@ forecast:
   timestep: hourly
 
 model:
-  stage1_algo: xgboost
+  stage1_algo: xgboost   # xgboost | lightgbm | lstm | tft | nbeats | dlinear
   test_split: 0.2
   cv_folds: 5
-  # Trimmed feature set: dropped lag24 and roll24 (they were overfitting on
-  # the previous 6-month NASA POWER run). Kept lag1..12 + roll3/6.
+  # Trimmed feature set to fight overfit; kept lag1..12 + roll3/6.
   lags: [1, 2, 3, 6, 12]
   rolling_windows: [3, 6]
   seed: 42
+  # Optuna XGBoost sweep (only applies when stage1_algo=xgboost)
+  tune_xgboost: true
+  tune_n_trials: 50
+  # Models to train when --compare is passed. Empty = fall back to primary + one sibling.
+  # Cheapest-first: TFT is ~700 s/epoch on this CPU, so it goes last and a
+  # crash there still leaves four models in the report.
+  compare_algos: [xgboost, dlinear, lstm, nbeats, tft]
+  # Deep-model knobs (ignored for tree algos).
+  # v4 retrains these following docs/09_why_deep_learning_underperformed.md:
+  #   #1 train longer, with early stopping on a held-out validation tail
+  #   #2 feed the lag features as past covariates
+  #   #3 larger LR sweep + warmup + cosine decay
+  deep:
+    input_chunk_length: 48   # 48h context window
+    hidden_size: 64
+    n_rnn_layers: 1
+    batch_size: 128
+    dropout: 0.2
+    learning_rate: 0.001     # starting point; overridden by lr_sweep when enabled
+    gradient_clip_val: 1.0   # TFT in particular needs this to train stably
+
+    # Uniform training objective across the zoo. No-op for LSTM / N-BEATS /
+    # DLinear (already MSE), but it stops darts' TFTModel from defaulting to a
+    # 17-quantile QuantileRegression likelihood — a much harder problem whose
+    # point forecast is only the median, and the reason TFT lost in v4.
+    # Set to null to give each model back its own darts default.
+    loss_fn: mse
+
+    # --- rec #2: give sequence models the same labelled lag/rolling variables
+    # XGBoost gets. They are backward-looking and live inside the input chunk,
+    # so they cannot leak. Set false to reproduce the v3 behaviour.
+    include_target_lags: true
+
+    # --- rec #1: long budget, stopped by validation loss rather than a fixed
+    # epoch count. Best checkpoint is restored after the run.
+    n_epochs: 200
+    val_fraction: 0.15       # tail of the train slice, held out for early stopping
+    early_stopping:
+      enabled: true
+      patience: 20
+      min_delta: 0.0001
+
+    # --- rec #3: linear warmup into cosine decay, plus a short-budget sweep
+    # that picks the initial LR on validation loss.
+    scheduler:
+      enabled: true
+      warmup_epochs: 5
+      min_lr_factor: 0.02
+    lr_sweep:
+      enabled: true
+      candidates: [0.0003, 0.001, 0.003]
+      epochs: 6
+
+    nbeats:
+      num_stacks: 3
+      num_blocks: 3
+      layer_widths: 256
+    dlinear:
+      kernel_size: 25
+
+    # Per-model budget. Measured cost on this CPU box (12 threads, 48
+    # covariates, 28k train points) is ~5 s/epoch for DLinear, ~35 s for LSTM,
+    # ~103 s for N-BEATS and ~300 s for TFT, so a flat 200-epoch cap would run
+    # for ~29 h. The two heavy models get smaller caps and larger batches to
+    # keep the whole bakeoff inside one overnight run; the cosine schedule is
+    # always annealed over each model's own cap, so every run is a complete
+    # schedule rather than a truncated one.
+    overrides:
+      nbeats:
+        n_epochs: 100
+        batch_size: 256
+        early_stopping: {patience: 15}
+        lr_sweep: {epochs: 4}
+      tft:
+        n_epochs: 60
+        batch_size: 256
+        early_stopping: {patience: 10}
+        lr_sweep: {candidates: [0.0003, 0.001], epochs: 3}
 
 paths:
   outputs: outputs

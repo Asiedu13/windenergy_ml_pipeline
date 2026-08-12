@@ -1,0 +1,108 @@
+2026-08-10 20:03:26,335 | INFO | data_ingest_extend | ERA5 extension: 28 months (2024-03-01 → 2026-06-30), cache=data\raw
+2026-08-10 20:03:26,344 | INFO | src.data_ingest | Downloading ERA5 core 2024-03 (1/28) (attempt 1/3)
+2026-08-10 20:03:27,140 INFO Request ID is 14c83765-8f14-4120-abd0-8afff525939c
+2026-08-10 20:03:27,366 INFO status has been updated to accepted
+2026-08-10 20:04:18,497 INFO status has been updated to running
+2026-08-10 20:09:49,983 INFO status has been updated to successful
+800a0d8dcd5ec1e767ff13507c9cf272.nc:   0%|          | 0.00/155k [00:00<?, ?B/s]800a0d8dcd5ec1e767ff13507c9cf272.nc: 100%|██████████| 155k/155k [00:01<00:00, 126kB/s]                                                                                      2026-08-10 20:09:52,390 | INFO | src.data_ingest | Downloading ERA5 extras 2024-03 (1/28) (attempt 1/3)
+2026-08-10 20:09:53,507 INFO Request ID is 1b30fbe6-3d36-4efd-b135-b8d3507a8951
+2026-08-10 20:09:53,746 INFO status has been updated to accepted
+2026-08-10 20:10:16,471 INFO status has been updated to running
+2026-08-10 20:14:16,143 INFO status has been updated to successful
+6e795244c56a1082b5afe230c9b7bc81.zip:   0%|          | 0.00/170k [00:00<?, ?B/s]6e795244c56a1082b5afe230c9b7bc81.zip: 100%|██████████| 170k/170k [00:01<00:00, 143kB/s]                                                                                       2026-08-10 20:14:18,803 | INFO | src.data_ingest | Downloading ERA5 pressure 2024-03 (1/28) (attempt 1/3)
+2026-08-10 20:14:19,234 INFO Request ID is a2115443-50a6-42e7-aa30-f45963d40249
+2026-08-10 20:14:19,456 INFO status has been updated to accepted
+2026-08-10 20:14:42,392 INFO status has been updated to running
+2026-08-10 20:20:45,910 INFO status has been updated to successful
+4fb348eb8fee844a2361b681229d6cd.nc:   0%|          | 0.00/120k [00:00<?, ?B/s]4fb348eb8fee844a2361b681229d6cd.nc: 100%|██████████| 120k/120k [00:01<00:00, 103kB/s]                                                                                     2026-08-10 20:20:50,159 | INFO | src.data_ingest | Downloading ERA5 core 2024-04 (2/28) (attempt 1/3)
+2026-08-10 20:20:50,932 INFO Request ID is 5e401d87-e05e-4b5e-92cb-b8640b9a9b40
+2026-08-10 20:20:52,089 INFO status has been updated to accepted
+2026-08-10 20:21:43,530 INFO status has been updated to running
+2026-08-10 20:27:15,126 INFO status has been updated to successful
+46a2d9a5badfdc900092f5c38f3ae91c.nc:   0%|          | 0.00/154k [00:00<?, ?B/s]46a2d9a5badfdc900092f5c38f3ae91c.nc: 100%|██████████| 154k/154k [00:02<00:00, 69.3kB/s]                                                                                       2026-08-10 20:27:18,470 | INFO | src.data_ingest | Downloading ERA5 extras 2024-04 (2/28) (attempt 1/3)
+2026-08-10 20:27:19,421 INFO Request ID is 3ea35c60-3928-4c57-94d8-3cd83e293fe3
+2026-08-10 20:27:19,697 INFO status has been updated to accepted
+2026-08-10 20:33:42,652 INFO status has been updated to running
+2026-08-10 20:35:43,512 INFO status has been updated to successful
+351fd69831b31fe1eb923497c36fd046.zip:   0%|          | 0.00/169k [00:00<?, ?B/s]351fd69831b31fe1eb923497c36fd046.zip: 100%|██████████| 169k/169k [00:01<00:00, 114kB/s]                                                                                       2026-08-10 20:35:47,436 | INFO | src.data_ingest | Downloading ERA5 pressure 2024-04 (2/28) (attempt 1/3)
+2026-08-10 20:35:48,186 INFO Request ID is e3e301f7-2895-4d9b-ba10-96b23eae7fdb
+2026-08-10 20:35:48,402 INFO status has been updated to accepted
+2026-08-10 20:42:13,056 INFO status has been updated to running
+2026-08-10 20:46:15,083 INFO status has been updated to successful
+36b14594e68c8630401d8f769f58a9e3.nc:   0%|          | 0.00/119k [00:00<?, ?B/s]36b14594e68c8630401d8f769f58a9e3.nc: 100%|██████████| 119k/119k [00:01<00:00, 91.9kB/s]                                                                                       2026-08-10 20:46:17,631 | INFO | src.data_ingest | Downloading ERA5 core 2024-05 (3/28) (attempt 1/3)
+2026-08-10 20:46:18,349 INFO Request ID is 6dc510c1-9c0c-445e-be5f-954407791ea0
+2026-08-10 20:46:18,660 INFO status has been updated to accepted
+2026-08-10 20:56:45,588 INFO status has been updated to running
+2026-08-10 21:00:50,348 INFO status has been updated to successful
+1e1b9c714ee60f899e8b66af4b016789.nc:   0%|          | 0.00/155k [00:00<?, ?B/s]1e1b9c714ee60f899e8b66af4b016789.nc: 100%|██████████| 155k/155k [00:01<00:00, 113kB/s]                                                                                      2026-08-10 21:00:52,830 | INFO | src.data_ingest | Downloading ERA5 extras 2024-05 (3/28) (attempt 1/3)
+2026-08-10 21:00:56,137 INFO Request ID is 761dbfcb-ebb9-4d2b-8f0c-0fdecb3ee8c4
+2026-08-10 21:00:56,417 INFO status has been updated to accepted
+2026-08-10 21:31:37,213 INFO status has been updated to running
+2026-08-10 21:33:38,188 INFO status has been updated to successful
+4ed4eef4fcd6d4899461a02c018ad97a.zip:   0%|          | 0.00/170k [00:00<?, ?B/s]4ed4eef4fcd6d4899461a02c018ad97a.zip: 100%|██████████| 170k/170k [00:01<00:00, 140kB/s]                                                                                       2026-08-10 21:33:40,927 | INFO | src.data_ingest | Downloading ERA5 pressure 2024-05 (3/28) (attempt 1/3)
+2026-08-10 21:33:41,624 INFO Request ID is 8dcedaaf-385e-45d2-9811-48ab509606f5
+2026-08-10 21:33:41,878 INFO status has been updated to accepted
+2026-08-10 22:16:23,690 INFO status has been updated to running
+2026-08-10 22:20:28,306 INFO status has been updated to successful
+702d59c3f5cfcd89ace533cb518fa756.nc:   0%|          | 0.00/120k [00:00<?, ?B/s]702d59c3f5cfcd89ace533cb518fa756.nc: 100%|██████████| 120k/120k [00:01<00:00, 84.7kB/s]                                                                                       2026-08-10 22:20:31,826 | INFO | src.data_ingest | Downloading ERA5 core 2024-06 (4/28) (attempt 1/3)
+2026-08-10 22:20:32,677 INFO Request ID is d8b0bfe7-3bb4-4853-8817-7054d7f2936e
+2026-08-10 22:20:32,874 INFO status has been updated to accepted
+2026-08-10 23:09:21,513 INFO status has been updated to running
+2026-08-10 23:13:23,732 INFO status has been updated to successful
+27cb431db0c3dc1679cbc46242b5b74c.nc:   0%|          | 0.00/153k [00:00<?, ?B/s]27cb431db0c3dc1679cbc46242b5b74c.nc: 100%|██████████| 153k/153k [00:01<00:00, 108kB/s]                                                                                      2026-08-10 23:13:26,600 | INFO | src.data_ingest | Downloading ERA5 extras 2024-06 (4/28) (attempt 1/3)
+2026-08-10 23:13:27,467 INFO Request ID is 6ebc2565-b90a-4c68-b094-fc5747bc896d
+2026-08-10 23:13:27,688 INFO status has been updated to accepted
+2026-08-11 00:00:19,612 INFO status has been updated to running
+2026-08-11 00:02:20,561 INFO status has been updated to successful
+50ac2c004e9fd076789599a3477165d0.zip:   0%|          | 0.00/169k [00:00<?, ?B/s]50ac2c004e9fd076789599a3477165d0.zip: 100%|██████████| 169k/169k [00:01<00:00, 138kB/s]                                                                                       2026-08-11 00:02:23,104 | INFO | src.data_ingest | Downloading ERA5 pressure 2024-06 (4/28) (attempt 1/3)
+2026-08-11 00:02:23,767 INFO Request ID is f8261935-6f9a-4ee6-a206-e4988b4f6515
+2026-08-11 00:02:24,004 INFO status has been updated to accepted
+2026-08-11 00:34:59,343 INFO status has been updated to running
+2026-08-11 00:39:01,141 INFO status has been updated to successful
+3d3a88bd6102a4df7715483abee335db.nc:   0%|          | 0.00/119k [00:00<?, ?B/s]3d3a88bd6102a4df7715483abee335db.nc: 100%|██████████| 119k/119k [00:01<00:00, 115kB/s]                                                                                      2026-08-11 00:39:03,269 | INFO | src.data_ingest | Downloading ERA5 core 2024-07 (5/28) (attempt 1/3)
+2026-08-11 00:39:05,938 INFO Request ID is 7d9107a3-ef50-4046-8d0f-4b7d8374bd4f
+2026-08-11 00:39:06,117 INFO status has been updated to accepted
+2026-08-11 00:59:43,751 | WARNING | src.data_ingest | ERA5 core 2024-07 (5/28) attempt 1 failed: HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/7d9107a3-ef50-4046-8d0f-4b7d8374bd4f?log=True&request=True (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)')))
+2026-08-11 01:00:43,752 | INFO | src.data_ingest | Downloading ERA5 core 2024-07 (5/28) (attempt 2/3)
+2026-08-11 01:00:46,958 | WARNING | src.data_ingest | ERA5 core 2024-07 (5/28) attempt 2 failed: HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/processes/reanalysis-era5-single-levels (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)')))
+2026-08-11 01:01:46,967 | INFO | src.data_ingest | Downloading ERA5 core 2024-07 (5/28) (attempt 3/3)
+2026-08-11 01:01:47,349 | WARNING | src.data_ingest | ERA5 core 2024-07 (5/28) attempt 3 failed: HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/processes/reanalysis-era5-single-levels (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)')))
+2026-08-11 01:01:47,358 | ERROR | src.data_ingest | ERA5 core 2024-07 (5/28): giving up after 3 attempts
+2026-08-11 01:01:47,359 | INFO | src.data_ingest | Downloading ERA5 extras 2024-07 (5/28) (attempt 1/3)
+2026-08-11 01:02:09,573 | WARNING | src.data_ingest | ERA5 extras 2024-07 (5/28) attempt 1 failed: HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/processes/reanalysis-era5-single-levels (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)')))
+2026-08-11 01:03:09,574 | INFO | src.data_ingest | Downloading ERA5 extras 2024-07 (5/28) (attempt 2/3)
+2026-08-11 01:03:09,921 | WARNING | src.data_ingest | ERA5 extras 2024-07 (5/28) attempt 2 failed: HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/processes/reanalysis-era5-single-levels (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)')))
+2026-08-11 01:04:09,931 | INFO | src.data_ingest | Downloading ERA5 extras 2024-07 (5/28) (attempt 3/3)
+2026-08-11 01:04:10,033 | WARNING | src.data_ingest | ERA5 extras 2024-07 (5/28) attempt 3 failed: HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/processes/reanalysis-era5-single-levels (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)')))
+2026-08-11 01:04:10,035 | ERROR | src.data_ingest | ERA5 extras 2024-07 (5/28): giving up after 3 attempts
+2026-08-11 01:04:10,036 | INFO | src.data_ingest | Downloading ERA5 pressure 2024-07 (5/28) (attempt 1/3)
+2026-08-11 01:04:10,112 | WARNING | src.data_ingest | ERA5 pressure 2024-07 (5/28) attempt 1 failed: HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/processes/reanalysis-era5-pressure-levels (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)')))
+2026-08-11 01:05:10,114 | INFO | src.data_ingest | Downloading ERA5 pressure 2024-07 (5/28) (attempt 2/3)
+2026-08-11 01:05:10,283 | WARNING | src.data_ingest | ERA5 pressure 2024-07 (5/28) attempt 2 failed: HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/processes/reanalysis-era5-pressure-levels (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)')))
+2026-08-11 01:06:10,284 | INFO | src.data_ingest | Downloading ERA5 pressure 2024-07 (5/28) (attempt 3/3)
+2026-08-11 01:06:10,645 | WARNING | src.data_ingest | ERA5 pressure 2024-07 (5/28) attempt 3 failed: HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/processes/reanalysis-era5-pressure-levels (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)')))
+2026-08-11 01:06:10,646 | ERROR | src.data_ingest | ERA5 pressure 2024-07 (5/28): giving up after 3 attempts
+2026-08-11 01:06:10,647 | INFO | src.data_ingest | Downloading ERA5 core 2024-08 (6/28) (attempt 1/3)
+2026-08-11 01:06:13,714 | WARNING | src.data_ingest | ERA5 core 2024-08 (6/28) attempt 1 failed: HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/processes/reanalysis-era5-single-levels (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)')))
+2026-08-11 01:07:13,714 | INFO | src.data_ingest | Downloading ERA5 core 2024-08 (6/28) (attempt 2/3)
+2026-08-11 01:07:14,182 | WARNING | src.data_ingest | ERA5 core 2024-08 (6/28) attempt 2 failed: HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/processes/reanalysis-era5-single-levels (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1028)')))
+2026-08-11 01:08:14,189 | INFO | src.data_ingest | Downloading ERA5 core 2024-08 (6/28) (attempt 3/3)
+2026-08-11 01:08:15,458 INFO Request ID is 54b9ee84-bd5f-4207-837d-8f3623a29ae5
+2026-08-11 01:08:15,772 INFO status has been updated to accepted
+Recovering from connection error [('Connection aborted.', ConnectionResetError(10054, 'An existing connection was forcibly closed by the remote host', None, 10054, None))], attempt 1 of 500
+Retrying in 120 seconds
+2026-08-11 01:33:57,164 INFO status has been updated to running
+2026-08-11 01:37:58,541 INFO status has been updated to successful
+a08eabf0283dc0979bf6f25f02666e1c.nc:   0%|          | 0.00/154k [00:00<?, ?B/s]a08eabf0283dc0979bf6f25f02666e1c.nc: 100%|██████████| 154k/154k [00:03<00:00, 44.0kB/s]                                                                                       2026-08-11 01:38:03,276 | INFO | src.data_ingest | Downloading ERA5 extras 2024-08 (6/28) (attempt 1/3)
+2026-08-11 01:38:05,055 INFO Request ID is 234bc9e2-bf6a-49c6-9f8f-928b1f031359
+2026-08-11 01:38:05,264 INFO status has been updated to accepted
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Max retries exceeded with url: /api/retrieve/v1/jobs/234bc9e2-bf6a-49c6-9f8f-928b1f031359?log=True&request=True (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x0000024734628550>: Failed to resolve 'cds.climate.copernicus.eu' ([Errno 11001] getaddrinfo failed)"))], attempt 1 of 500
+Retrying in 120 seconds
+2026-08-11 01:52:54,546 INFO status has been updated to running
+2026-08-11 01:59:00,018 INFO status has been updated to successful
+55557503ed567cab819a973c1b9e0ba6.zip:   0%|          | 0.00/170k [00:00<?, ?B/s]55557503ed567cab819a973c1b9e0ba6.zip: 100%|██████████| 170k/170k [00:01<00:00, 139kB/s]                                                                                       2026-08-11 01:59:02,324 | INFO | src.data_ingest | Downloading ERA5 pressure 2024-08 (6/28) (attempt 1/3)
+2026-08-11 01:59:06,441 INFO Request ID is fcfea7e8-3d87-4373-a6b5-bde838aa3a6f
+2026-08-11 01:59:06,664 INFO status has been updated to accepted
+Recovering from connection error [HTTPSConnectionPool(host='cds.climate.copernicus.eu', port=443): Read timed out. (read timeout=60)], attempt 1 of 500
+Retrying in 120 seconds
+2026-08-11 02:08:38,712 INFO status has been updated to running

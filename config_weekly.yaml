@@ -1,0 +1,84 @@
+# Weekly (multi-day) forecasting config.
+#
+#   python -m src.weekly --config config_weekly.yaml
+#
+# What differs from config_bakeoff.yaml, and why:
+#
+#   * `lead_days: [1..7]`. A forecast for valid time tau at lead day N was issued
+#     24*N hours before tau, so a 7-day product needs d7. Requesting more leads
+#     than a cached file holds now triggers a re-fetch (`_missing_open_meteo_keys`)
+#     rather than silently serving the old 3-lead cache.
+#
+#   * ⚠️ ICON tops out at d6. Probed 2025-06-01..03 at this site:
+#         ecmwf_ifs025  d1-d7
+#         gfs_global    d1-d7
+#         icon_global   d1-d6      <- 144 h ceiling
+#         (previous_day8 is null for all three)
+#     So a 168 h product runs on a TWO-model ensemble, while 144 h keeps all
+#     three. Inter-model spread is the uncertainty signal a weekly forecast most
+#     needs, so this is a real trade — resolved by measurement, not assertion.
+#
+#   * The model is indexed by VALID TIME, not feature time. At weekly range the
+#     observation-side lag features are dead, which removes the reason for the
+#     feature-time framing and makes each lead day a plain MOS problem.
+#
+# Baseline note: beyond ~36 h **climatology is the reference**, not persistence.
+# Measured: damped persistence beats climatology at 24 h (1.1861 vs 1.2725) and
+# loses to it at 48 h (1.3662 vs 1.2844). Quoting persistence skill at weekly
+# range would flatter the model by ~20%.
+
+site:
+  name: anloga
+  latitude: 5.79
+  longitude: 0.90
+  hub_height_m: 100
+
+data:
+  source: era5
+  start: "2024-03-01"
+  end: "2025-12-31"
+  cache_dir: data/raw
+
+nwp:
+  enabled: true
+  models: [ecmwf_ifs025, gfs_global, icon_global]
+  lead_days: [1, 2, 3, 4, 5, 6, 7]
+  variables:
+    - wind_speed_100m
+    - wind_direction_100m
+    - wind_speed_10m
+    - temperature_2m
+    - surface_pressure
+    - wind_gusts_10m
+
+turbine:
+  name: E-101/3050
+  source: oedb
+
+forecast:
+  horizon_hours: 168        # 7 days; the per-lead models cover 1..7 days
+  timestep: hourly
+
+weekly:
+  lead_days: [1, 2, 3, 4, 5, 6, 7]
+  # Quantiles for the probabilistic arm. Trained as separate models from the
+  # point forecast — a shared quantile objective cost TFT 0.380 m/s in v4.
+  quantiles: [0.1, 0.5, 0.9]
+  # Non-overlapping weeks for the energy-aggregate evaluation. ~95 exist in the
+  # window; quoting the hour count instead would be fiction.
+  aggregate_hours: 168
+
+model:
+  stage1_algo: xgboost
+  test_split: 0.2
+  cv_folds: 5
+  lags: [1, 2, 3, 6, 12]
+  rolling_windows: [3, 6]
+  seed: 42
+  tune_xgboost: false       # tuning bought 0.0000 at 24 h
+  tune_n_trials: 50
+  compare_algos: [xgboost]
+
+paths:
+  outputs: outputs
+  processed: data/processed

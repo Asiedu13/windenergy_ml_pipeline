@@ -1,0 +1,71 @@
+# ⚠️ INTERIM CONFIG — a real-ERA5 pilot on the months downloaded so far.
+# Its outputs are preliminary, not final v5 results. Re-run config_nwp.yaml when the
+# full 2024-03 -> 2025-12 cache is complete.
+#
+# Why this exists. The v5 experiment is blocked on a slow ERA5 download, but 12 complete
+# months (2024-03 -> 2025-02, 8,760 hours) are already cached. That is enough to run the
+# verification gates and a with/without-NWP experiment against the *authoritative* truth
+# source, rather than waiting for the remaining 10 months.
+#
+#   python -m src.validate_nwp --config config_nwp_partial.yaml
+#
+# Preferred over the NASA POWER pilot (config_nwp_pilot.yaml) because:
+#   * ERA5 is the truth source v5 will actually use -> methodology is identical
+#   * ERA5's wind_speed_100m is genuinely at 100 m, so no log-law extrapolation and no
+#     ~12% MAE inflation -> absolute numbers ARE on the same scale as v5's will be
+#   * NASA POWER carries a 1-hour timestamp offset (measured 2026-08-11: every model's
+#     cross-correlation lag against NASA POWER is exactly 1 h more negative than against
+#     ERA5, and the two truth sources differ by -1 h). MERRA-2 hourly values are
+#     hour-averaged, not instantaneous.
+#
+# What is still preliminary about it: 12 months rather than 22, so after the 80/20 split
+# training sees ~0.8 yr. The learning curve in docs/07 is still climbing there
+# (0.8 yr -> 1.1933 m/s, 1.6 yr -> 1.1534 m/s), so the absolute scores here should be
+# slightly WORSE than the final run. Read the with/without *difference*, not the level.
+
+site:
+  name: anloga
+  latitude: 5.79
+  longitude: 0.90
+  hub_height_m: 100
+
+data:
+  source: era5
+  start: "2024-03-01"
+  end: "2025-02-28"     # last complete month on disk as of 2026-08-11
+  cache_dir: data/raw
+
+nwp:
+  enabled: true
+  models: [ecmwf_ifs025, gfs_global, icon_global]
+  lead_days: [1, 2, 3]
+  variables:
+    - wind_speed_100m
+    - wind_direction_100m
+    - wind_speed_10m
+    - temperature_2m
+    - surface_pressure
+    - wind_gusts_10m
+
+turbine:
+  name: E-101/3050
+  source: oedb
+
+forecast:
+  horizon_hours: 24
+  timestep: hourly
+
+model:
+  stage1_algo: xgboost
+  test_split: 0.2
+  cv_folds: 5
+  lags: [1, 2, 3, 6, 12]
+  rolling_windows: [3, 6]
+  seed: 42
+  # Off deliberately: both arms must use identical hyperparameters, or the comparison
+  # measures tuning rather than the NWP feature block.
+  tune_xgboost: false
+
+paths:
+  outputs: outputs
+  processed: data/processed
