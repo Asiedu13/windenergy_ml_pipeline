@@ -1,0 +1,25 @@
+rows 16104 cols 126
+leads present: [1, 2, 3, 4, 5, 6, 7]
+
+model                lead  non-null / rows
+ecmwf_ifs025         d1     15966 / 16104
+ecmwf_ifs025         d2     15942 / 16104
+ecmwf_ifs025         d3     15912 / 16104
+ecmwf_ifs025         d4     15888 / 16104
+ecmwf_ifs025         d5     15864 / 16104
+ecmwf_ifs025         d6     15840 / 16104
+ecmwf_ifs025         d7     15816 / 16104
+gfs_global           d1     16104 / 16104
+gfs_global           d2     16104 / 16104
+gfs_global           d3     16104 / 16104
+gfs_global           d4     16104 / 16104
+gfs_global           d5     16104 / 16104
+gfs_global           d6     16104 / 16104
+gfs_global           d7     16104 / 16104
+icon_global          d1     16104 / 16104
+icon_global          d2     16104 / 16104
+icon_global          d3     16104 / 16104
+icon_global          d4     16104 / 16104
+icon_global          d5     16104 / 16104
+icon_global          d6     16104 / 16104
+icon_global          d7         0 / 16104  <-- empty

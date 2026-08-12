@@ -560,6 +560,62 @@ which is exactly the v5 thesis. Leakage test passed — skill decays with lead t
 than the published reference, though not like-for-like"*. Note too that `two_stage` and
 `direct` swap order between the two truth sources — neither margin is established.
 
+### 📅 Weekly forecast — 24 h to 168 h (2026-08-12)
+
+The project's first multi-horizon work. Seven models, one per forecast lead day, on a
+**valid-time** framing: for lead day *N* the row is `(nwp_*_d{N}[τ], calendar(τ), spread(τ))
+→ hub(τ)`. Full detail, including limitations:
+[redo/results/09](redo/results/09_weekly_forecast_results.md).
+
+**A 7-day forecast beats climatology by 20.7%.**
+
+| Lead | Horizon | Members | Climatology | `mos_multi` | **XGBoost** | Skill vs clim |
+|---:|---:|---:|---:|---:|---:|---:|
+| d1 | 24 h | 3 | 1.2065 | 0.7733 | **0.7322** | **0.393** |
+| d2 | 48 h | 3 | 1.2075 | 0.8606 | **0.8251** | 0.317 |
+| d3 | 72 h | 3 | 1.2087 | 0.9098 | **0.8729** | 0.278 |
+| d4 | 96 h | 3 | 1.2085 | 0.9355 | **0.9166** | 0.242 |
+| d5 | 120 h | 3 | 1.2088 | 0.9289 | **0.9147** | 0.243 |
+| d6 | 144 h | 3 | 1.2085 | 0.9609 | **0.9354** | 0.226 |
+| **d7** | **168 h** | **2** | 1.2075 | 0.9802 | **0.9580** | **0.207** |
+
+⚠️ **Day 7 runs on a two-member ensemble** — ICON's archive stops at d6 (confirmed: zero
+non-null hours at d7 across all 16,104). Never place a d7 figure beside a three-member one
+unlabelled.
+
+**Weekly energy is the strongest product.** Summing the hourly forecasts through the power
+curve over non-overlapping weeks cancels ~2.6× of the hourly error:
+
+| Lead | Hourly nMAE (% rated) | **Weekly nMAE (% rated)** | Weekly MAPE (% of actual) |
+|---:|---:|---:|---:|
+| d1 | 7.73% | **2.24%** | 9.83% |
+| **d7** | **10.32%** | **3.95%** | 18.22% |
+
+*Two normalisations because they are not interchangeable: % of rated is comparable to the
+hourly figure and shows the cancellation; % of actual has a denominator ~a quarter the size
+(measured capacity factor **0.236–0.240**) and is what an operator feels. Reporting only the
+latter made the aggregate look worse than the hourly forecast when it is ~2.6× better.*
+
+**Three findings and one failure:**
+
+1. **The classical/ML gap narrows with lead** — `mos_multi` trails XGBoost by 5.6% at 24 h
+   and only **2.3% at 168 h**. The further ahead you forecast, the less machine learning
+   adds. At weekly range this is very nearly a linear-regression problem.
+2. **By day 7, raw ensemble averaging beats single-model MOS** (1.0418 vs 1.0578) —
+   multi-model combination outweighs statistical correction at that range.
+3. **Dropping an ensemble member costs nothing.** Scoring d6 with and without ICON:
+   0.9354 → **0.9343**, coverage 0.705 → 0.719. This **refuted a documented prior** that
+   144 h with three members would beat 168 h with two. Take 168 h.
+4. ❌ **The quantiles are not calibrated.** P10–P90 coverage is **0.65–0.74 against 0.80
+   nominal** at every lead — bands systematically too narrow. Reported as a failure rather
+   than widened, because an interval tuned until it covers is fitted to the test set.
+   Interval width does grow correctly with lead (1.81 → 2.70), so the spread feature tracks
+   real uncertainty; the model is under-dispersed.
+
+⚠️ **Single split, seed 42 — not the 4-fold × 5-seed protocol.** Treat differences under ~2%
+as unresolved, **including the ICON result**. The energy aggregate is scored on the test
+fold's **18–19 weeks**, not the ~95 in the full window.
+
 ### 🏁 Classical vs ML bakeoff (2026-08-12) — one protocol, eleven predictors
 
 The first comparison in this project run on a **defensible protocol**: 4 rolling-origin

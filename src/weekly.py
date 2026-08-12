@@ -43,6 +43,7 @@ from __future__ import annotations
 import argparse
 import re
 from dataclasses import dataclass, field
+from functools import lru_cache
 
 import numpy as np
 import pandas as pd
@@ -85,6 +86,12 @@ def models_present(cols: list[str], lead_day: int) -> list[str]:
     Used to record *which* ensemble a lead actually had. ICON stops at d6, so
     the day-7 model runs on two members rather than three — a fact that must
     travel with any day-7 number rather than being discovered later.
+
+    ⚠️ Pass the columns that **survive** the all-NaN drop, not the requested
+    ones. ICON's d7 columns exist in the frame and are entirely null, so naming
+    them from the request labelled the day-7 model a three-member ensemble when
+    it is a two-member one — the exact mislabelling verification gate 6 in
+    `redo/results/08` exists to prevent.
     """
     tag = f"_wind_speed_100m_d{lead_day}"
     return sorted(c[len("nwp_"):-len(tag)] for c in cols if c.endswith(tag))
@@ -95,6 +102,7 @@ def build_valid_time_frame(
     nwp_df: pd.DataFrame,
     lead_day: int,
     config: Config,
+    keep_models: list[str] | None = None,
 ) -> tuple[pd.DataFrame, pd.Series, list[str]]:
     """Return (X, y, model_names) for one lead day, indexed by valid time τ.
 
@@ -105,6 +113,12 @@ def build_valid_time_frame(
     cannot occur.
     """
     cols = lead_columns(nwp_df, lead_day)
+    if keep_models is not None:
+        # Restricting the ensemble is how the ICON question gets answered:
+        # scoring d6 with and without ICON isolates the cost of losing a member
+        # from the cost of an extra forecast day.
+        cols = [c for c in cols
+                if any(c.startswith(f"nwp_{m}_") for m in keep_models)]
     if not cols:
         raise ValueError(f"No forecast columns for lead day {lead_day}.")
 
@@ -132,17 +146,19 @@ def build_valid_time_frame(
 
     combined = X.copy()
     combined["_target"] = hub.reindex(X.index)
-    # Drop all-NaN columns first (e.g. ECMWF serves no gusts here) so they do
-    # not take every row with them.
+    # Drop all-NaN columns first (e.g. ECMWF serves no gusts here, and ICON
+    # serves nothing at d7) so they do not take every row with them.
     all_nan = [c for c in X.columns if combined[c].isna().all()]
     if all_nan:
         combined = combined.drop(columns=all_nan)
     combined = combined.dropna()
 
     feature_cols = [c for c in combined.columns if c != "_target"]
+    # Membership is reported from the columns that SURVIVED, so an all-null
+    # member is never counted. See models_present.
     return (combined[feature_cols],
             combined["_target"].rename("wind_speed_hub"),
-            models_present(cols, lead_day))
+            models_present(feature_cols, lead_day))
 
 
 # ---------------------------------------------------------------------------
@@ -226,7 +242,16 @@ def evaluate_lead(X: pd.DataFrame, y: pd.Series, config: Config,
 
     gbm = _make_regressor(config.model.stage1_algo, seed)
     gbm.fit(X_tr, y_tr)
-    res.scores["xgboost"] = compute_metrics(yt, gbm.predict(X_te)).mae
+    pred = np.asarray(gbm.predict(X_te), dtype=float)
+    res.scores["xgboost"] = compute_metrics(yt, pred).mae
+
+    quantiles = config.raw.get("weekly", {}).get("quantiles")
+    if quantiles:
+        qp = fit_quantiles(X_tr, y_tr, X_te, list(quantiles), seed)
+        res.scores.update(calibration(yt, qp))
+
+    hours = int(config.raw.get("weekly", {}).get("aggregate_hours", 168))
+    res.scores.update(weekly_energy_error(y_te, pred, config, hours))
     return res
 
 
@@ -238,12 +263,22 @@ def run(config_path: str, test_split: float = 0.2, seed: int = 42) -> pd.DataFra
         raise SystemExit("No NWP data — set nwp.enabled: true in the config.")
 
     leads = config.raw.get("weekly", {}).get("lead_days") or available_leads(nwp)
+
+    # (lead, keep_models, label). The last two rows are the ICON ablation: d6
+    # scored with and without ICON isolates the cost of losing a member from
+    # the cost of an extra forecast day. Without the d6-minus-ICON run the two
+    # effects are confounded and the 144 h vs 168 h choice cannot be made.
+    jobs: list[tuple[int, list[str] | None, str]] = [(d, None, "all") for d in leads]
+    two = ["ecmwf_ifs025", "gfs_global"]
+    if 6 in leads:
+        jobs.append((6, two, "no_icon"))
+
     rows = []
-    for lead in leads:
+    for lead, keep, label in jobs:
         try:
-            X, y, models = build_valid_time_frame(weather, nwp, lead, config)
+            X, y, models = build_valid_time_frame(weather, nwp, lead, config, keep)
         except ValueError as exc:
-            logger.warning("lead d%d skipped: %s", lead, exc)
+            logger.warning("lead d%d (%s) skipped: %s", lead, label, exc)
             continue
         r = evaluate_lead(X, y, config, lead, models, test_split, seed)
         logger.info(
@@ -256,7 +291,7 @@ def run(config_path: str, test_split: float = 0.2, seed: int = 42) -> pd.DataFra
             r.scores.get("mos_multi", float("nan")),
             r.scores.get("xgboost", float("nan")),
         )
-        rows.append(dict(lead_day=lead, horizon_h=lead * 24,
+        rows.append(dict(lead_day=lead, horizon_h=lead * 24, arm=label,
                          members=r.n_models, models="+".join(r.models),
                          n_features=r.n_features, n_train=r.n_train,
                          n_test=r.n_test, **r.scores))
@@ -268,6 +303,117 @@ def run(config_path: str, test_split: float = 0.2, seed: int = 42) -> pd.DataFra
         df.to_csv(out, index=False)
         logger.info("Wrote %s", out)
     return df
+
+
+# ---------------------------------------------------------------------------
+# Probabilistic arm
+# ---------------------------------------------------------------------------
+
+def fit_quantiles(X_tr: pd.DataFrame, y_tr: pd.Series, X_te: pd.DataFrame,
+                  quantiles: list[float], seed: int) -> dict[float, np.ndarray]:
+    """One gradient-boosting model per quantile, pinball objective.
+
+    **Separate models from the point forecast, deliberately.** Training one
+    model to serve both cost TFT 0.380 m/s in v4 — a quantile objective is a
+    different problem from minimising squared error, and a model asked to do
+    both does neither well.
+    """
+    from lightgbm import LGBMRegressor
+
+    out = {}
+    for q in quantiles:
+        m = LGBMRegressor(objective="quantile", alpha=q, n_estimators=300,
+                          num_leaves=31, learning_rate=0.05, subsample=0.8,
+                          colsample_bytree=0.8, min_child_samples=20,
+                          random_state=seed, n_jobs=-1, verbose=-1)
+        m.fit(X_tr, y_tr)
+        out[q] = np.asarray(m.predict(X_te), dtype=float)
+    return out
+
+
+def calibration(y_true: np.ndarray, preds: dict[float, np.ndarray]) -> dict[str, float]:
+    """Observed coverage vs nominal, plus interval width.
+
+    An uncalibrated interval is worse than none — it invites false confidence.
+    Sharpness travels with it because a band spanning the whole turbine range
+    is perfectly calibrated and perfectly useless.
+    """
+    stats: dict[str, float] = {}
+    for q, p in sorted(preds.items()):
+        stats[f"below_p{int(q * 100)}"] = float(np.mean(y_true < p))
+    lo, hi = min(preds), max(preds)
+    stats["interval_width"] = float(np.mean(preds[hi] - preds[lo]))
+    stats["coverage"] = float(np.mean((y_true >= preds[lo]) & (y_true <= preds[hi])))
+    stats["nominal_coverage"] = float(hi - lo)
+    return stats
+
+
+# ---------------------------------------------------------------------------
+# Weekly energy aggregate
+# ---------------------------------------------------------------------------
+
+@lru_cache(maxsize=4)
+def _turbine_cached(name: str, hub_height_m: float):
+    """`load_turbine` reaches out to the oedb turbine library on every call.
+
+    Eight lead-day jobs meant eight fetches and turned a two-minute run into a
+    ten-minute one. The turbine does not change between leads.
+    """
+    from .stage2_powercurve import load_turbine, turbine_spec
+    t = load_turbine(name, hub_height_m)
+    return t, turbine_spec(t, name)
+
+
+def _turbine(config: Config):
+    return _turbine_cached(config.turbine.name, float(config.site.hub_height_m))
+
+
+def weekly_energy_error(y_true: pd.Series, y_pred: np.ndarray, config: Config,
+                        hours: int = 168) -> dict[str, float]:
+    """Percent error on total energy over NON-OVERLAPPING weeks.
+
+    Hourly errors partially cancel in a sum, so this should beat any individual
+    hour — and weekly energy is what a resource assessment actually wants at a
+    site with no metered output.
+
+    Evaluated on whole, non-overlapping blocks: adjacent weeks share weather, so
+    a rolling window would inflate the sample count into fiction. ~95 weeks
+    exist in the study window; a test fold holds far fewer.
+    """
+    turbine, spec = _turbine(config)
+    from .stage2_powercurve import windspeed_to_power
+    p_true = windspeed_to_power(y_true, turbine).to_numpy(dtype=float)
+    p_pred = windspeed_to_power(
+        pd.Series(np.asarray(y_pred, dtype=float), index=y_true.index), turbine
+    ).to_numpy(dtype=float)
+
+    n_weeks = len(y_true) // hours
+    if n_weeks < 2:
+        return {"n_weeks": float(n_weeks)}
+    t = p_true[: n_weeks * hours].reshape(n_weeks, hours).sum(axis=1)
+    p = p_pred[: n_weeks * hours].reshape(n_weeks, hours).sum(axis=1)
+
+    # TWO normalisations, because they answer different questions and mixing
+    # them up makes the aggregate look worse than the hourly forecast when it is
+    # in fact much better:
+    #   * `_of_actual` divides by the energy actually produced — the number an
+    #     operator cares about, but its denominator is ~a quarter of rated, so
+    #     it is NOT comparable to an hourly nMAE.
+    #   * `_of_rated` divides by rated energy over the same block, which IS
+    #     directly comparable to `hourly_nmae_pct` and is what shows whether
+    #     hourly errors cancel in the sum.
+    rated_week = spec.nominal_power_w * hours
+    denom = np.where(t == 0, np.nan, t)
+    return {
+        "n_weeks": float(n_weeks),
+        "weekly_mape_of_actual": float(np.nanmean(np.abs(p - t) / denom * 100.0)),
+        "weekly_bias_pct": float(np.nanmean((p - t) / denom * 100.0)),
+        "weekly_nmae_of_rated": float(np.mean(np.abs(p - t)) / rated_week * 100.0),
+        "hourly_nmae_pct": float(
+            np.mean(np.abs(p_pred - p_true)) / spec.nominal_power_w * 100
+        ),
+        "capacity_factor": float(np.mean(p_true) / spec.nominal_power_w),
+    }
 
 
 def main() -> None:

@@ -1,10 +1,13 @@
 # `redo/results/` — measured evidence for the redo methodology
 
-> ⏱️ **Horizons covered: 24 h, 48 h and 72 h.** Unless a document says otherwise its numbers
-> are **t + 24 h** — that is the project's primary horizon and the basis of documents
-> 01–06. [07](07_horizon_sweep.md) is the exception: it sweeps 24/48/72 h to measure how
-> skill decays with lead time. **Nothing here covers 96 h or beyond**; a weekly (168 h)
-> model would need forecast leads that are available but not yet fetched.
+> ⏱️ **Horizons covered: 24 h through 168 h.** Unless a document says otherwise its numbers
+> are **t + 24 h** — the project's primary horizon and the basis of documents 01–06.
+> [07](07_horizon_sweep.md) sweeps 24/48/72 h; [09](09_weekly_forecast_results.md) covers
+> **24 h to 168 h** at daily resolution.
+>
+> 🔮 **[08](08_weekly_forecast_design.md) is a design, not a measurement** — the only
+> forward-looking document here, left unedited after the build so its refuted projection and
+> prior stay visible. Its results live in [09](09_weekly_forecast_results.md).
 
 > **What this folder is:** the measurements that justify the staged plan in
 > [`../`](../README.md). Each document ties a result to the stage it evidences.
@@ -42,17 +45,27 @@ LSTM's spread across seeds (sd 0.0281) is **~8× XGBoost's** (0.0034). Every pri
 architecture conclusion in this project rested on single-seed runs, which could not have
 seen this. → [04](04_deep_models.md)
 
-**4. The protocol caught six defects that inspection had not.**
-Including a SARIMAX configuration that produced numerically explosive forecasts, a
-significance test silently comparing different time periods, and a **latent leak that would
-have made any multi-day forecast look superb and mean nothing**.
+**4. The protocol caught seven defects that inspection had not.**
+Including a SARIMAX configuration producing numerically explosive forecasts, a significance
+test silently comparing different time periods, a **latent leak that would have made any
+multi-day forecast look superb and mean nothing**, and a cache that would have turned a
+7-day model into a 3-day one. **Three of the seven surfaced within a day of starting the
+weekly work** — novel configurations are where dormant bugs live.
 → [06](06_what_the_protocol_caught.md)
 
-**5. Forecast skill decays, but decelerates — a weekly model looks viable.**
-Across 24/48/72 h, XGBoost's skill against climatology falls 0.371 → 0.320 → 0.289, with the
-loss per extra day shrinking. Extrapolated, a 7-day forecast would still beat climatology by
-~25%. Also: **climatology overtakes persistence as the right baseline between 24 h and
-48 h.** → [07](07_horizon_sweep.md)
+**5. Forecast skill decays, but decelerates — and a 7-day model works.**
+Across 24/48/72 h, skill against climatology falls 0.371 → 0.320 → 0.289. Built out to
+168 h, a **7-day forecast beats climatology by 20.7%** and predicts **weekly energy to ~4%
+of rated capacity**. Also: **climatology overtakes persistence as the right baseline between
+24 h and 48 h**, and the classical/ML gap *narrows* with lead (5.6% → 2.3%).
+→ [07](07_horizon_sweep.md), [09](09_weekly_forecast_results.md)
+
+**6. Two documented predictions were tested — one held, one was refuted.**
+The 168 h skill projection of ~0.25 measured **0.207** (decay is faster than geometric). The
+prior that losing an ensemble member would hurt was **wrong** — dropping ICON costs nothing,
+so 168 h beats 144 h. And the quantile arm **fails calibration** (0.65–0.74 vs 0.80 nominal),
+reported as a failure rather than fixed by widening.
+→ [09](09_weekly_forecast_results.md)
 
 ## Contents
 
@@ -65,6 +78,8 @@ loss per extra day shrinking. Extrapolated, a 7-day forecast would still beat cl
 | [05_ceiling_and_information.md](05_ceiling_and_information.md) | The ceiling measurements, and how the bakeoff corroborates them | [04](../04_stage4_ceiling_analysis.md) |
 | [06_what_the_protocol_caught.md](06_what_the_protocol_caught.md) | **Six** defects and the guard that surfaced each | [03](../03_stage3_alignment_harness.md) |
 | [07_horizon_sweep.md](07_horizon_sweep.md) | 24/48/72 h decay; the baseline crossover; whether a weekly model is viable | [04](../04_stage4_ceiling_analysis.md), [05](../05_stage5_baselines_and_protocol.md) |
+| [08_weekly_forecast_design.md](08_weekly_forecast_design.md) | 🔮 **Design, written before the build.** Valid-time reframing, the ICON constraint, probabilistic output. Left unedited — including the projection and prior that 09 refutes | [08](../08_stage8_deployment_rehearsal.md) |
+| [09_weekly_forecast_results.md](09_weekly_forecast_results.md) | **24 h → 168 h measured.** 7-day skill vs climatology, the ICON ablation, weekly energy, and a failing calibration check | [05](../05_stage5_baselines_and_protocol.md), [08](../08_stage8_deployment_rehearsal.md) |
 
 ## Provenance
 

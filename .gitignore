@@ -8,6 +8,7 @@ venv/
 .ipynb_checkpoints/
 
 # Data and outputs (keep the folders, ignore contents)
+outputs
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*

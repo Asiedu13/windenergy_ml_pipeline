@@ -193,7 +193,64 @@ implicit contracts break silently.
 
 ---
 
-## What these six have in common
+## Defect 7 — a cache that would have turned a 7-day model into a 3-day one
+
+**Symptom.** None available. This one produced no error, no warning, and no visibly wrong
+number — it would have produced *suspiciously good* day-7 scores.
+
+**Cause.** Open-Meteo responses are cached at
+`data/raw/openmeteo_{site}_{model}_{year}.json` — a path that keys on site, model and year
+and **says nothing about which lead days or variables the file holds**. Widening
+`lead_days` from `[1,2,3]` to `[1..7]` for the weekly work would have hit those existing
+files, found them present, and returned a three-lead frame. Every "day 7" model would in
+fact have been running on a day-1/2/3 forecast — i.e. reading 4–6 days into the future — and
+scoring beautifully for it.
+
+**What caught it.** Reading the cache path before trusting the fetch. A cache hit is not a
+match: the filename encodes less than the request does.
+
+**Fix.** `_missing_open_meteo_keys` compares the requested `{var}_previous_day{N}` series
+against what the payload actually contains, and re-downloads on any mismatch. Confirmed
+firing on every stale file:
+
+```
+Open-Meteo cache openmeteo_anloga_ecmwf_ifs025_2024.json is missing 24 requested
+series (e.g. wind_speed_100m_previous_day4); re-downloading.
+```
+
+**The lesson.** **A cache key must encode everything that changes the answer.** This one
+encoded three of five dimensions. The general form — *silent staleness when a request widens*
+— is the same failure as defect 5: a configuration nobody had tried yet, sitting behind code
+that looked correct for the configuration everybody had.
+
+---
+
+## Defect 8 — a day-7 model labelled as a three-member ensemble
+
+**Symptom.** The first per-lead run reported d7 with `members: 3` and
+`models: ecmwf+gfs+icon`, while the same row showed **17 features against 23** for every
+other lead. The two numbers could not both be right.
+
+**Cause.** `models_present` named the ensemble from the *requested* columns. ICON's d7
+columns exist in the frame and are entirely null, so they were counted — then dropped moments
+later by the all-NaN filter. The scores were correct; the label was not.
+
+**What caught it.** Cross-reading two fields that had to agree. Nothing failed, and the
+mislabelled row would have travelled into a results table where a two-member day-7 number sat
+unlabelled beside three-member ones — **exactly the failure that verification gate 6 in
+[08](08_weekly_forecast_design.md) was written to prevent**, occurring in the same session
+the gate was written.
+
+**Fix.** Membership is now reported from the columns that *survive*, so an all-null member is
+never counted.
+
+**The lesson.** Metadata drifts from data unless it is derived from the same object. Naming
+the ensemble from the request rather than the result is the same class of error as asserting
+the grid shape you asked for rather than the one that arrived ([register B4](../00_mistake_register.md)).
+
+---
+
+## What these eight have in common
 
 **None of them crashed.** Several produced numbers that *agreed with a reasonable prior* —
 ARIMA is weak at day-ahead, spatial gradients are marginal, deep models are seed-sensitive —
@@ -209,10 +266,15 @@ Two patterns are worth naming because they recur:
   five models had an unstated, name-based dependency on the configuration that changed. The
   sanity floor caught it within one run.
 
-**Cost of the guards:** a sanity-floor rule, two assertions, and about twenty test cases.
+**Cost of the guards:** a sanity-floor rule, three assertions, and about thirty test cases.
 
-**Cost of the six defects had they gone unreported:** one invalid published number; one
+**Cost of the seven defects had they gone unreported:** one invalid published number; one
 invalid significance analysis; a 2.9%-inflated baseline under every historical claim; a
 handicapped classical arm that would have overstated the advantage of machine learning; a
-latent leak that would have made any multi-day forecast look superb and mean nothing; and a
-48 h comparison in which five of eleven models were silently fitting calendar terms.
+latent leak that would have made any multi-day forecast look superb and mean nothing; a 48 h
+comparison in which five of eleven models were silently fitting calendar terms; and a weekly
+model that was secretly a three-day model.
+
+**Three of the seven (5, 6, 7) surfaced within a single day of starting the weekly work** —
+because that work was the first to use a configuration the code had never run. Novel
+configurations are where dormant bugs live.

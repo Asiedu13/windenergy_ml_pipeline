@@ -94,25 +94,49 @@ Full table and DM matrices: [`../outputs/reports/bakeoff.md`](../outputs/reports
 
 ## Tier 2 — newly attractive because of the result
 
-### 5. Multi-horizon forecasting
+### 5. Multi-horizon forecasting — ✅ *done 2026-08-12, and it went to 7 days*
 
-**Why:** the `d2`/`d3` columns are already on disk and already shown to carry decaying
-skill (d1 0.7684 → d2 0.8504 → d3 0.8457 m/s). A horizon-vs-error curve is now a
-*measured* story rather than a hypothetical.
-**What to change:** as doc 08 item 5 — `add_nwp_features` already takes `offset_hours`, so
-pair horizon *h* with the `d{ceil(h/24)}` columns.
-**Effort:** half a day. **ROI:** a strong thesis chart, no new data.
+**Result:** built out to **168 h**, seven models on a valid-time framing (one per forecast
+lead day). A 7-day forecast beats climatology by **20.7%**; weekly energy lands within **~4%
+of rated capacity**. Full table in [`../RESULTS.md`](../RESULTS.md), detail and limitations
+in [`redo/results/09`](../redo/results/09_weekly_forecast_results.md).
 
-### 6. Probabilistic forecasting — substantially upgraded
+**One correctness note that matters more than the result.** Setting a longer horizon on the
+old feature-time path would have **leaked the future**: `nwp_*_d{N}` at valid time τ was
+issued 24·N hours before τ, so row *t* may only use leads with `24·N ≥ h`. At 168 h the `d1`
+column would have carried a forecast issued at `t + 144` — six days ahead. Nothing checked
+this until it was looked for. `add_nwp_features` now drops short leads and raises when none
+survives.
+
+**What this item under-predicted.** It scoped a horizon curve from the `d2`/`d3` columns
+already on disk. Leads `d4`–`d7` turned out to be available from the same API for ~6 MB, so
+the ceiling was seven days rather than three — and the interesting findings were at the far
+end: the classical/ML gap **narrows** with lead (5.6% → 2.3%), and by day 7 raw ensemble
+averaging beats single-model MOS.
+
+### 6. Probabilistic forecasting — ⚠️ *first attempt built 2026-08-12; calibration FAILS*
 
 **Why:** doc 08 ranked this mid-table partly because there was no natural uncertainty
 signal. There is one now: **three independent NWP models whose disagreement is itself
 informative**. Wide spread between ECMWF, GFS and ICON on a given hour is a physically
 meaningful "low confidence" indicator, and it is already fetched.
-**What to change:** add per-hour ensemble spread as a feature; train quantile regression
-for P10/P50/P90.
-**Effort:** 1–2 days. **ROI:** materially more useful to a grid operator than a point
-forecast, and the input is free.
+
+**Built:** per-hour ensemble spread as a feature, plus quantile gradient boosting (pinball
+objective) for P10/P50/P90 per lead day, trained **separately** from the point model.
+
+**Result: not calibrated.** Observed P10–P90 coverage is **0.65–0.74 against 0.80 nominal**
+at every lead from 24 h to 168 h — the bands are systematically too narrow, roughly
+symmetrically, so it is a width problem rather than bias. **Reported as a failure rather
+than fixed by widening**, because an interval tuned until it covers is fitted to the test
+set, not calibrated.
+
+**What does work:** interval width grows monotonically with lead (1.81 → 2.70 m/s) and
+coverage improves with it, so the spread feature is tracking real uncertainty. The model is
+simply under-dispersed throughout.
+
+**Remaining work:** recalibrate on a held-out validation fold, or wrap in conformal
+prediction, which guarantees coverage by construction rather than by fitting.
+[`redo/results/09`](../redo/results/09_weekly_forecast_results.md).
 
 ### 7. Richer NWP inputs via GFS GRIB — **upgraded from "only on a null result"**
 
