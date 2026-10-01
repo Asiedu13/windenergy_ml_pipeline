@@ -1,0 +1,92 @@
+# Monthly resource climatology + 30-day outlook.
+#
+#   python -m src.monthly          --config config_monthly.yaml   # M2 climatology
+#   python -m src.monthly_outlook  --config config_monthly.yaml   # M1 outlook
+#
+# What differs from config_weekly.yaml, and why:
+#
+#   * `data.start: 2010-01-01`. The monthly work reads **every cached ERA5 month**
+#     directly from data/raw rather than through load_weather(), so this range is
+#     documentation of intent rather than a filter. The archive has a deliberate
+#     41-month hole (2016-08..2019-12) that is NOT being filled; src.monthly
+#     tolerates it, and `anomaly_autocorrelation` only pairs genuinely consecutive
+#     months so the gap cannot manufacture a four-year-apart "lag-1" pair.
+#
+#   * ⚠️ The two products have very different sample sizes, and every table must
+#     say which it is on:
+#         M2 climatology  -> 149 complete months (2010-01..2025-12), 12-13 per
+#                            calendar month.
+#         M1 outlook      -> capped by NWP availability. Probed live 2026-08-12:
+#                            Open-Meteo previous-runs is ALL-NULL before 2024-03
+#                            and has no lead past d7. So ~22 months, extending to
+#                            ~28 once ERA5 2026-01..07 lands.
+#
+#   * No `model.compare_algos` sweep. At n=149 months with 13 leave-one-year-out
+#     folds, anything past a handful of parameters overfits; deep models are out
+#     of the question. The 24 h/weekly configs' algorithm comparison would be
+#     meaningless here.
+#
+# Baseline note: **climatology, and specifically leave-one-year-out climatology.**
+# Measured: anomaly persistence scores 0.0439 CF against climatology's 0.0369 on
+# the same months, so persistence is not merely weaker than at 24 h — it is worse
+# than doing nothing. And in-sample climatology (0.0371) flatters by 8.6% over the
+# honest leave-one-year-out figure (0.0403); only the latter may be quoted.
+
+site:
+  name: anloga
+  latitude: 5.79
+  longitude: 0.90
+  hub_height_m: 100
+
+data:
+  source: era5
+  start: "2010-01-01"
+  end: "2026-07-31"
+  cache_dir: data/raw
+
+nwp:
+  enabled: true
+  models: [ecmwf_ifs025, gfs_global, icon_global]
+  lead_days: [1, 2, 3, 4, 5, 6, 7]
+  variables:
+    - wind_speed_100m
+    - wind_direction_100m
+    - wind_speed_10m
+    - temperature_2m
+    - surface_pressure
+    - wind_gusts_10m
+
+turbine:
+  name: E-101/3050
+  source: oedb
+
+forecast:
+  horizon_hours: 168        # the outlook's forecastable head; the tail is climatology
+  timestep: hourly
+
+monthly:
+  # A month is dropped unless this fraction of its hours are present. Guards
+  # against a truncated final month entering the climatology as a genuine low year.
+  min_completeness: 0.95
+  # PXX = the value EXCEEDED XX% of the time, so P90 is the 10th percentile — a
+  # low, conservative number. Encoded in src.monthly.EXCEEDANCE_QUANTILE.
+  exceedance_levels: [50, 75, 90]
+  # Bootstrap resamples for the M1 skill confidence interval. The interval is the
+  # deliverable, not the point estimate: the ceiling is 13.1% and n is ~22, so an
+  # interval spanning zero is the expected, reportable outcome.
+  bootstrap_samples: 10000
+
+model:
+  stage1_algo: xgboost
+  test_split: 0.2
+  cv_folds: 5
+  lags: [1, 2, 3, 6, 12]
+  rolling_windows: [3, 6]
+  seed: 42
+  tune_xgboost: false
+  tune_n_trials: 50
+  compare_algos: [xgboost]
+
+paths:
+  outputs: outputs
+  processed: data/processed

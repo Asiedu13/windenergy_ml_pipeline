@@ -23,6 +23,23 @@
 
 **A 7-day forecast beats climatology by 20.7%.** The model works at weekly range.
 
+> ⚠️ **Two later findings qualify this table — neither invalidates it, but both change what it
+> may be compared against.** ([12](12_monthly_outlook_power.md))
+>
+> 1. **The climatology column is a *training-window* climatology** — (month, hour) means from
+>    the ≤22-month window, via `weekly.climatology_predict`. Against the admissible
+>    leave-one-year-out archive climatology (~14 years, which is operationally available since
+>    ERA5 latency does not affect a climatological mean) the window baseline is **14.8% worse
+>    hourly and 52.5% worse on weekly aggregates**. **The skill column is therefore measured
+>    against a weak reference and the like-for-like values would be lower.**
+> 2. **This table is hub wind speed in m/s; the deliverable is energy.** Re-scored in capacity
+>    factor after the power curve, `mos_multi` beats `xgboost` at **5 of 7 leads** — reversing
+>    the 7-of-7 ordering here. The power curve is nonlinear, so the model minimising
+>    wind-speed error is not the one minimising energy error.
+>
+> Both are flagged rather than silently restated: the numbers below are correct for what they
+> measure.
+
 ## Finding 1 — the projection was optimistic, and by how much
 
 [08 §1](08_weekly_forecast_design.md) projected skill ~**0.25** at 168 h by extrapolating the

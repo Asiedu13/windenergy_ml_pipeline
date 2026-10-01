@@ -121,6 +121,31 @@ Measured later, at a 24 h horizon ([results/05](results/05_ceiling_and_informati
    is present, the analysed state at *t* is largely redundant. The same argument from the
    opposite direction.
 
+### The strongest case for this stage: the monthly model that was never built
+
+Asked for "a monthly model", the ceiling analysis ran **first** and found
+([results/10](results/10_monthly_ceiling.md), 156 months):
+
+* **81.6% of monthly-energy variance is the seasonal cycle.** Only 18.4% is available.
+* **Lag-1 anomaly autocorrelation is 0.229 and gone by lag 2**, so there is almost nothing to
+  carry forward.
+* **Anomaly persistence scores worse than climatology** (0.0447 vs 0.0402 CF) — the baseline
+  ordering from the 24 h regime is *inverted*, and using persistence would have flattered any
+  model by ~10%.
+* A 30-day total built on a **perfect** 7-day forecast is capped at **13.1%** skill.
+
+**A 30-day hourly forecast was therefore never trained.** Every ingredient for a
+confident-looking failure was present: a plausible request, a working pipeline, and a target
+whose seasonal component would have produced a healthy-looking R² while predicting nothing.
+The measured outlook came in at **+1.1%, CI [−19.7%, +17.7%]** — and because the ceiling was
+known first, that null result was the *expected* outcome rather than a surprise to explain
+away. This stage cost about an hour and prevented an entire iteration.
+
+**It also produced a deliverable.** Knowing the ceiling redirected the work to what monthly
+data *does* support — a P50/P75/P90 resource climatology
+([results/11](results/11_monthly_results.md)). Stage 4's output is not only "stop"; it is
+"stop, and here is what is actually available."
+
 ## 4.4 Then, and only then, re-plan
 
 Take the finding back to the [stage 1](01_stage1_deployment_contract.md) contract. If the

@@ -1,9 +1,14 @@
 # `redo/results/` — measured evidence for the redo methodology
 
-> ⏱️ **Horizons covered: 24 h through 168 h.** Unless a document says otherwise its numbers
+> ⏱️ **Horizons covered: 24 h through monthly.** Unless a document says otherwise its numbers
 > are **t + 24 h** — the project's primary horizon and the basis of documents 01–06.
 > [07](07_horizon_sweep.md) sweeps 24/48/72 h; [09](09_weekly_forecast_results.md) covers
-> **24 h to 168 h** at daily resolution.
+> **24 h to 168 h** at daily resolution; [10](10_monthly_ceiling.md) and
+> [11](11_monthly_results.md) work at **calendar-month** scale.
+>
+> ⚠️ **The monthly documents are not in m/s.** Their errors are in **capacity-factor points**
+> over month-long aggregates, and their sample is months (~150), not hours (~16k). No figure
+> in 10–11 is comparable to a figure in 01–09.
 >
 > 🔮 **[08](08_weekly_forecast_design.md) is a design, not a measurement** — the only
 > forward-looking document here, left unedited after the build so its refuted projection and
@@ -67,6 +72,24 @@ so 168 h beats 144 h. And the quantile arm **fails calibration** (0.65–0.74 vs
 reported as a failure rather than fixed by widening.
 → [09](09_weekly_forecast_results.md)
 
+**8. An underpowered test is not a finding — and the baseline can outweigh the model.**
+The 30-day outlook's original test had a **minimum detectable effect of 26.1% against a 13.1%
+ceiling**: its null was guaranteed by the design. Re-scored on 7-day blocks, where the
+forecast is 100% of the prediction rather than 23%, the same models give **+39.4%,
+p = 1.1×10⁻⁵**. Two side-findings matter more than the headline: **choosing a 2-year training
+-window climatology over the 14-year archive is worth 52.5%** — more than every modelling
+decision combined — and **the winner changes with the objective**, `mos_multi` beating
+`xgboost` at 5 of 7 leads in capacity factor while losing 7 of 7 in m/s.
+→ [12](12_monthly_outlook_power.md)
+
+**7. At monthly scale the calendar is the model, and persistence is inadmissible.**
+**81.7% of monthly-energy variance is the seasonal cycle**; only 18.3% is left to predict, and
+lag-1 anomaly autocorrelation is 0.263 — dead by lag 2. Anomaly persistence scores *worse than
+climatology* (0.0437 vs 0.0405 CF), inverting the 24 h regime. A 30-day outlook is capped at
+**13.1% skill even with a perfect 7-day head**, so "extend the model to a month" was answered
+with a resource-climatology product rather than a forecast.
+→ [10](10_monthly_ceiling.md), [11](11_monthly_results.md)
+
 ## Contents
 
 | File | What it holds | Redo stage evidenced |
@@ -80,6 +103,9 @@ reported as a failure rather than fixed by widening.
 | [07_horizon_sweep.md](07_horizon_sweep.md) | 24/48/72 h decay; the baseline crossover; whether a weekly model is viable | [04](../04_stage4_ceiling_analysis.md), [05](../05_stage5_baselines_and_protocol.md) |
 | [08_weekly_forecast_design.md](08_weekly_forecast_design.md) | 🔮 **Design, written before the build.** Valid-time reframing, the ICON constraint, probabilistic output. Left unedited — including the projection and prior that 09 refutes | [08](../08_stage8_deployment_rehearsal.md) |
 | [09_weekly_forecast_results.md](09_weekly_forecast_results.md) | **24 h → 168 h measured.** 7-day skill vs climatology, the ICON ablation, weekly energy, and a failing calibration check | [05](../05_stage5_baselines_and_protocol.md), [08](../08_stage8_deployment_rehearsal.md) |
+| [10_monthly_ceiling.md](10_monthly_ceiling.md) | **Monthly scale.** The variance decomposition that reframed "monthly model", the 13.1% outlook ceiling, and why persistence is inadmissible here | [04](../04_stage4_ceiling_analysis.md), [05](../05_stage5_baselines_and_protocol.md) |
+| [11_monthly_results.md](11_monthly_results.md) | **Monthly measured.** The P50/P75/P90 resource product, the exceedance-estimator correction, and the 30-day outlook with its interval | [05](../05_stage5_baselines_and_protocol.md), [08](../08_stage8_deployment_rehearsal.md) |
+| [12_monthly_outlook_power.md](12_monthly_outlook_power.md) | **The outlook re-powered.** Why 11's test could not have worked, the pre-registered MDE, the model ladder it unlocked, and two findings that reach back into [09](09_weekly_forecast_results.md) | [05](../05_stage5_baselines_and_protocol.md), [08](../08_stage8_deployment_rehearsal.md) |
 
 ## Provenance
 

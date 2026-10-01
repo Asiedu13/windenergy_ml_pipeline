@@ -1,6 +1,6 @@
 # 06 — What the protocol caught
 
-> **What:** four defects surfaced by the bakeoff's own guards during a single day's work.
+> **What:** nine defects surfaced by the project's own guards and cross-checks.
 > **Why this file exists:** [stage 3](../03_stage3_alignment_harness.md) argues that guards
 > must be built before models and must be able to *fail*. That argument is cheap to make and
 > easy to ignore. This is what it bought in practice — every one of these produced a
@@ -250,7 +250,44 @@ the grid shape you asked for rather than the one that arrived ([register B4](../
 
 ---
 
-## What these eight have in common
+## Defect 9 — `lead_days` stopped being binding once the cache widened
+
+**Symptom.** Re-running Phase A to add a per-fold output — a change that touches only an
+output path — moved **20 of 22 published MAEs**. XGBoost `study` went 0.8037 → 0.7998.
+
+**Cause.** `_parse_open_meteo` returned **every** `{var}_previous_day{N}` series present in the
+cached payload, ignoring the `lead_days` the config asked for. The weekly work widened the raw
+caches from 3 leads to 7; from that moment, `config_bakeoff.yaml`'s `lead_days: [1, 2, 3]` was
+silently served **all seven** — 126 columns instead of 54. At a 24 h horizon the lead guard
+admits every lead, so the four extra leads entered as genuine additional information and every
+model improved.
+
+**What caught it.** Comparing the re-run against the published table before using it. The new
+numbers were *better*, internally consistent, and would have been entirely believable as a
+figure source.
+
+**Fix.** `_parse_open_meteo` now filters to the requested leads and variables, logging what it
+drops. Three tests pin it, including one asserting that a d7 series present in the payload does
+**not** appear when leads 1–2 are requested.
+
+**Verified**: after the fix the harness reproduces **14 of 14** published figures exactly
+(xgboost 0.8037, mos_multi 0.8412, persistence 1.3183, …) and the per-fold table to four
+decimals, including the 46% difficulty spread.
+
+**The lesson.** This is **defect 7 in the opposite direction**. That one was *request wider,
+receive narrower*; this is *request narrower, receive wider*. Both come from the same root
+cause — **a cache key that encodes less than the request does** — and fixing only the first
+left the second live. When a guard is written for one direction of a mismatch, ask immediately
+what the other direction would look like.
+
+It also shows why the derive-never-transcribe rule has a corollary: **a regenerated artefact
+must be checked against the published one before it replaces it.** The regeneration was the
+right instinct; using it unchecked would have quietly re-based a thesis chapter on an
+undocumented feature set.
+
+---
+
+## What these nine have in common
 
 **None of them crashed.** Several produced numbers that *agreed with a reasonable prior* —
 ARIMA is weak at day-ahead, spatial gradients are marginal, deep models are seed-sensitive —

@@ -36,8 +36,9 @@ differently enough to change what the documents say:
 | **A 21-parameter linear model lands within 4.7% of gradient boosting.** Most of the project's ~30% NWP gain is an *information* effect, not a machine-learning one — and the redo's original three-baseline list was missing the two rungs that show it | [05](05_stage5_baselines_and_protocol.md), [results/02](results/02_classical_vs_ml.md) |
 | **Dropping every latency-blocked reanalysis feature costs nothing** — degradation is *negative*. Stage 8's pre-registered prediction, measured and right | [08](08_stage8_deployment_rehearsal.md), [results/03](results/03_operational_vs_study.md) |
 | **The "XGBoost beats deep models by 18%" figure does not transfer.** That was NASA POWER truth; on ERA5 it is **5.1%**. Direction holds, magnitude does not | [06](06_stage6_modelling.md), [results/04](results/04_deep_models.md) |
-| **Deep models are ~8× more seed-sensitive than trees** — LSTM's seed range exceeds its entire mean gap to XGBoost | [06](06_stage6_modelling.md), [results/04](results/04_deep_models.md) |
+| **Deep models are up to ~18× more seed-sensitive than trees** — LSTM's seed range exceeds its entire mean gap to XGBoost, and TFT's is twice that again | [06](06_stage6_modelling.md), [results/04](results/04_deep_models.md) |
 | **The guards caught four real defects in one day**, two of them introduced by the redo's own bakeoff | [00 group F](00_mistake_register.md), [results/06](results/06_what_the_protocol_caught.md) |
+| **At monthly scale the calendar is the model** — 81.6% of monthly-energy variance is the seasonal cycle, persistence is *worse* than climatology, and a 30-day outlook shows no demonstrable skill. The ceiling analysis (stage 4) is what stopped this becoming a model nobody could falsify | [04](04_stage4_ceiling_analysis.md), [results/10](results/10_monthly_ceiling.md), [results/11](results/11_monthly_results.md) |
 
 None of it changes the nine-stage structure or the ordering argument — the evidence supports
 both. It changes specific figures, and it adds two baselines that should have been there
@@ -67,7 +68,7 @@ gate you cannot fail is not a gate, which is a lesson this project learned twice
 | # | Stage | Exit gate |
 |---:|:---|:---|
 | — | [00 Mistake register](00_mistake_register.md) | *(reference — read first)* |
-| — | [results/](results/README.md) | *(measured evidence for the stages below — all at a **24 h horizon**)* |
+| — | [results/](results/README.md) | *(measured evidence for the stages below — **24 h** unless a document says otherwise; 07 sweeps to 72 h, 09 to 168 h, 10–11 are **monthly**)* |
 | 1 | [Deployment contract](01_stage1_deployment_contract.md) | A one-page contract, plus a git repo with a first commit |
 | 2 | [Data availability audit](02_stage2_data_availability_audit.md) | Every source characterised; the study window chosen *from* that table |
 | 3 | [Alignment harness](03_stage3_alignment_harness.md) | Every guard demonstrated **failing** on broken input before it is trusted |

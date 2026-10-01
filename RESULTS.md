@@ -616,6 +616,113 @@ latter made the aggregate look worse than the hourly forecast when it is ~2.6× 
 as unresolved, **including the ICON result**. The energy aggregate is scored on the test
 fold's **18–19 weeks**, not the ~95 in the full window.
 
+### 🗓️ Monthly scale — climatology and a 30-day outlook (2026-08-12)
+
+⚠️ **Different units and a different sample.** Errors below are **capacity-factor points over
+calendar-month aggregates**, not m/s over hours. Nothing in this section is comparable to any
+other figure in this log. Detail: [`redo/results/10`](redo/results/10_monthly_ceiling.md) and
+[`11`](redo/results/11_monthly_results.md).
+
+**The request was "a monthly model"; the measurement said that cannot mean a 30-day hourly
+forecast.** NWP previous-runs stop at lead day 7 (probed live), and at monthly scale:
+
+| Quantity | Value (n = **156 months**, 2010-01→2026-07) |
+|:---|---:|
+| Seasonal cycle share of monthly-CF variance | **81.6%** |
+| Interannual anomaly share | **18.4%** |
+| Lag-1 anomaly autocorrelation | **0.229** (gone by lag 2: 0.101) |
+| Leave-one-year-out climatology MAE | **0.0402 CF** (4.02 pp of rated) |
+| Anomaly persistence MAE | **0.0447** — *worse than climatology* |
+
+So "monthly" was split into a **resource climatology** (which works) and a **30-day outlook**
+(which does not, measurably).
+
+**Ceiling first.** A monthly total can only use NWP for its first ~7 days. Granting that head
+a *perfect* forecast caps skill at **13.1%** over climatology (7 days), rising to 30.7% at 14
+and 51.5% at 21 — the first week is the least valuable week to know.
+
+| Arm | n | MAE (CF) | Skill | 95% CI | Verdict |
+|:---|---:|---:|---:|:---|:---|
+| Climatology (LOYO) | 22 | 0.0346 | — | — | baseline |
+| **30-day outlook** | 22 | 0.0342 | **+1.1%** | **[−19.7%, +17.7%]** | ❌ **no demonstrable skill** |
+| Perfect head (ceiling here) | 22 | 0.0262 | +24.2% | [−0.0%, +44.1%] | not significant |
+
+**Findings:**
+
+1. ❌ **The 30-day outlook has no demonstrable skill.** It beat climatology in **12 of 22
+   months** — a coin flip. Reported as a null result. This is a **sample-size problem, not a
+   modelling one**: Open-Meteo previous-runs begin 2024-03, so n grows one month per month,
+   and resolving a true ~5% effect needs 100+ months.
+2. ⚠️ **A 22-month estimate is not stable.** Growing the sample 20 → 22 months during this
+   work moved the outlook's headline **+6.9% → +1.1%** and flipped the ceiling arm from
+   significant to not. Only the interval makes that visible.
+3. ✅ **The obvious P90 estimator was wrong, in the optimistic direction.** The empirical 10th
+   percentile is exceeded **84.6%** of the time against 90% nominal — with 12–14 years per
+   calendar month it moves a whole rank when one year is held out. A fitted-normal tail lands
+   at **89.7%**, within 0.3 points. `exceedance_table` now defaults to the normal fit and
+   scores both on every run.
+4. 🔆 **Wind and solar are close to anti-correlated on the daily cycle here.** Wind troughs
+   08:00–11:00 UTC and peaks 16:00–21:00, every month. The diurnal swing (up to 0.207 CF)
+   rivals the seasonal one (0.289) — the most operationally useful fact in the monthly work,
+   and it comes from the climatology, not a forecast.
+5. 📉 **Interannual spread is large:** across 11 complete years, annual energy runs
+   **6,246–7,691 MWh** (CF 0.234–0.288). The best year beats the worst by 23%.
+
+**Capacity-factor reconciliation (a defect this closed).** This project was carrying two
+capacity factors: **0.2606** here and **0.236–0.240** in the weekly work. Both are correct for
+what they measure and neither was labelled. The weekly figure is its **test fold**
+(2025-08-19→12-31, a low-wind stretch); it *varies across leads* because each lead's frame
+survives `dropna` with a different row count, shifting the fold start — `n_test` 3164–3194
+correlates **+0.987** with the quoted capacity factor. Density correction accounts for a
+further +4.1%. Any capacity factor quoted from here on carries its period.
+
+### 🔁 The 30-day outlook, re-powered (2026-08-12) — and two findings that reach backwards
+
+The monthly outlook above returned "no demonstrable skill" and was attributed to sample size.
+That was incomplete. The design was **diluting** the signal: a 7-day forecast is 23% of a
+30-day month, and the other 77% is climatological tail error *identical in both arms* which,
+being absolute, inflates variance without cancelling.
+
+**Its minimum detectable effect was 26.1% against a 13.1% ceiling — it could not have resolved
+even a perfect forecast.** The null was guaranteed by the design, not the physics.
+
+Fix: score the head where it *is* the prediction — non-overlapping 7-day blocks, forecasts
+issued weekly so they tile the era. n = 22 → **114**, effect 4.3× larger, ~10× the power. MDE
+was **pre-registered at 8.2% before any result was computed**. Detail:
+[`redo/results/12`](redo/results/12_monthly_outlook_power.md).
+
+| Arm | Block MAE (CF) | Skill vs archive clim | DM p |
+|:---|---:|---:|---:|
+| `climatology_archive` *(reference)* | 0.0728 | — | — |
+| `climatology_window` *(what 09 used)* | 0.1110 | **−52.5%** | 1.4×10⁻⁵ |
+| `ensemble_mean` | 0.0918 | **−26.1%** | 1.9×10⁻³ |
+| `mos_single` | 0.0637 | +12.5% | 0.110 *(ns)* |
+| `mos_multi` | 0.0505 | +30.7% | 2.8×10⁻⁴ |
+| **`xgboost`** | **0.0441** | **+39.4%** | **1.1×10⁻⁵** |
+
+1. ⚠️ **The baseline outweighed every modelling decision.** Scoring against a ≤2-year
+   training-window climatology instead of the 14-year archive is worth **+52.5%** at block
+   level and +14.8% hourly — a 21-point swing in XGBoost's headline (39.4% → 60.3%), larger
+   than the gap between the best and worst candidate. **The archive is operationally
+   available**: ERA5's 5-day latency is irrelevant to a climatological mean.
+2. ⚠️ **The winner depends on the objective.** In capacity factor, `mos_multi` beats
+   `xgboost` at **5 of 7 leads** — reversing the 7-of-7 result in
+   [`redo/results/09`](redo/results/09_weekly_forecast_results.md), which scored **m/s**. The
+   power curve is nonlinear, so the model minimising wind-speed error is not the one
+   minimising energy error. **The project has been selecting on m/s while the deliverable is
+   energy.**
+3. **The raw ensemble mean is 98% bias** (−0.0902 CF of a 0.0918 MAE). It beats climatology at
+   every lead hourly and loses by 26.1% on weekly aggregates, because a 168-hour sum preserves
+   bias while hourly MAE forgives it. This is the case for MOS stated as a measurement.
+4. **The monthly product improves but still cannot be called significant:** +1.1%
+   [−19.7%, +17.7%] → **+4.4% [−10.5%, +19.1%]**, interval 21% narrower, n 22 → 26. The 13.1%
+   ceiling never moved. **A 39.4% gain on the forecastable quarter becomes ~4% on the month.**
+   The re-powering did not rescue the monthly outlook — it explained it.
+
+**Both climatology arms and both objectives are reported side by side** rather than the
+favourable one being quoted. The gate that caught the tiling bug (86 of 19,488 hours never
+predicted, traced to Open-Meteo holes rather than an off-by-one) is in the doc.
+
 ### 🏁 Classical vs ML bakeoff (2026-08-12) — one protocol, eleven predictors
 
 The first comparison in this project run on a **defensible protocol**: 4 rolling-origin
@@ -672,7 +779,29 @@ the persistence column is the anchor. The harness reproduces the published persi
 figure (1.3097) exactly on the original single split.
 
 ⚠️ **Deep models are not in this table.** They are on a different evaluation basis (single
-split, 3 seeds) and are reported separately — see below once phase B lands.
+split, 3 seeds) and are reported separately.
+
+#### Phase B complete (2026-08-12, 12.9 h) — all five architectures × 3 seeds
+
+⚠️ **Single chronological split, `study` features — not the 4-fold protocol above.** XGBoost
+is re-run on the same split so the deep scores have a like-for-like anchor. Detail:
+[`redo/results/04`](redo/results/04_deep_models.md).
+
+| Model | Mean MAE (m/s) | Seed sd | Range | Min/fit | Seed sensitivity |
+|:---|---:|---:|---:|---:|---:|
+| **`xgboost`** *(anchor)* | **0.7329** | **0.0035** | 0.0068 | 0.1 | 1× |
+| `lstm` | 0.7701 | 0.0276 | 0.0505 | 4.8 | 8× |
+| `nbeats` | 0.8234 | 0.0361 | 0.0705 | 20.7 | 10× |
+| `dlinear` | 0.8244 | 0.0115 | 0.0215 | 1.1 | 3× |
+| **`tft`** | **0.8826** | **0.0614** | **0.1090** | **231.1** | **18×** |
+
+1. **TFT finished last** at ~**2,000× XGBoost's training cost** (3 h 51 m vs 7 s per fit) to
+   land **20% worse**. It is also the most seed-sensitive model measured: seeds 42 and 7 agree
+   to 0.0056, and seed 1234 falls 0.1090 away.
+2. **This inverts the NASA POWER result below**, which had TFT as the *best* deep model on a
+   single seed. That run got both the gap size (18% → **5.1%**) and the runner-up's identity
+   wrong — and it picked its winner from the noisiest candidate available.
+3. **Trees still win, by 5.1% not 18%.** Wherever the 18% figure appears, this belongs with it.
 
 ### Five-model bakeoff with NWP (2026-08-11) — the v4 near-tie breaks
 

@@ -58,16 +58,23 @@ One source, one seed, one split.
 
 ### 3. Two-stage power evaluation with NWP — ✅ *done, see §Results below*
 
-### 4. Multi-seed repeat — **now the highest-value outstanding item**
+### 4. Multi-seed repeat — **still the highest-value outstanding item**, and now with evidence
 
-**Why:** carried from doc 08 tier 1 and still not done. It matters *more* now, not less: a
-large claimed effect attracts more scrutiny than a small one, and every NWP number is a
-single seed on a single chronological split.
+**Why:** carried from doc 08 tier 1 and still not done for the NWP arms. It matters *more*
+now, not less: a large claimed effect attracts more scrutiny than a small one, and every NWP
+number is a single seed on a single chronological split.
 **What to change:** loop `model.seed` over ≥5 values in `src/validate_nwp.py`; report
 mean ± sd for the with/without gap.
 **Effort:** ~1 h for the XGBoost arms.
 **Expected ROI:** converts "NWP improves MAE by 23%" into a defensible interval. Cheap
 insurance on the project's headline claim.
+
+**⚠️ Phase B (2026-08-12) supplies the argument for doing this.** Across 3 seeds, TFT scored
+0.8444 / 0.8500 / **0.9535** — a **0.1090 spread**, 18× XGBoost's. A single-seed TFT run could
+have reported anything in that range. It also **reversed** the NASA POWER finding that had TFT
+as the best deep model. XGBoost's own spread is small (sd 0.0035), so the headline is unlikely
+to move much — but "unlikely" is exactly what this item exists to replace.
+See [`../redo/results/04`](../redo/results/04_deep_models.md).
 
 ### 4b. Classical baselines — ✅ *done 2026-08-12, and it reframes the headline*
 
@@ -113,6 +120,16 @@ already on disk. Leads `d4`–`d7` turned out to be available from the same API 
 the ceiling was seven days rather than three — and the interesting findings were at the far
 end: the classical/ML gap **narrows** with lead (5.6% → 2.3%), and by day 7 raw ensemble
 averaging beats single-model MOS.
+
+**And where it stops: 168 h is the end of the road, not a waypoint.** Extended to monthly
+scale (2026-08-12), the answer is that a 30-day *forecast* is not available at this site.
+Previous-runs has no lead past d7, **81.6% of monthly-energy variance is just the seasonal
+cycle**, and a monthly total built on a *perfect* 7-day head is capped at **13.1%** skill over
+climatology. The real outlook measured **+1.1%, CI [−19.7%, +17.7%]** — no demonstrable skill,
+and a sample-size problem rather than a modelling one. What monthly scale *does* support is a
+resource climatology (P50/P75/P90), which was built.
+[`redo/results/10`](../redo/results/10_monthly_ceiling.md),
+[`11`](../redo/results/11_monthly_results.md).
 
 ### 6. Probabilistic forecasting — ⚠️ *first attempt built 2026-08-12; calibration FAILS*
 
