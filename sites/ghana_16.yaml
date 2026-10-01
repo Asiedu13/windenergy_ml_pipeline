@@ -1,0 +1,286 @@
+# Ghana's 16 regional capitals + Anloga, the v5 reference site.
+#
+# WHY THIS FILE EXISTS
+# -------------------
+# One place where each site's coordinate is written down, so it is never written
+# twice. Per-site configs are GENERATED from this registry by `src.multisite`,
+# not hand-copied — the nine hand-maintained `config_*.yaml` files in the repo
+# root each carry their own duplicate of the same Anloga site block, which is
+# exactly the pattern that lets one copy drift.
+#
+# A wrong coordinate is the quietest possible defect here: it relocates a site by
+# tens of kilometres and every downstream metric still looks completely
+# reasonable. Nothing in the pipeline can catch it. So every coordinate below
+# carries the source it came from, and `verified` records the date it was checked.
+#
+# PROVENANCE
+# ----------
+# Region/capital list cross-checked against two independent sources
+# (en.wikipedia.org/wiki/Regions_of_Ghana and a Graphic Online / fact-check
+# listing) on 2026-10-01; both agree on all 16 pairings.
+#
+# Coordinates come from two gazetteers, named per site in `coord_source`:
+#   time-ok    = https://time-ok.com/coordinates/ghana  (2 dp, city centre)
+#   geodatos   = https://www.geodatos.net/en/coordinates/ghana/<city>  (5 dp)
+#   config     = the project's own config.yaml (Anloga, unchanged since v1)
+# Where both sources covered a city they agreed to within 0.01 deg.
+#
+# PRECISION NOTE
+# --------------
+# ERA5's grid is 0.25 deg (~27 km), so a coordinate only needs to be accurate to
+# about 0.05 deg to select the correct grid cell. Two decimal places is ample.
+# What matters is identity (the right town) and side-of-the-coast, not metres.
+#
+# ⚠️ THE LAND/SEA PROBLEM — read before trusting any coastal site
+# --------------------------------------------------------------
+# ERA5 cells over water carry much lower surface roughness and correspondingly
+# higher wind speeds. A coastal site whose nearest grid cell lands offshore will
+# therefore show an *inflated* resource, and the error is invisible downstream:
+# the series is physically self-consistent, it just describes the sea.
+#
+# Cape Coast is the dangerous case. At 5.11 N it sits almost exactly between the
+# ERA5 rows at 5.00 and 5.25 (0.11 vs 0.14 deg), so a plain nearest-cell lookup
+# selects 5.00 N — and the coastline there runs near 5.10 N, putting that cell in
+# the Gulf of Guinea. Accra (5.56 -> 5.50) is borderline for the same reason.
+#
+# Sites flagged `land_check: required` below MUST have their selected cell
+# validated against the ERA5 land-sea mask before any metric is reported, and the
+# selected cell recorded in docs/13. See `src.data_ingest` (Phase 1) for the
+# guard; it snaps to the nearest cell with land fraction >= 0.5 and logs every
+# snap it makes.
+#
+# MEASURED 2026-10-01 (era5gh_lsm.nc, probe gate 0). `land_fraction_nearest` is
+# the mask value at each site's nearest cell; `cell` is what the guard selected.
+# Three sites failed the threshold and two of them snapped:
+#
+#   accra       nearest (5.50,-0.25) lf 0.314 -> snapped (5.75,-0.25) 22 km, lf 0.96
+#   cape_coast  nearest (5.00,-1.25) lf 0.178 -> snapped (5.25,-1.25) 16 km, lf 0.77
+#   anloga      nearest (5.75, 1.00) lf 0.124 -> NOT SNAPPED, see its entry below
+#
+# ⚠️⚠️ THE ANLOGA FINDING — this is about the EXISTING published work
+# ------------------------------------------------------------------
+# Anloga's cell is 12% land. Surface roughness already in the v5 parquet confirms
+# it independently: mean z0 = 0.000063 m, which is open water (open sea is
+# 0.0001-0.0002 m; cropland is 0.05-0.10 m, roughly a thousand times higher).
+# Every published v5 figure was computed on a predominantly-water ERA5 cell.
+#
+# What that does and does not touch:
+#   * FORECAST metrics are unaffected in validity. MAE 0.7295, R2 0.6653, the
+#     -30.6% NWP gain, the 4.7% classical-ML gap, the operational-vs-study
+#     result: all predict ERA5 wind at that cell from NWP forecasts at that same
+#     cell, so truth and features agree and the comparisons are internally sound.
+#   * RESOURCE and POWER levels are affected. Mean 100 m wind of 6.24 m/s and
+#     CF ~0.25 describe a marine/lagoon regime, not a land site, and the bias runs
+#     one way: lower roughness means faster wind means overstated resource.
+#   * The BENCHMARK comparison is flattered. Marine wind is smoother and more
+#     persistent than land wind, so "7.48% nMAE, at or below the Energies 2021
+#     land-farm reference" compares an easier series against a harder one.
+#
+# Anloga is a sandspit between the Keta Lagoon and the Gulf of Guinea, so a real
+# turbine there genuinely has near-marine exposure and the low roughness is not
+# absurd. But ERA5 at 25 km cannot resolve a ~2 km spit: the cell averages the
+# water around the site rather than the site. See docs/13 section 3a.
+
+bbox:
+  # N, W, S, E — one CDS request area covering all 17 sites with enough margin
+  # for a 3x3 extraction window (+-0.375 deg) around even the outermost site.
+  # Outermost sites: Bolgatanga 10.79 N, Sekondi-Takoradi 4.93 S,
+  # Goaso -2.52 W, Anloga 0.90 E.
+  north: 11.5
+  west: -3.5
+  south: 4.25
+  east: 1.5
+  # 30 lat x 21 lon = 630 cells, against 2 cells for the per-site Anloga patch.
+  # Request COUNT is unchanged (CDS cost is field-based) — only payload size
+  # grows. This is the whole reason 17 sites are affordable. Verified by the
+  # Phase 0c probe; see docs/13.
+
+defaults:
+  hub_height_m: 100
+  # One turbine everywhere, deliberately. Comparability across 17 sites is the
+  # point of this study; a per-site optimal machine is a different study, and a
+  # low-wind IEC class III turbine would flatter the interior sites.
+  turbine: E-101/3050
+
+sites:
+  # ---- Coastal / southeast strip: where Ghana's exploitable wind actually is ----
+  - name: accra
+    region: Greater Accra
+    latitude: 5.56
+    longitude: -0.20
+    coastal: true
+    coord_source: time-ok
+    verified: 2026-10-01
+    land_check: required
+    land_fraction_nearest: 0.314    # measured; nearest (5.50,-0.25) is mostly sea
+    cell: [5.75, -0.25]             # snapped 22 km inland, land fraction 0.96
+
+  - name: cape_coast
+    region: Central
+    latitude: 5.11
+    longitude: -1.25
+    coastal: true
+    coord_source: time-ok
+    verified: 2026-10-01
+    land_check: required
+    land_fraction_nearest: 0.178    # measured; the predicted offshore case
+    cell: [5.25, -1.25]             # snapped 16 km, land fraction 0.77
+
+  - name: sekondi_takoradi
+    region: Western
+    latitude: 4.92678
+    longitude: -1.75773
+    coastal: true
+    coord_source: geodatos
+    verified: 2026-10-01
+    land_check: required
+    land_fraction_nearest: 0.664    # measured; passes, no snap
+    cell: [5.00, -1.75]
+    note: >
+      Wikipedia gives this capital as Takoradi and the Graphic listing as
+      Sekondi; they are the twin city Sekondi-Takoradi and fall in the same ERA5
+      cell, so the distinction does not affect any result.
+
+  # ---- Interior: forecast-skill sites, resource expected to be marginal ----
+  - name: ho
+    region: Volta
+    latitude: 6.60
+    longitude: 0.47
+    coastal: false
+    coord_source: time-ok
+    verified: 2026-10-01
+
+  - name: koforidua
+    region: Eastern
+    latitude: 6.09
+    longitude: -0.26
+    coastal: false
+    coord_source: time-ok
+    verified: 2026-10-01
+
+  - name: kumasi
+    region: Ashanti
+    latitude: 6.69
+    longitude: -1.62
+    coastal: false
+    coord_source: time-ok
+    verified: 2026-10-01
+
+  - name: dambai
+    region: Oti
+    latitude: 8.06616
+    longitude: 0.17947
+    coastal: false
+    coord_source: geodatos
+    verified: 2026-10-01
+
+  - name: sunyani
+    region: Bono
+    latitude: 7.34
+    longitude: -2.33
+    coastal: false
+    coord_source: time-ok
+    verified: 2026-10-01
+
+  - name: techiman
+    region: Bono East
+    latitude: 7.59
+    longitude: -1.94
+    coastal: false
+    coord_source: time-ok
+    verified: 2026-10-01
+
+  - name: goaso
+    region: Ahafo
+    latitude: 6.80355
+    longitude: -2.51720
+    coastal: false
+    coord_source: geodatos
+    verified: 2026-10-01
+
+  - name: sefwi_wiawso
+    region: Western North
+    latitude: 6.20583
+    longitude: -2.48944
+    coastal: false
+    coord_source: geodatos
+    verified: 2026-10-01
+
+  # ---- Northern savannah ----
+  - name: tamale
+    region: Northern
+    latitude: 9.40
+    longitude: -0.84
+    coastal: false
+    coord_source: time-ok
+    verified: 2026-10-01
+
+  - name: damongo
+    region: Savannah
+    latitude: 9.08296
+    longitude: -1.81884
+    coastal: false
+    coord_source: geodatos
+    verified: 2026-10-01
+
+  - name: nalerigu
+    region: North East
+    latitude: 10.52726
+    longitude: -0.36982
+    coastal: false
+    coord_source: geodatos
+    verified: 2026-10-01
+
+  - name: bolgatanga
+    region: Upper East
+    latitude: 10.79
+    longitude: -0.85
+    coastal: false
+    coord_source: time-ok
+    verified: 2026-10-01
+
+  - name: wa
+    region: Upper West
+    latitude: 10.06
+    longitude: -2.50
+    coastal: false
+    coord_source: time-ok
+    verified: 2026-10-01
+
+  # ---- Reference site: NOT a regional capital ----
+  - name: anloga
+    region: Volta (reference site, not the regional capital)
+    latitude: 5.79
+    longitude: 0.90
+    coastal: true
+    coord_source: config
+    verified: 2026-10-01
+    reference: true
+    land_fraction_nearest: 0.124    # measured — the cell is 88% WATER
+    cell: [5.75, 1.00]              # deliberately NOT snapped; see below
+    # ⚠️ DELIBERATE DEVIATION from the pre-registered land-mask rule.
+    #
+    # The rule in docs/13 section 3 would snap this site 26 km inland to
+    # (6.00, 1.00). It is exempted, for two reasons that are not preferences:
+    #
+    #   1. Gate 1 would become untestable. The gate checks that the regional path
+    #      reproduces the per-site cache's centre-cell columns, and the per-site
+    #      cache IS cell (5.75, 1.00). Snapping would guarantee a mismatch and
+    #      destroy the only end-to-end validation of the new data path.
+    #   2. It would silently redefine every published v5 number. Changing the
+    #      reference site's cell mid-project is precisely the "silent edit" that
+    #      redo stage 9 section 9.3 forbids.
+    #
+    # The exemption is NOT a judgement that the cell is correct. It is not: see
+    # the header. The finding is reported rather than patched, and the v5 figures
+    # keep the cell they were computed on.
+    min_land_fraction: 0.0
+    note: >
+      The v5 site, carried forward for two reasons. It is the only site in this
+      project with a demonstrated resource and a published result set, so it is
+      the equivalence check on the regional ERA5 path (Gate 1): Anloga extracted
+      from the Ghana bbox must reproduce the centre-cell columns of its 468-file
+      per-site cache exactly. It also anchors the viability scale, sitting near
+      0.25 mean capacity factor — though see the header, because that figure is
+      now known to describe a water cell. Ho is Volta's actual capital and is
+      listed separately above.

@@ -63,13 +63,53 @@ a single JSON.
 | `data/processed/era5_anloga_2020-01-01_2023-12-31.parquet` | **35,064 rows × 36 cols**, 2020-01-01 00:00 → 2023-12-31 23:00 UTC, zero all-NaN columns | 5.3 MB |
 | `data/processed/nasa_power_anloga_2023-01-01_2023-06-30.parquet` | Cross-check slice, 2023 H1 | 0.09 MB |
 
-**ERA5 month coverage:**
+**ERA5 month coverage — per-site cache (`era5_anloga_*`, the v1–v5 path):**
 
 ```
 2010-01 ──────────────► 2016-07     ✓ complete (backfill halted here, deliberately)
 2016-08 ──────────────► 2019-12     ✗ MISSING (41 months, 123 requests)
 2020-01 ──────────────► 2023-12     ✓ complete (48 months, all 3 families)
 2024-03 ──────────────► 2025-12     ⟳ downloading for config_nwp.yaml (22 months)
+```
+
+### 2.1 Regional cache (`era5gh_*`, v6 multi-site) — a fourth family
+
+Added 2026-10-01 for the 16-regional-capital extension
+([13](13_multi_site_extension.md)). Keyed by **month only, not by site**, because one
+bounding-box download serves every site inside it — CDS charges per field rather than per
+grid cell, so 17 sites cost one site's requests instead of seventeen.
+
+| File | Contents |
+|:---|:---|
+| `era5gh_core_{YYYY}-{MM}.nc` | the 7 v1 single-level variables over the whole bbox |
+| `era5gh_extra_{YYYY}-{MM}.nc` | the 3 v2 extras over the bbox |
+| `era5gh_pressure_{YYYY}-{MM}.nc` | 3 variables × 2 pressure levels over the bbox |
+| `era5gh_lsm.nc` | land-sea mask, one hour, ~25 KB, reused for the whole archive |
+| `era5gh_manifest.json` | the bbox these files were built for |
+
+```
+bbox (N, W, S, E) = 11.5, -3.5, 4.25, 1.5   →  30 lat × 21 lon = 630 cells
+target range      = 2010-01 ──► 2025-12      (192 months × 3 families = 576 requests)
+```
+
+**Measured, not estimated:** 6.3 MB per core month, ~4.6–5.8 min per request, so ≈2.7 GB and
+≈2 days for the full archive. **This range has no hole** — it covers the 41 months
+(2016-08 → 2019-12) the per-site backfill deliberately skipped.
+
+⚠️ **The filenames do not encode the bbox.** A cache built for one box would otherwise be
+silently reused for another and every spatial column would describe the wrong neighbourhood —
+the same class of defect as the Open-Meteo `lead_days` leak
+([register entry B4 / defect 9](../redo/results/06_what_the_protocol_caught.md)), where a cache
+key encoded less than the request. `era5gh_manifest.json` is the guard and
+`_check_regional_manifest` raises rather than mixing grids.
+
+**Live coverage check** (file counts are never written into this page as facts — see the
+warning above):
+
+```bash
+powershell -c "(Get-ChildItem data/raw/era5gh_core_* | Measure-Object).Count"   # of 192
+powershell -c "Get-Content outputs/logs/era5gh_archive.log -Tail 5"
+python -m src.multisite cells      # which cell each site resolved to, and its land fraction
 ```
 
 **Why the backfill was stopped (2026-08-10).** It ran from 2026-08-08 to 2026-08-10 and
@@ -213,6 +253,25 @@ any write-up should say so. Widening `pad` to ~0.35° would give a true 3×3 pat
 cost of a full re-ingest — see [03_data_sources.md](03_data_sources.md) and
 [08_next_steps.md](08_next_steps.md).
 
+> ✅ **Fixed for `era5_regional` (v6), measured 2026-10-01.** The multi-site path downloads a
+> Ghana-wide bbox and extracts a genuine **3 × 3** window per site, so on that path:
+>
+> | Suffix | Status on the 1×2 per-site patch | Status on the 3×3 regional patch |
+> |:---|:---|:---|
+> | `_grad_ns` | identically zero | **alive** — sd 0.71 (wind 100 m) to 14.6 (pressure) |
+> | `_std` | `= \|_grad_ew\|/2` | **no longer collinear** |
+>
+> **All twenty columns carry information on the regional path.** Verified on 2024-06 against
+> the per-site cache ([13 §7a](13_multi_site_extension.md)).
+>
+> Two caveats. (1) **It is a different feature set**, so regional and per-site results are not
+> directly comparable on anything spatial. (2) **The "exactly" above is slightly too strong**
+> even for the 1×2 patch: three of the five `_std` columns match `|_grad_ew|/2` to 0.0e+00,
+> but the two *derived* wind-magnitude columns (`wind_speed_100m_std`,
+> `wind_speed_850hpa_std`) agree only to 8.0e-05 and 8.9e-06 relative, because `np.std` over a
+> 2-cell float32 array of `sqrt(u²+v²)` rounds where a raw field does not. Functionally
+> collinear either way — the substantive claim is unchanged.
+
 ---
 
 ## 3.5 NWP forecast columns (`config_nwp.yaml` only)
@@ -286,7 +345,7 @@ wind → 180°. Asserted in `tests/test_data_ingest.py`.
 
 ## 5. Known data limitations
 
-> **What:** five honest weaknesses in the data, stated plainly.
+> **What:** six honest weaknesses in the data, stated plainly.
 > **Why it matters:** these bound what the project can legitimately claim. Anyone
 > assessing this work will look for exactly this list, and it is far stronger to state
 > the limits yourself than to have them found for you.
@@ -298,9 +357,24 @@ Carry these into any write-up:
    *potential* generation. Errors are relative to reanalysis, not to reality.
 2. **Effectively a single grid cell.** 1 × 2 ERA5 cells at 0.25° — no meaningful
    spatial diversity, which is the direct cause of the degenerate columns in §3.4.
+   *(Fixed on the v6 regional path, which extracts a true 3 × 3 — see §3.4.)*
 3. **Four usable years, not ten.** 2020–2023 only; the backfill stalled at 2016-03 (§2).
 4. **Reanalysis is not a forecast.** ERA5 assimilates observations after the fact, so
    a "day-ahead" forecast here has access to a cleaner atmospheric state than an
    operational NWP forecast would. This flatters the reported scores.
 5. **`geopot_*` and the `_grad_*` columns are easy to misreport** — see the unit
    warnings in §3.3 and §3.4.
+6. ⚠️ **Anloga's ERA5 cell is 88% water** (land fraction **0.124**, measured 2026-10-01
+   against `era5gh_lsm.nc`). Surface roughness in the parquet confirms it independently:
+   mean **z₀ = 0.000063 m**, where open sea is 0.0001–0.0002 and cropland 0.05–0.10 — about
+   a thousand times rougher. ERA5 at 25 km cannot resolve the ~2 km sandspit between the
+   Keta Lagoon and the Gulf of Guinea, so the cell describes the water around the site
+   rather than the site.
+   **What this bounds:** *forecast* metrics stay valid (truth and features are the same
+   cell, so the comparisons are internally sound), but **resource and power levels are
+   overstated with a known sign** — lower roughness, faster wind, larger apparent resource
+   — and the benchmark comparison is **flattered**, because marine wind is smoother and
+   more persistent than the land wind the reference study measured. How much is **not
+   quantified**; that needs a land-cell or mast comparison. The cell is deliberately left
+   unchanged so published figures keep the data they were computed on.
+   → [13 §3a](13_multi_site_extension.md)
