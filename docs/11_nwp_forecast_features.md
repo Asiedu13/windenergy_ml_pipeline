@@ -1,27 +1,37 @@
-# 11 — NWP Forecast Features (v5, in progress)
+# 11 — NWP Forecast Features (v5, landed)
 
-Record of the v5 iteration, started 2026-08-10 — both what has happened and **what is
-planned next**. Written **mid-flight**: the ingest and plumbing are complete and tested,
-the ERA5 truth series for the new window is still downloading, and **no accuracy result
-exists yet**.
+Record of the v5 iteration, started 2026-08-10 and **completed 2026-08-11 23:18**. Much of
+this document was written **mid-flight** and is left that way deliberately: §7 holds the
+verification gates as they were *pre-registered*, and §7b holds what each possible outcome
+had been committed to **before** the result was seen. Both are kept unedited
+([redo stage 9 §9.4](../redo/09_stage9_writeup_and_hygiene.md)) — a pre-registration that
+gets rewritten after the fact is worthless.
 
-Reading order if you are picking this up cold: **§8** for what is running and how to
-resume it, **§7** for the gates still to run and their pass criteria, **§7b** for what
-each outcome commits you to, **§10** for why every decision was taken.
+Reading order if you are picking this up cold: **§7a‑final** for the authoritative result,
+**§9** for what may and may not be claimed from it, **§1** for why the iteration existed at
+all, **§7b** for what each outcome had been committed to in advance, **§10** for why every
+decision was taken. §7's ⏳ markers and §8's "what is running" are historical.
 
 > 📐 **Reading the numbers.** Unless stated otherwise, a figure like `1.1410` is a **test
 > MAE in m/s** — how far off the model typically is when predicting hub-height wind speed
 > 24 hours ahead, where **lower is better**. For scale: best model 1.114, naive
 > "tomorrow = today" 1.399, guessing the average 1.466. Full explanation:
 > [glossary — How to read the numbers](glossary.md#how-to-read-the-numbers).
-> ⚠️ Every figure in this document is from the **2020–2023** period. The v5 study window
-> is 2024-03 → 2025-12 and its results, once they exist, will not be comparable to these.
+> ⚠️ Figures in **§§1–7b** are from the **2020–2023** period. The v5 study window is
+> 2024-03 → 2025-12 and the results in §7a‑final are **not** comparable to them.
 
-> **Status at last edit: 2026-08-11 02:40.** ERA5 for the study window
-> (**2024-03 → 2025-12**, shortened from 2026-06 — see §10) is downloading; §8 has a live
-> progress check, since the count in any document is stale on arrival.
-> Nothing in this iteration has produced a model score yet. Do not quote v5 numbers —
-> there are none.
+> ✅ **Result: v5 landed 2026-08-11 23:18.** On the full 22-month ERA5 window
+> (2024-03 → 2025-12, 15,912 rows × 104 features) adding archived day-ahead NWP forecasts
+> as Stage 1 features cuts test MAE **1.0513 → 0.7295 m/s (−30.6%)** and lifts R²
+> **0.3300 → 0.6653**, past the **0.326** ceiling that bounds any predictor built on the
+> atmospheric state at time *t*. End-to-end power reaches **7.48% nMAE / 10.08% nRMSE**.
+> All four gates pass. Detail: **§7a‑final**; authoritative tables:
+> [`../RESULTS.md`](../RESULTS.md); interpretation:
+> [`../thesis/04_results_and_discussion.md`](../thesis/04_results_and_discussion.md) §4.5.
+>
+> **Every one of those figures is a single seed on a single chronological split.** Quote the
+> direction and magnitude, not a precise figure, until the multi-seed repeat
+> ([12 item 4](12_next_steps_v2.md)) is done. See §9.
 
 ## 1. Why this iteration exists
 
@@ -246,7 +256,12 @@ Conclusion: genuine model disagreement about the coastal sea-breeze phase, which
 precisely the systematic error the ML bias-correction absorbs. **Still to be confirmed
 per-model against ERA5 truth (§7 gate 1).**
 
-## 7. Verification gates — none of these have run yet
+## 7. Verification gates — as pre-registered, before any of them ran
+
+> 🔖 **This section is a pre-registration and is kept unedited, ⏳ markers included.** All
+> four gates have since **passed** — the outcomes are in **§7a‑final** (full 22-month
+> window, authoritative) and §7a (12-month interim). Read the pass criteria here and the
+> results there; do not read the status column below as current.
 
 > **What:** four checks that must pass, in order, before any result from this iteration
 > can be believed. Each has an exact pass mark and a defined response to failure.
@@ -371,7 +386,13 @@ where ECMWF led. Two consequences:
 
 Single seed, single chronological split. The multi-seed repeat
 ([12 item 4](12_next_steps_v2.md)) is the one thing standing between "measured on one run"
-and a defensible interval. The five-model bakeoff below also needs repeating on ERA5 truth.
+and a defensible interval — and it is now the **only** thing.
+
+✅ **The five-model bakeoff has since been repeated on ERA5 truth** (2026-08-12, 5 models ×
+3 seeds, 12.9 h). The reversal holds in direction but not magnitude: XGBoost leads the best
+deep model by **5.1%**, not 18%, and TFT fell from best of the deep bracket to **last**
+(0.8826 m/s, seed sd 0.0614 — 18× XGBoost's).
+→ [`../redo/results/04`](../redo/results/04_deep_models.md)
 
 ## 7a. INTERIM RESULT — 12 of 22 months (2026-08-11, superseded by 7a‑final)
 
@@ -533,6 +554,11 @@ evidence of mechanism.** Do not state this as the explanation without testing it
 - **The bakeoff needs repeating on ERA5 truth before the reversal is claimed.** It is one
   source, one seed, one split. The direction is large enough to be unlikely to be noise,
   but "unlikely" is not "measured".
+  > ✅ **Done 2026-08-12, and this caution earned its keep.** On ERA5 over 3 seeds the
+  > direction held but the magnitude fell from 18% to **5.1%**, and the identity of the best
+  > deep model changed — TFT, which won here, finished **last**. "Unlikely to be noise" was
+  > right about the direction and wrong about everything else.
+  > → [`../redo/results/04`](../redo/results/04_deep_models.md)
 - The ERA5 arm is handicapped by the short window; the full ERA5 run is the fair test and
   should land near the NASA POWER figures for R² and relative gain.
 - Pre-registered response for the LARGE band (§7b): bank it, then re-run the two-stage
@@ -568,21 +594,25 @@ The GFS-GRIB fallback is reserved for a **null** result traced to input poverty 
 a modest one. A modest gain does not justify a week of GRIB infrastructure for inputs
 whose marginal value would still be unmeasured.
 
-## 8. What is running right now, and how to resume
+## 8. The download, and how to resume one — ✅ completed 2026-08-11
 
-> **What:** the live state of the long-running download, and the commands to check on it
-> or restart it.
-> **Why this section exists at all:** the work is blocked on a multi-day download. Anyone
-> returning to this project needs to know what is in flight before starting anything,
-> because launching a second downloader corrupts the shared cache.
+> **What:** the state of the long-running download that blocked this iteration, and the
+> commands to check on or restart one.
+> **Why this section is kept now that it has finished:** the operating rules below are not
+> specific to this download. The next ingest needs them, and one of them was learned the
+> hard way.
 > **The one rule:** check for a running process before starting an ingest. It has already
 > gone wrong once.
 
-**ERA5 truth download for the new window.**
+**ERA5 truth download for the new window — finished.** All 84 files landed and the
+authoritative run on them is §7a‑final. The process block below is kept as the record of
+what was in flight; it is **not** live state ([stage 9
+§9.5](../redo/09_stage9_writeup_and_hygiene.md) — documents carry check commands, not
+snapshots, and the check command is in the next subsection).
 
 ```
 process : PID 42956 — python -u -m src.data_ingest_extend --config config_nwp.yaml
-started : 2026-08-10 20:03
+started : 2026-08-10 20:03   finished: 2026-08-11 (84/84 files)
 target  : 84 files (28 months × 3 request families)
 logs    : outputs/logs/era5_2024_2026.log   (stderr — Python logging writes there)
           outputs/logs/era5_2024_2026.out.log
@@ -660,27 +690,63 @@ families**, verified no file under 50 KB. `2016-08 → 2019-12` (41 months, 123 
 remains missing, so `config_10yr.yaml` still aborts in `src.pipeline`. Resume any time
 with `python -m src.data_ingest_extend --config config_10yr.yaml`.
 
-## 9. What may and may not be claimed today
+## 9. What may and may not be claimed — current as of 2026-10-01
 
-> **What:** an explicit boundary between what this iteration has established and what it
-> has not.
-> **Why it is stated so bluntly:** the plumbing works, the data is downloaded, and the
-> tests pass — which makes it tempting to describe the iteration as a success. It is not
-> one yet. **No accuracy result exists.** Whether adding forecasts helps is still an
-> open question, and the honest answer today is "we don't know".
+> **What:** an explicit boundary between what this iteration established and what it did
+> not.
+> **Why it is stated so bluntly:** a large measured effect attracts more scrutiny than a
+> small one, and this iteration produced the project's largest. The temptation after a
+> −30.6% result is to describe it more strongly than the evidence carries.
+> **Maintenance rule** ([stage 9 §9.7](../redo/09_stage9_writeup_and_hygiene.md)): this list
+> is updated whenever a result lands. An earlier version of it said "no accuracy result
+> exists" and stayed in the document for seven weeks after §7a‑final was written — which is
+> precisely the failure mode it exists to prevent.
 
 **May:**
-- The residual gap is information-limited, not sample-limited — with the learning curve,
-  the 1.16 train/test ratio, the ablation and the 0.326 autocorrelation ceiling as
-  evidence.
+- **NWP forecast features improve day-ahead wind-speed accuracy at this site by ~30%** —
+  1.0513 → 0.7295 m/s, R² 0.3300 → 0.6653, on the 22-month ERA5 window (§7a‑final).
+  Measured, gated, and reproduced on a second truth source at a smaller magnitude (+23.2%
+  on NASA POWER).
+- **The gain is an *information* effect, not a machine-learning one.** A 21-parameter OLS
+  model (`mos_multi`, 0.8412 m/s) lands within **4.7%** of XGBoost (0.8037) on the 4-fold
+  rolling-origin protocol, Diebold–Mariano p < 0.0001
+  ([redo/results/02](../redo/results/02_classical_vs_ml.md)). This is the more defensible
+  phrasing *and* it survives "did you need ML at all?" — for the last 4.7%, yes, with a
+  significance test.
+- **The residual gap before v5 was information-limited, not sample-limited** — learning
+  curve, 1.16 train/test ratio, ablation, and the 0.326 autocorrelation ceiling as
+  evidence (§1). The ceiling held and was passed by adding information, not by modelling.
+- **The latency-blocked features cost nothing to drop.** XGBoost on NWP + calendar only
+  (55 features, no reanalysis) scores 0.8009 against 0.8037 for all 94 — marginally
+  *better* ([redo/results/03](../redo/results/03_operational_vs_study.md)).
 - The 10-year backfill was stopped on measured grounds, not abandoned.
 - A three-model archived NWP feed is ingested, aligned under test, and wired end-to-end.
 
 **May not:**
-- Any statement that NWP features improve accuracy. **Not yet measured.**
-- Any v5 metric. None exists.
-- Any comparison between a future v5 number and the v1–v4 tables without re-running
-  baselines on 2024-03 → 2025-12 first.
+- **A precise figure quoted as if replicated.** Every §7a‑final number is a **single seed
+  on a single chronological split**. Quote direction and rough magnitude until the
+  multi-seed repeat ([12 item 4](12_next_steps_v2.md)) is done. The warrant for this
+  caution is measured, not hypothetical: on the 4-fold protocol, problem difficulty varies
+  **46%** between quarters (persistence 1.1129 → 1.6274), and deep models vary up to 18×
+  more across seeds than XGBoost does
+  ([redo/results/04](../redo/results/04_deep_models.md)).
+- **"Beats the published benchmark"** without stating site, window difficulty, truth type
+  and seed count alongside it. 7.48% nMAE sits below the Energies 2021 ~8.8% reference on a
+  window of comparable difficulty, but it is **not like-for-like**: different site,
+  different turbine assumptions, physics-derived truth rather than SCADA. Defensible
+  phrasing is in [12 §Results](12_next_steps_v2.md).
+- **Power metrics as validated physical yield.** They validate the forecasting step *given
+  an assumed power curve*. Wake, availability and electrical losses are invisible to this
+  evaluation, and an incorrect turbine selection would be too.
+- **An offline score as an operational one** — except where the operational arm was
+  actually measured, which it has been here and is the "may" item above
+  ([redo stage 8](../redo/08_stage8_deployment_rehearsal.md)).
+- **A ranking among the three NWP models.** ICON leads on ERA5 truth, ECMWF on NASA POWER;
+  the ordering is not stable across truth sources and the margins are small (§7a‑final).
+- **`two_stage` beating `direct`, or the reverse.** They sit within 0.05 pp and swap order
+  across truth sources. That ordering is not established.
+- Any comparison between a v5 number and the v1–v4 tables without re-running baselines on
+  2024-03 → 2025-12 first. The windows differ.
 
 ## 10. Decision log
 

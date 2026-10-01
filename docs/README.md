@@ -7,9 +7,18 @@
 > **7.48% nMAE / 10.08% nRMSE** against v4's 11.25% / 15.50%. All four verification gates
 > pass. Full detail: [11 §7a‑final](11_nwp_forecast_features.md).
 >
-> **Two things still outstanding before this is a headline claim:** it is a **single seed on
-> a single split** ([12 item 4](12_next_steps_v2.md)), and the five-model bakeoff that broke
-> v4's architecture near-tie was run on NASA POWER truth and needs repeating on ERA5.
+> **One thing still outstanding before this is a headline claim:** it is a **single seed on
+> a single split** ([12 item 4](12_next_steps_v2.md)). Quote the direction and rough
+> magnitude, not a precise figure, until the multi-seed repeat is done.
+>
+> ✅ **The second caveat is retired.** The five-model bakeoff that broke v4's architecture
+> near-tie *was* run on NASA POWER truth, and has since been repeated on ERA5 over 3 seeds
+> (2026-08-12): XGBoost still wins, but by **5.1%** rather than 18%, and TFT went from best
+> of the deep bracket to **last**. → [`../redo/results/04`](../redo/results/04_deep_models.md)
+>
+> 📘 **For interpretation, read [`../thesis/04_results_and_discussion.md`](../thesis/04_results_and_discussion.md).**
+> It supersedes [07_findings_and_analysis.md](07_findings_and_analysis.md), which remains the
+> v4-era record.
 
 Detailed documentation for the two-stage wind power forecasting pipeline built for
 Anloga, Ghana. Every design decision, every hyperparameter, every result — written
@@ -94,7 +103,10 @@ temporal alignment, a comparable training objective, and validation-based stoppi
 
 **Suggested path for a newcomer:** [glossary](glossary.md) → [01 problem & design](01_problem_and_design.md)
 → [00 data card](00_data_card.md) → [02 architecture](02_pipeline_architecture.md) →
-[07 findings](07_findings_and_analysis.md). The rest are reference.
+[11 §7a‑final](11_nwp_forecast_features.md) for the current result →
+[`../thesis/04_results_and_discussion.md`](../thesis/04_results_and_discussion.md) for what
+it means. The rest are reference. Read [07 findings](07_findings_and_analysis.md) for the
+v4-era interpretation and the methodological findings, **not** for current figures.
 
 | # | File | What it covers |
 |---:|:---|:---|
@@ -106,12 +118,12 @@ temporal alignment, a comparable training objective, and validation-based stoppi
 | 4 | [04_stage1_wind_speed.md](04_stage1_wind_speed.md) | Feature engineering, baselines (persistence + climatology), XGBoost + Optuna, deep models (LSTM/TFT/N-BEATS/DLinear), SHAP + Pearson analysis. |
 | 5 | [05_stage2_and_evaluation.md](05_stage2_and_evaluation.md) | Turbine, power curve, air-density correction, error propagation, three-variant comparison, metric definitions. |
 | 6 | [06_iteration_history.md](06_iteration_history.md) | v1 → v1.5 → v2 → v3 → v4 → v4b, every decision, every hyperparameter change, every result, every bug and fix. |
-| 7 | [07_findings_and_analysis.md](07_findings_and_analysis.md) | Interpretation of the v4 results: why the deep models *appeared* to underperform, feature-ranking interpretation, honest positioning vs literature, threats to validity, and what you may and may not claim in a write-up. |
+| 7 | [07_findings_and_analysis.md](07_findings_and_analysis.md) | **v4-era interpretation; superseded as the quotable layer by [`../thesis/04`](../thesis/04_results_and_discussion.md).** Why the deep models *appeared* to underperform, feature-ranking interpretation, positioning vs literature, threats to validity. Its findings 2 and 4 and its "defensible conclusions" 1–3 carry v5 supersede notes — read them, don't quote around them. |
 | 8 | [08_next_steps.md](08_next_steps.md) | Ranked improvements with effort estimates and expected ROI. **Largely superseded by doc 12** — its tiers assume a data-volume constraint that has since been refuted. |
 | 9 | [09_why_deep_learning_underperformed.md](09_why_deep_learning_underperformed.md) | Original word-for-word explanation of why LSTM/TFT/N-BEATS/DLinear lost to XGBoost. **Superseded by doc 10 — the premise was a measurement artefact.** |
 | 10 | [10_v4_deep_model_retraining.md](10_v4_deep_model_retraining.md) | The 24-hour alignment bug, doc 09's recommendations implemented and evaluated, corrected 5-model bakeoff, the 25 h persistence-baseline issue. |
 | 12 | [12_next_steps_v2.md](12_next_steps_v2.md) | **Current priorities**, rewritten after the NWP result. What is now settled, four tiers of remaining work, threats to the new result, and the results table so far. Replaces doc 08. |
-| 11 | [11_nwp_forecast_features.md](11_nwp_forecast_features.md) | **v5, in progress — state *and* forward plan.** Measured refutation of the "data-limited" claim (learning curve, ablation, autocorrelation ceiling), Open-Meteo vs GFS-GRIB source selection, the alignment contract, what is running right now, the four verification gates with pass criteria and failure actions, the pre-registered outcome branches, and a dated decision log. No v5 accuracy result exists yet. |
+| 11 | [11_nwp_forecast_features.md](11_nwp_forecast_features.md) | **v5, landed — the authoritative result (§7a‑final) and the boundary list (§9).** Measured refutation of the "data-limited" claim (learning curve, ablation, autocorrelation ceiling), Open-Meteo vs GFS-GRIB source selection, the alignment contract, and a dated decision log. §7 (verification gates with pass criteria and failure actions) and §7b (pre-registered outcome branches) are kept **unedited as pre-registration** — all four gates passed; read their outcomes in §7a‑final. |
 
 ## Quick reference
 

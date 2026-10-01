@@ -1,4 +1,16 @@
-# 07 — Findings & Analysis
+# 07 — Findings & Analysis (v4-era; superseded as the quotable layer)
+
+> ⚠️ **Read [`../thesis/04_results_and_discussion.md`](../thesis/04_results_and_discussion.md)
+> instead if you want current interpretation.** This document was written as the project's
+> interpretation layer and was correct for **v4** — state-only features, 2020–2023,
+> 11.25% nMAE. v5 added NWP forecast features and moved two of the five findings below:
+> the architecture spread (finding 2) and the benchmark position (finding 4). Chapter 4 is
+> now the interpretation layer; this document is the **v4-era record**, kept because its
+> ceiling analysis is what made v5 findable and because the reasoning is worth reading.
+>
+> Each affected section carries an inline v5 note. Nothing here has been deleted
+> ([redo stage 9 §9.3](../redo/09_stage9_writeup_and_hygiene.md)) — but **do not quote this
+> document's headline figures**; quote Chapter 4 or [`../RESULTS.md`](../RESULTS.md).
 
 This document steps back from the mechanics and interprets what the numbers
 actually mean: what worked, what didn't, and how this project sits relative to
@@ -43,6 +55,16 @@ chapter or a technical report.
    a 24 h persistence baseline of 1.399. The spread across architectures
    (0.101 m/s) is *smaller* than the gap from the weakest of them to persistence
    (0.184 m/s).
+   > ⚠️ **v5: the near-equivalence does not survive informative features.** On ERA5 truth
+   > with NWP forecasts, over 3 seeds, the spread is **0.150 m/s** and XGBoost wins
+   > outright: 0.7329, then LSTM 0.7701, N-BEATS 0.8234, DLinear 0.8244, TFT 0.8826. The
+   > near-tie was a property of a feature set with little signal in it — when every model
+   > is near the ceiling, they are near each other. **Two further things this finding could
+   > not have seen**, both measured in 2026-08: deep models vary up to **18×** more across
+   > seeds than XGBoost (TFT's range 0.1090 exceeds the entire gap from XGBoost to the
+   > worst model here), so a single-seed ranking is not a ranking; and TFT, best of the
+   > deep bracket on NASA POWER truth, finishes **last** on ERA5.
+   > → [`../redo/results/04_deep_models.md`](../redo/results/04_deep_models.md)
 3. **Architecture choice was not the lever; measurement correctness was.** Two
    configuration details — a 24-hour index offset in the deep-model scorer and one
    library default (`darts.TFTModel`'s 17-quantile objective) — moved the models
@@ -51,6 +73,16 @@ chapter or a technical report.
    ~8.8% nMAE). The ceiling is **information-limited, not sample-limited** — see
    the measurements in the next section, which refute the "more data" reading
    this document previously gave.
+   > ⚠️ **v5: the gap closed, and the second sentence is why.** Acting on
+   > "information-limited" rather than "sample-limited" is what produced v5: adding
+   > day-ahead NWP forecasts reaches **7.48% nMAE / 10.08% nRMSE**, now *below* the ~8.8%
+   > reference rather than 2.5 pp above it. This is the one finding in this document that
+   > was both correct and load-bearing — the diagnosis was right and the prescription
+   > followed from it. **The 0.326 ceiling quoted throughout this document remains correct
+   > for state-only features**; v5 did not beat it by modelling, it stepped outside the
+   > feature set it bounds (R² 0.6653). Benchmark comparisons are not like-for-like — see
+   > the §Positioning note below. → [`../RESULTS.md`](../RESULTS.md) §v5,
+   > [`11 §7a‑final`](11_nwp_forecast_features.md)
 5. **Feature engineering still matters, but not as the deciding factor.** The
    biggest metric jump from a *feature* change came from adding upper-air winds
    and spatial derivatives (v2). Handing the sequence models the same engineered
@@ -200,6 +232,17 @@ sequence architectures, all losing to a gradient-boosted tree, consistent with a
 well-known prior about small tabular datasets. It was not a finding. It was two
 bugs and a library default.
 
+> ⚠️ **v5 note — and an awkward one.** Once the measurement errors were fixed, trees won
+> anyway. On ERA5 truth with NWP features over 3 seeds, XGBoost (0.7329) leads the best
+> deep model (LSTM, 0.7701) by **5.1%** at 1/42nd the training cost
+> ([`../redo/results/04`](../redo/results/04_deep_models.md)). **This does not vindicate the
+> original explanation.** That explanation was wrong about *why*, and it was reasoning from
+> numbers that did not exist; being accidentally right about the direction is not the same
+> as having been right. The section's actual lesson — that a bug nudging every result toward
+> a plausible value survives review — is unaffected, and the mechanism behind the surviving
+> gap remains a hypothesis (see "The mechanism is a hypothesis" in
+> [`../redo/06_stage6_modelling.md`](../redo/06_stage6_modelling.md) §6.2).
+
 ### 1. The 24-hour alignment bug (the dominant cause)
 
 > **What:** each neural network's predictions were compared against the wrong hour — 24
@@ -341,6 +384,14 @@ something the others miss — the signal available in these features is being
 extracted about as well as any of them can manage, and the residual is weather
 chaos plus reanalysis resolution.
 
+> ✅ **v5 note — this one held, and then proved itself.** The retraction stands: N-BEATS is
+> **fourth of five** on ERA5 truth with NWP features (0.8234). And the diagnosis in the
+> last sentence — *the limit is in the data, not the design* — was tested the only way it
+> could be, by changing the data. Informative features broke the convergence this section
+> describes (spread 0.101 → **0.150 m/s**, with a clear winner), which is exactly what the
+> "limit is in the data" reading predicts should happen.
+> → [`../redo/results/04`](../redo/results/04_deep_models.md)
+
 ## Feature-ranking interpretation
 
 > **What:** reading the model's own account of which inputs it relied on, and checking it
@@ -398,11 +449,21 @@ story:
 ## Positioning relative to Energies 2021 benchmark
 
 > **What:** an honest comparison against the published study this architecture came from.
-> **Where it stands:** about 2.5 percentage points behind (11.25% vs ~8.8%).
+> **Where it stands:** about 2.5 percentage points behind (11.25% vs ~8.8%) **as of v4**.
 > **Why the gap is expected rather than embarrassing:** they had real turbine
 > measurements from an operating Polish wind farm and an operational forecast as input;
 > this project has neither, by necessity. The section separates the factors that genuinely
 > explain the gap from the one that was assumed to and did not — data volume.
+
+> ✅ **v5 note — the gap closed, because this section correctly named its cause.** The
+> dominant factor identified below ("no forecast in the input") was acted on, and v5 reaches
+> **7.48% nMAE / 10.08% nRMSE** — below the ~8.8% reference rather than 2.5 pp above it, on
+> a window whose persistence baseline is comparable to the literature setting rather than
+> markedly calmer. **It is still not like-for-like**, and the claim must carry those limits:
+> different site, different turbine assumptions, physics-derived truth rather than SCADA,
+> and a single seed on a single chronological split. Defensible phrasing, and the retraction
+> of the "both NWP windows are calmer" hedge that earlier weakened this comparison, are in
+> [`12_next_steps_v2.md`](12_next_steps_v2.md) §Results and threat 4.
 
 The published two-stage benchmark for this architecture is **8.8% nMAE / 13%
 nRMSE** (Donadio, Fang & Porté-Agel, Energies 2021, Model 2). Our v4 result is
@@ -446,6 +507,33 @@ another architecture.
 > discovered — and several here are genuinely important. In particular, the results come
 > from a single random seed on a single split, so small differences between models are
 > not statistically separated and must not be reported as if they were.
+
+> 📌 **v5 status of this list (2026-08-12).** The eight items are kept verbatim; three have
+> since been measured, and **none of the three was removed by being measured.**
+>
+> - **#3 (single contiguous test window)** — addressed by a 4-fold rolling-origin protocol,
+>   which **confirmed the threat was real**: problem difficulty swings **46%** between
+>   quarters (persistence 1.1129 → 1.6274), so any single split lands somewhere in that
+>   range by luck. Raw MAE is not comparable across folds; skill is.
+>   → [`../redo/results/01_protocol.md`](../redo/results/01_protocol.md)
+> - **#4 (single seed)** — now *quantified* rather than resolved. Across 3 seeds XGBoost's
+>   sd is **0.0035** m/s, but deep models reach **0.0614** (TFT), up to 18× more, with a
+>   range exceeding their entire mean gap to XGBoost. So the tree-based headline is unlikely
+>   to move and **every architecture ranking from a single seed is unsafe**. The v5 headline
+>   itself is still a single seed; that is [12 item 4](12_next_steps_v2.md).
+>   → [`../redo/results/04`](../redo/results/04_deep_models.md)
+> - **#6 (24 h horizon only)** — swept to 48/72 h, built out to **168 h**, and extended to
+>   monthly scale. Skill against climatology decays 0.371 → 0.320 → 0.289 → **0.207** at
+>   168 h, decelerating; climatology overtakes persistence as the right baseline between 24
+>   and 48 h; and at monthly scale a 30-day forecast is capped at 13.1% skill, so that arm
+>   became a resource climatology instead.
+>   → [`../redo/results/07`](../redo/results/07_horizon_sweep.md),
+>   [`09`](../redo/results/09_weekly_forecast_results.md),
+>   [`10`](../redo/results/10_monthly_ceiling.md)
+>
+> Threats **1, 2, 5, 7, 8 stand unchanged.** Two threats specific to v5's NWP arm — the
+> ERA5/ECMWF shared lineage, and assumed lead-time semantics — are listed in
+> [`12_next_steps_v2.md`](12_next_steps_v2.md) §Threats rather than duplicated here.
 
 **1. No real SCADA validation.** The whole pipeline is validated against a
 physics-derived reference that uses the *same power curve* both sides of the
@@ -586,6 +674,25 @@ them.
 > is not, on one seed and one split.
 > ⚠️ **Check the numbers before quoting.** Conclusion 5 carries a correction, and all six
 > describe the 2020–2023 study period — the in-progress v5 work uses a different window.
+
+> 🛑 **Do not quote 1, 2 or 3 as current. v5 moved all three.** These six were written for
+> verbatim reuse, which makes them the most dangerous paragraphs in this document now that
+> the window has changed. They are kept because they are correct **for v4 on 2020–2023**,
+> and because conclusion 4 is the project's most transferable finding and is unaffected.
+>
+> | # | Status | What changed |
+> |---:|:---|:---|
+> | 1 | ⚠️ superseded | Headline is now XGBoost + NWP, **0.7295 m/s / R² 0.6653** on 2024-03 → 2025-12, not LSTM 1.114 on 2020–2023 |
+> | 2 | ⚠️ superseded | **7.48% nMAE / 10.08% nRMSE** — at or *below* the 8.8% / 13% reference, so "within the expected gap" no longer describes it |
+> | 3 | ⚠️ **reversed in the v5 regime** | "No evidence architecture choice is a material lever" held on state-only features; with informative features XGBoost wins by **5.1%** over the best deep model. The *correct* current claim is the stronger one: **the lever is information, not architecture** — a 21-parameter OLS model is within 4.7% of XGBoost |
+> | 4 | ✅ unaffected | The methodological finding. Still the most valuable thing here |
+> | 5 | ✅ unaffected | Its two corrections still apply |
+> | 6 | — | See below |
+>
+> **Current phrasings written for the same purpose** live in
+> [`../thesis/04_results_and_discussion.md`](../thesis/04_results_and_discussion.md) §4.5.4
+> and §4.14, and the boundary list is
+> [`11 §9`](11_nwp_forecast_features.md). Quote those.
 
 You can honestly state the following in a thesis chapter or technical report.
 Every number is from the v4 run; quote 1.399 (true 24 h persistence) as the

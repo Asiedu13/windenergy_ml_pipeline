@@ -48,13 +48,16 @@ The original ran a five-model bakeoff three times and the answer moved each time
 |:---|:---|---:|:---|
 | State-only (v4) | ERA5, 2020–2023 | 0.101 m/s — effectively a tie | LSTM, by a nose |
 | + NWP forecasts (v5) | **NASA POWER**, 22 mo | 0.291 m/s — not a tie | XGBoost, **by 18%** over the best deep model |
-| **+ NWP forecasts** | **ERA5**, 22 mo | *pending TFT* | **XGBoost, by 5.1%** |
+| **+ NWP forecasts** | **ERA5**, 22 mo | 0.150 m/s — not a tie | **XGBoost, by 5.1%** |
 
 > ⚠️ **The 18% figure does not transfer, and it was written here before that was known.**
 > On NASA POWER truth the tree led the best deep model by 18% (0.678 vs 0.827). On **ERA5**
 > truth — the project's actual truth series — the same comparison gives **0.7329 vs 0.7701,
 > a 5.1% gap** ([results/04](results/04_deep_models.md)). Trees still win; by roughly a
-> third of what the NASA POWER run suggested. **Provisional: TFT is 0 of 3 seeds done.**
+> third of what the NASA POWER run suggested. **Final as of 2026-08-12: all 15 fits
+> complete, and TFT — which won the deep bracket on NASA POWER — finished last of four on
+> ERA5.** So the earlier run got both the size of the gap and the identity of the
+> runner-up wrong.
 >
 > Why the two disagree is not established. NASA POWER is coarser (~55 km) and hour-averaged,
 > so its target is smoother; whether that favours one model class is a hypothesis.
@@ -82,10 +85,11 @@ The cost side of that judgement, measured on ERA5 truth at a 24 h horizon
 | `dlinear` | 1.1 | 0.8244 | ~10× |
 | `lstm` | 4.8 | 0.7701 | ~42× |
 | `nbeats` | 20.7 | 0.8234 | ~185× |
-| `tft` | ~350 | *pending* | ~3,000× |
+| `tft` | 231.1 | 0.8826 | ~2,000× |
 
-**The best deep model costs ~42× the training time to finish 5% behind.** For a single-site
-day-ahead forecast that is not a close decision.
+**The best deep model costs ~42× the training time to finish 5% behind.** TFT is the
+reductio: **~2,000× the cost of XGBoost to finish 20% worse**, at 3 h 51 m per fit against
+7 seconds. For a single-site day-ahead forecast that is not a close decision.
 
 ## 6.3 Comparability rules for any head-to-head
 
