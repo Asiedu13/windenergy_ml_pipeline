@@ -196,6 +196,25 @@ REGIONAL_PRESSURE_PREFIX = "era5gh_pressure"
 REGIONAL_LSM_NAME = "era5gh_lsm.nc"
 REGIONAL_MANIFEST_NAME = "era5gh_manifest.json"
 
+# Truncation floors for the regional families, passed to `_retrieve_with_retry`
+# as `min_bytes`. A download killed mid-request can leave a short file behind, and
+# `path.exists()` is the only re-download guard in this module — so without a floor
+# a partial month would be treated as complete forever.
+#
+# Calibrated against the smallest legitimate files observed (February, 28 days):
+# core 5.87 MB, extra 2.68 MB, pressure 4.71 MB. Month-length variation is only
+# ~10% (28/31 days), so a floor near half the February size cannot false-positive
+# on a real month while still catching a gross truncation or an error page written
+# to the target.
+#
+# Subtler truncation is caught elsewhere and harder: a partially-written NetCDF
+# fails to open in `_open_dataset` rather than yielding plausible wrong numbers.
+REGIONAL_MIN_BYTES = {
+    REGIONAL_CORE_PREFIX: 2_500_000,
+    REGIONAL_EXTRA_PREFIX: 1_200_000,
+    REGIONAL_PRESSURE_PREFIX: 2_000_000,
+}
+
 
 @dataclass(frozen=True)
 class RegionalExtract:
@@ -338,6 +357,43 @@ def _check_regional_manifest(cache_dir: Path, area: list[float]) -> None:
         )
 
 
+def _drop_truncated_regional_files(cache_dir: Path) -> list[Path]:
+    """Delete any regional cache file below its family's floor, before resuming.
+
+    ⚠️ **This is the hole `min_bytes` alone does not close.** That check runs after
+    a `retrieve` returns, so it catches a short file this process downloaded — but
+    a process **killed mid-write** leaves a partial file behind that no later run
+    ever looks at, because `path.exists()` short-circuits first. The partial month
+    then feeds every site that reads it, and nothing about the output looks wrong.
+
+    That is not hypothetical here. The archive download was killed at 2010-07 on
+    2026-10-01 when its parent session ended, and escaped damage only because
+    cdsapi had not yet opened the target. A multi-day download crossing several
+    session boundaries will be killed again.
+
+    So every resume re-validates what is already on disk and deletes anything
+    short, letting the normal request loop fetch it again. Returns what it removed
+    so callers can log it.
+    """
+    removed: list[Path] = []
+    for prefix, floor in REGIONAL_MIN_BYTES.items():
+        for path in sorted(Path(cache_dir).glob(f"{prefix}_*.nc")):
+            size = path.stat().st_size
+            if size < floor:
+                logger.warning(
+                    "Regional cache: %s is %d bytes (floor %d) — truncated, "
+                    "deleting so it is re-requested", path.name, size, floor,
+                )
+                path.unlink()
+                removed.append(path)
+    if removed:
+        logger.warning("Regional cache: removed %d truncated file(s) before "
+                       "resuming", len(removed))
+    else:
+        logger.info("Regional cache: all existing files pass their size floor")
+    return removed
+
+
 def fetch_regional_archive(
     start: str, end: str, cache_dir: Path, bbox: dict[str, float],
 ) -> tuple[list[Path], list[Path], list[Path]]:
@@ -361,6 +417,7 @@ def fetch_regional_archive(
     ensure_dir(cache_dir)
     area = _bbox_area(bbox)
     _check_regional_manifest(cache_dir, area)
+    _drop_truncated_regional_files(cache_dir)
     client = cdsapi.Client()
 
     # The mask is constant in value, so one hour covers the whole archive.
@@ -395,6 +452,7 @@ def fetch_regional_archive(
                 client, "reanalysis-era5-single-levels",
                 _era5_single_request(ERA5_CORE_VARS, year, month, area),
                 str(core), label=f"regional core {tag} ({i}/{n})",
+                min_bytes=REGIONAL_MIN_BYTES[REGIONAL_CORE_PREFIX],
             ):
                 failures.append(("core", tag))
         if not extra.exists():
@@ -402,6 +460,7 @@ def fetch_regional_archive(
                 client, "reanalysis-era5-single-levels",
                 _era5_single_request(ERA5_EXTRA_VARS, year, month, area),
                 str(extra), label=f"regional extras {tag} ({i}/{n})",
+                min_bytes=REGIONAL_MIN_BYTES[REGIONAL_EXTRA_PREFIX],
             ):
                 failures.append(("extras", tag))
         if not press.exists():
@@ -411,6 +470,7 @@ def fetch_regional_archive(
                     ERA5_PRESSURE_VARS, ERA5_PRESSURE_LEVELS, year, month, area,
                 ),
                 str(press), label=f"regional pressure {tag} ({i}/{n})",
+                min_bytes=REGIONAL_MIN_BYTES[REGIONAL_PRESSURE_PREFIX],
             ):
                 failures.append(("pressure", tag))
 
@@ -477,7 +537,8 @@ def _fetch_era5_regional(site: SiteConfig, start: str, end: str, cache_dir: Path
 
 
 def _retrieve_with_retry(client, dataset: str, request: dict, target_path: str,
-                         label: str, max_attempts: int = 5, wait_seconds: int = 300) -> bool:
+                         label: str, max_attempts: int = 5, wait_seconds: int = 300,
+                         min_bytes: int = 0) -> bool:
     """Retry a CDS retrieve on transient/CDS-side failures.
 
     Returns True on success, False if all attempts failed (caller decides
@@ -495,17 +556,49 @@ def _retrieve_with_retry(client, dataset: str, request: dict, target_path: str,
     Note this wraps cdsapi's own retry loop, which already handles connection
     errors internally; this layer exists for failures that surface as
     exceptions from `client.retrieve`.
+
+    ⚠️ **`min_bytes` guards against a truncated file becoming permanent.** A
+    download interrupted after the target is opened but before it is complete
+    leaves a short file behind, and since `path.exists()` is the only
+    re-download guard anywhere in this module, that file is treated as finished
+    *forever* — silently feeding a partial month into every result that reads it.
+    Nothing about the resulting series looks broken.
+
+    This nearly happened on 2026-10-01: the regional archive download was killed
+    mid-request at 2010-07 and only escaped damage because cdsapi happened not to
+    have written the target yet. Over a multi-day download crossing several
+    session boundaries, that is luck rather than a guarantee.
+
+    The floor is **per call**, not global, because the families differ by two
+    orders of magnitude: a regional monthly file is 2.8-6.5 MB while a per-site
+    one is ~150 KB. `min_bytes=0` (the default) keeps the per-site path exactly
+    as it was. A short file is deleted so the retry loop re-requests it rather
+    than skipping it next run.
+
+    Precedent: the 10-year backfill was validated by hand with "verified no file
+    under 50 KB" (docs/11 section 8). This is that check, automated.
     """
     import time
+    target = Path(target_path)
     for attempt in range(1, max_attempts + 1):
         logger.info("Downloading ERA5 %s (attempt %d/%d)", label, attempt, max_attempts)
         try:
             client.retrieve(dataset, request, target_path)
-            return True
         except Exception as exc:  # cdsapi wraps requests.HTTPError etc.
             logger.warning("ERA5 %s attempt %d failed: %s", label, attempt, exc)
-            if attempt < max_attempts:
-                time.sleep(wait_seconds)
+        else:
+            size = target.stat().st_size if target.exists() else 0
+            if size >= min_bytes:
+                return True
+            # Delete, or `path.exists()` would skip this month on the next run.
+            logger.warning(
+                "ERA5 %s: retrieve reported success but the file is %d bytes "
+                "(floor %d) — treating as truncated and deleting",
+                label, size, min_bytes,
+            )
+            target.unlink(missing_ok=True)
+        if attempt < max_attempts:
+            time.sleep(wait_seconds)
     logger.error("ERA5 %s: giving up after %d attempts", label, max_attempts)
     return False
 

@@ -415,15 +415,48 @@ or an Open-Meteo hole. Stop and investigate; do not report it as a finding about
 ## 10. What is running, and how to resume
 
 **The regional archive download started 2026-10-01 16:00** and is the long pole. Everything in
-§5 waits on it. It is **resumable** — `path.exists()` is the re-download guard, so re-running
-`fetch` picks up where it stopped.
+§5 waits on it. It is **resumable** — `fetch_regional_archive` skips months already on disk.
 
 ⚠️ **Revised estimate: ≈2 days, not the ≈29 h §4 extrapolates.** The probe measured a single
-request at 3.0 min; the sustained rate over the first few months is **4.6–5.8 min/request**,
-because CDS queue time dominates and varies through the day. 576 × ~5 min ≈ **48 h**. Still
-inside the pre-registered ≤7 day gate, and payload is tracking at ~4.7 MB/file → ≈2.7 GB.
-**A single request is not a sample.** Recorded here rather than quietly amended in §4, where
-the 3.0 min measurement stays as what it was.
+request at 3.0 min; the sustained rate measured over six complete months (18 requests in
+101.9 min) is **5.66 min/request**, because CDS queue time dominates and varies through the
+day. 576 × 5.66 min ≈ **54 h**. Still inside the pre-registered ≤7 day gate, and payload is
+tracking at ~4.7 MB/file → ≈2.7 GB. **A single request is not a sample.** Recorded here rather
+than quietly amended in §4, where the 3.0 min measurement stays as what it was.
+
+### It died once, and the cause was not CDS
+
+**2026-10-01 ~17:43, at 2010-07, after 7/192 months.** The process was launched as a child of
+the agent shell, and the harness kills its process tree when a session ends. Nothing was wrong
+with the download itself.
+
+**Relaunched detached** via WMI (`Win32_Process.Create`), so the process is parented to
+`WmiPrvSE` rather than to any shell and a session teardown cannot reach it. Verified: the
+running python's parent is the detached launcher, not the agent.
+
+**Two guards were added because of this, and the second matters more than the first:**
+
+1. `_retrieve_with_retry` now takes a per-family `min_bytes` floor
+   (`REGIONAL_MIN_BYTES`), deleting and re-requesting anything short. Floors are ~half the
+   smallest legitimate file — February at 28 days: core 5.87 MB, extra 2.68 MB, pressure
+   4.71 MB — so they cannot trip on a real month. The per-site path keeps `min_bytes=0` and is
+   byte-for-byte unchanged.
+2. **`_drop_truncated_regional_files` re-validates the whole cache on every resume.** The first
+   guard only inspects what its own process downloaded; a process **killed mid-write** leaves a
+   partial file that no later run ever looks at, because `path.exists()` short-circuits first.
+   The partial month would then feed every site reading it, with nothing in the output looking
+   wrong. This is the actual hole the death exposed, and it closes it.
+
+**This time no partial file was produced** — `era5gh_core_2010-07.nc` completed at 6.78 MB
+before the kill, and all eight core files were verified to open with the right hour counts
+(744/720/672), the 30 × 21 grid and zero NaNs. That was luck, not design, which is why guard 2
+exists.
+
+> 📝 **A note on the log.** The first relaunch attempt redirected with PowerShell's `*>>`,
+> which transcodes to UTF-16 and left one garbled stretch in an otherwise UTF-8 file around
+> 17:58. Redirection now goes through `cmd.exe`, which appends raw bytes. The stretch is left
+> in place rather than edited out; it is a few lines of CDS status chatter and the file-count
+> check below is the authoritative progress signal anyway.
 
 This section carries **check commands rather than snapshots**
 ([stage 9 §9.5](../redo/09_stage9_writeup_and_hygiene.md)), because a file count written into
@@ -438,8 +471,17 @@ powershell -c "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Sel
 powershell -c "(Get-ChildItem data/raw/era5gh_* | Measure-Object).Count"
 powershell -c "Get-Content outputs/logs/era5gh_archive.log -Tail 5"
 
-# Resume an interrupted download (idempotent, skips what exists)
+# Resume an interrupted download. Idempotent: skips months already present and
+# deletes any truncated file first so it is re-requested.
 python -m src.multisite fetch
+
+# Resume DETACHED, so it survives the session that starts it. Running it as a
+# plain child of an agent shell is what killed the first run.
+powershell -NoProfile -Command "Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='cmd /c python -u -m src.multisite fetch >> outputs\logs\era5gh_archive.log 2>&1'; CurrentDirectory=(Get-Location).Path}"
+
+# Integrity check — size floors catch gross truncation, but opening the files is
+# what proves them. Run before trusting a resumed archive.
+python -c "import xarray as xr; from pathlib import Path; [print(p.name, len(xr.open_dataset(p).valid_time)) for p in sorted(Path('data/raw').glob('era5gh_core_*.nc'))]"
 
 # Which cell each site resolved to, and its land fraction — run before quoting
 # any resource figure

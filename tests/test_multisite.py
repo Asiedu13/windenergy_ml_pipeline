@@ -22,10 +22,15 @@ import pytest
 import yaml
 
 from src.data_ingest import (
+    REGIONAL_CORE_PREFIX,
+    REGIONAL_EXTRA_PREFIX,
     REGIONAL_LSM_NAME,
+    REGIONAL_MIN_BYTES,
+    REGIONAL_PRESSURE_PREFIX,
     RegionalExtract,
     _bbox_area,
     _check_regional_manifest,
+    _retrieve_with_retry,
     _window_slice,
     select_site_cell,
 )
@@ -244,6 +249,150 @@ def test_manifest_refuses_a_different_bbox(tmp_path):
     other = dict(GHANA_BBOX, north=12.0)
     with pytest.raises(RuntimeError, match="built for area"):
         _check_regional_manifest(tmp_path, _bbox_area(other))
+
+
+# ---------------------------------------------------------------------------
+# Truncation guard — a short file must not become permanent
+# ---------------------------------------------------------------------------
+
+class _FakeClient:
+    """Stands in for cdsapi.Client, writing a file of a chosen size."""
+
+    def __init__(self, sizes: list[int]):
+        self.sizes = list(sizes)
+        self.calls = 0
+
+    def retrieve(self, dataset, request, target):      # noqa: ARG002
+        size = self.sizes[min(self.calls, len(self.sizes) - 1)]
+        self.calls += 1
+        Path(target).write_bytes(b"x" * size)
+
+
+def test_retrieve_accepts_a_file_above_the_floor(tmp_path):
+    client = _FakeClient([3_000_000])
+    target = tmp_path / "era5gh_core_2010-07.nc"
+    assert _retrieve_with_retry(client, "ds", {}, str(target), label="t",
+                                min_bytes=2_500_000) is True
+    assert target.exists()
+    assert client.calls == 1
+
+
+def test_retrieve_deletes_a_truncated_file_and_retries(tmp_path):
+    """The failure this exists to prevent.
+
+    `path.exists()` is the only re-download guard in the module, so a short file
+    left behind would be treated as a complete month forever. It must be removed,
+    not merely reported.
+    """
+    client = _FakeClient([1_000, 3_000_000])      # truncated, then good
+    target = tmp_path / "era5gh_core_2010-07.nc"
+    assert _retrieve_with_retry(client, "ds", {}, str(target), label="t",
+                                min_bytes=2_500_000, wait_seconds=0) is True
+    assert client.calls == 2
+    assert target.stat().st_size == 3_000_000
+
+
+def test_retrieve_gives_up_and_leaves_no_file_behind(tmp_path):
+    """After exhausting attempts the target must be absent, so the next run retries."""
+    client = _FakeClient([1_000])
+    target = tmp_path / "era5gh_core_2010-07.nc"
+    assert _retrieve_with_retry(client, "ds", {}, str(target), label="t",
+                                max_attempts=3, wait_seconds=0,
+                                min_bytes=2_500_000) is False
+    assert not target.exists()
+    assert client.calls == 3
+
+
+def test_retrieve_default_floor_is_zero_so_the_per_site_path_is_unchanged(tmp_path):
+    """Per-site monthly files are ~150 KB against the regional 2.8-6.5 MB.
+
+    A global floor would reject every per-site download, so the floor is per call
+    and defaults to 0 — which also keeps every published v1-v5 figure's data path
+    byte-identical.
+    """
+    client = _FakeClient([150_000])
+    target = tmp_path / "era5_anloga_2024-06.nc"
+    assert _retrieve_with_retry(client, "ds", {}, str(target), label="t") is True
+    assert client.calls == 1
+
+
+def test_retrieve_treats_a_missing_file_as_truncated(tmp_path):
+    """A retrieve that raises nothing but writes nothing must not count as success."""
+    class _Silent:
+        calls = 0
+
+        def retrieve(self, dataset, request, target):      # noqa: ARG002
+            _Silent.calls += 1
+
+    target = tmp_path / "era5gh_core_2010-07.nc"
+    assert _retrieve_with_retry(_Silent(), "ds", {}, str(target), label="t",
+                                max_attempts=2, wait_seconds=0,
+                                min_bytes=1) is False
+    assert not target.exists()
+
+
+def test_startup_validation_removes_a_partial_file_left_by_a_killed_process(tmp_path):
+    """The hole `min_bytes` alone does not close.
+
+    `min_bytes` runs after a retrieve returns. A process killed mid-write leaves a
+    partial file that no later run inspects, because `path.exists()` short-circuits
+    first — so the partial month silently feeds every site that reads it. Resumes
+    must therefore re-validate what is already on disk.
+    """
+    from src.data_ingest import _drop_truncated_regional_files
+
+    good = tmp_path / f"{REGIONAL_CORE_PREFIX}_2010-01.nc"
+    partial = tmp_path / f"{REGIONAL_CORE_PREFIX}_2010-07.nc"
+    other_good = tmp_path / f"{REGIONAL_EXTRA_PREFIX}_2010-01.nc"
+    good.write_bytes(b"x" * 6_400_000)
+    partial.write_bytes(b"x" * 900_000)
+    other_good.write_bytes(b"x" * 2_900_000)
+
+    removed = _drop_truncated_regional_files(tmp_path)
+
+    assert removed == [partial]
+    assert not partial.exists()
+    assert good.exists() and other_good.exists()
+
+
+def test_startup_validation_leaves_a_healthy_cache_alone(tmp_path):
+    from src.data_ingest import _drop_truncated_regional_files
+
+    for prefix, size in [(REGIONAL_CORE_PREFIX, 6_400_000),
+                         (REGIONAL_EXTRA_PREFIX, 2_900_000),
+                         (REGIONAL_PRESSURE_PREFIX, 5_100_000)]:
+        (tmp_path / f"{prefix}_2010-01.nc").write_bytes(b"x" * size)
+    assert _drop_truncated_regional_files(tmp_path) == []
+    assert len(list(tmp_path.glob("*.nc"))) == 3
+
+
+def test_startup_validation_ignores_the_mask_and_manifest(tmp_path):
+    """`era5gh_lsm.nc` is ~25 KB by design and must not be mistaken for truncated."""
+    from src.data_ingest import _drop_truncated_regional_files
+
+    (tmp_path / REGIONAL_LSM_NAME).write_bytes(b"x" * 25_000)
+    (tmp_path / "era5gh_manifest.json").write_text("{}")
+    assert _drop_truncated_regional_files(tmp_path) == []
+    assert (tmp_path / REGIONAL_LSM_NAME).exists()
+    assert (tmp_path / "era5gh_manifest.json").exists()
+
+
+def test_regional_floors_sit_below_the_smallest_observed_real_files():
+    """Floors must not trip on a legitimate short month.
+
+    Smallest observed are February (28 days): core 5.87 MB, extra 2.68 MB,
+    pressure 4.71 MB. Month-length variation is only ~10%, so the floors should
+    sit comfortably under those and still be non-trivial.
+    """
+    observed_feb = {
+        REGIONAL_CORE_PREFIX: 5_871_500,
+        REGIONAL_EXTRA_PREFIX: 2_678_400,
+        REGIONAL_PRESSURE_PREFIX: 4_711_800,
+    }
+    for prefix, floor in REGIONAL_MIN_BYTES.items():
+        smallest = observed_feb[prefix]
+        assert floor < smallest * 0.75, f"{prefix}: floor too close to a real file"
+        assert floor > smallest * 0.25, f"{prefix}: floor too low to catch much"
 
 
 # ---------------------------------------------------------------------------
