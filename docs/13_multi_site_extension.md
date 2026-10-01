@@ -424,15 +424,40 @@ day. 576 × 5.66 min ≈ **54 h**. Still inside the pre-registered ≤7 day gate
 tracking at ~4.7 MB/file → ≈2.7 GB. **A single request is not a sample.** Recorded here rather
 than quietly amended in §4, where the 3.0 min measurement stays as what it was.
 
-### It died once, and the cause was not CDS
+### It died twice, and neither cause was CDS
 
-**2026-10-01 ~17:43, at 2010-07, after 7/192 months.** The process was launched as a child of
-the agent shell, and the harness kills its process tree when a session ends. Nothing was wrong
-with the download itself.
+Three launch methods, two of which failed. Recorded in full because the next person to resume
+this will reach for the first one.
 
-**Relaunched detached** via WMI (`Win32_Process.Create`), so the process is parented to
-`WmiPrvSE` rather than to any shell and a session teardown cannot reach it. Verified: the
-running python's parent is the detached launcher, not the agent.
+| # | Method | Outcome |
+|---:|:---|:---|
+| 1 | `Start-Process` from the agent shell | ❌ Died **17:43 at 2010-07** (7/192). The harness kills its process tree at session end. |
+| 2 | WMI `Win32_Process.Create` | ❌ Died **22:16 at 2011-04** (16/192). Survived the job-object teardown, but still had a **console** attached and took a `Ctrl+C` — the log ends in a literal `^C`. |
+| 3 | **Scheduled Task** | ✅ Running. Task Scheduler gives it **no console and no parent shell**, so neither failure mode applies. |
+
+**The lesson is narrower than "use a scheduled task".** Detaching from the parent is not the
+same as detaching from the console, and method 2 only fixed the first. On Windows a long job
+that must survive an interactive session needs to escape *both*, and only the scheduler does
+that.
+
+Register and start it with (the script path must be short — `schtasks /TR` caps at 261 chars,
+which a scratchpad path exceeds, so use `Register-ScheduledTask`):
+
+```powershell
+$action = New-ScheduledTaskAction -Execute "powershell.exe" `
+  -Argument '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "<short path>\era5gh_resume.ps1"' `
+  -WorkingDirectory "<repo>"
+Register-ScheduledTask -TaskName "era5gh_archive" -Action $action -Settings (
+  New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+    -ExecutionTimeLimit (New-TimeSpan -Days 5) -RestartCount 3 `
+    -RestartInterval (New-TimeSpan -Minutes 5))
+Start-ScheduledTask -TaskName "era5gh_archive"
+```
+
+`-RestartCount 3` means the scheduler itself retries if the process dies, which is a third
+layer under the in-process `_retrieve_with_retry` loop and the on-resume cache validation.
+**Remember to `Unregister-ScheduledTask -TaskName "era5gh_archive"` once the archive is
+complete** — it is a one-shot job, not a permanent fixture.
 
 **Two guards were added because of this, and the second matters more than the first:**
 
@@ -447,10 +472,21 @@ running python's parent is the detached launcher, not the agent.
    The partial month would then feed every site reading it, with nothing in the output looking
    wrong. This is the actual hole the death exposed, and it closes it.
 
-**This time no partial file was produced** — `era5gh_core_2010-07.nc` completed at 6.78 MB
-before the kill, and all eight core files were verified to open with the right hour counts
-(744/720/672), the 30 × 21 grid and zero NaNs. That was luck, not design, which is why guard 2
-exists.
+**Neither death produced a partial file**, and both times for the same reason — cdsapi had not
+yet opened the target. After the first, `era5gh_core_2010-07.nc` was complete at 6.78 MB and
+all eight core files were verified to open with the right hour counts (744/720/672), the
+30 × 21 grid and zero NaNs. After the second, no `era5gh_pressure_2011-04.nc` existed at all,
+and the resume's cache validation confirmed *"all existing files pass their size floor"* before
+re-requesting it.
+
+**That is luck twice, not design.** The window between "target opened" and "download complete"
+is a few seconds out of every ~5 minutes, so roughly a 2% chance per interruption — which is
+exactly the kind of odds that eventually lose over a 576-request job. Guard 2 is what makes it
+not matter.
+
+One incidental confirmation that the retry path works: the re-requested 2011-04 pressure
+completed in **6 seconds** rather than ~5 minutes, because the CDS job from the interrupted
+attempt had already finished server-side and was served from its cache.
 
 > 📝 **A note on the log.** The first relaunch attempt redirected with PowerShell's `*>>`,
 > which transcodes to UTF-16 and left one garbled stretch in an otherwise UTF-8 file around
@@ -475,9 +511,13 @@ powershell -c "Get-Content outputs/logs/era5gh_archive.log -Tail 5"
 # deletes any truncated file first so it is re-requested.
 python -m src.multisite fetch
 
-# Resume DETACHED, so it survives the session that starts it. Running it as a
-# plain child of an agent shell is what killed the first run.
-powershell -NoProfile -Command "Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{CommandLine='cmd /c python -u -m src.multisite fetch >> outputs\logs\era5gh_archive.log 2>&1'; CurrentDirectory=(Get-Location).Path}"
+# Resume so that it SURVIVES — see the table above for why a shell child and a
+# WMI-detached process both died. Task Scheduler is the one that holds.
+powershell -c "Start-ScheduledTask -TaskName 'era5gh_archive'"
+powershell -c "Get-ScheduledTask -TaskName 'era5gh_archive' | Select State"
+
+# Tear the task down once the archive is complete — it is a one-shot job.
+powershell -c "Unregister-ScheduledTask -TaskName 'era5gh_archive' -Confirm:`$false"
 
 # Integrity check — size floors catch gross truncation, but opening the files is
 # what proves them. Run before trusting a resumed archive.
