@@ -777,7 +777,8 @@ def _fetch_open_meteo(
                     model, lead_days, variables,
                 )
                 cache.write_text(json.dumps(payload))
-            model_frames.append(_parse_open_meteo(payload, model))
+            model_frames.append(
+                _parse_open_meteo(payload, model, lead_days, variables))
         if model_frames:
             frames.append(pd.concat(model_frames).sort_index())
 
@@ -809,11 +810,32 @@ def _download_open_meteo(site: SiteConfig, start: str, end: str, model: str,
     return resp.json()
 
 
-def _parse_open_meteo(payload: dict[str, Any], model: str) -> pd.DataFrame:
-    """Payload -> DataFrame indexed by valid time, columns `nwp_{model}_{var}_d{N}`."""
+def _parse_open_meteo(payload: dict[str, Any], model: str,
+                      lead_days: list[int] | None = None,
+                      variables: list[str] | None = None) -> pd.DataFrame:
+    """Payload -> DataFrame indexed by valid time, columns `nwp_{model}_{var}_d{N}`.
+
+    ⚠️ **The payload is filtered to what was requested, not served whole.**
+    A cache file holds whatever the *widest* previous request asked for, so once
+    the weekly work widened these caches to leads 1-7, a config asking for
+    `lead_days: [1, 2, 3]` was silently handed all seven — 126 columns instead of
+    54. That is not a small difference: it re-ran the 24 h bakeoff on an
+    undocumented feature set and moved every published MAE (xgboost 0.8037 ->
+    0.7998), because at a 24 h horizon the lead guard admits every lead and the
+    extra four are genuine additional information.
+
+    This is the mirror of the earlier cache defect. That one was *request wider,
+    receive narrower*; this is *request narrower, receive wider*. Both come from
+    the same root cause — a cache key that encodes less than the request does —
+    so both are guarded, one at fetch (`_missing_open_meteo_keys`) and one here.
+    """
     hourly = payload["hourly"]
     idx = pd.to_datetime(hourly["time"], utc=True)
+    wanted_leads = None if lead_days is None else set(lead_days)
+    wanted_vars = None if variables is None else set(variables)
+
     data: dict[str, Any] = {}
+    dropped = 0
     for key, values in hourly.items():
         if key == "time":
             continue
@@ -822,9 +844,17 @@ def _parse_open_meteo(payload: dict[str, Any], model: str) -> pd.DataFrame:
         if not variable or not lead.isdigit():
             logger.warning("Unexpected Open-Meteo key %r — skipped", key)
             continue
+        if ((wanted_leads is not None and int(lead) not in wanted_leads)
+                or (wanted_vars is not None and variable not in wanted_vars)):
+            dropped += 1
+            continue
         data[nwp_column(model, variable, int(lead))] = pd.Series(
             values, index=idx, dtype=float
         )
+    if dropped:
+        logger.info("%s: dropped %d cached series outside the requested "
+                    "leads/variables", model, dropped)
+
     df = pd.DataFrame(data, index=idx)
     df.index.name = "timestamp"
     return df

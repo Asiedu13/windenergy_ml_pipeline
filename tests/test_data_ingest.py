@@ -170,6 +170,41 @@ def test_nasa_power_timestamps_shifted_onto_era5_clock():
     assert df["wind_speed_10m"].notna().all()
 
 
+def test_parse_open_meteo_filters_to_requested_leads():
+    """A cache holds whatever the *widest* previous request asked for.
+
+    Once the weekly work widened these caches to leads 1-7, a config asking for
+    `lead_days: [1, 2, 3]` was silently handed all seven — 126 columns instead of
+    54 — which re-ran the 24 h bakeoff on an undocumented feature set and moved
+    every published MAE. The parser must honour the request, not the file.
+    """
+    payload = _fake_open_meteo_payload(12)
+    payload["hourly"]["wind_speed_100m_previous_day7"] = [9.9] * 12
+
+    served_all = _parse_open_meteo(payload, "ecmwf_ifs025")
+    assert "nwp_ecmwf_ifs025_wind_speed_100m_d7" in served_all.columns
+
+    filtered = _parse_open_meteo(payload, "ecmwf_ifs025", lead_days=[1, 2])
+    assert "nwp_ecmwf_ifs025_wind_speed_100m_d7" not in filtered.columns
+    assert "nwp_ecmwf_ifs025_wind_speed_100m_d1" in filtered.columns
+    assert "nwp_ecmwf_ifs025_wind_speed_100m_d2" in filtered.columns
+
+
+def test_parse_open_meteo_filters_to_requested_variables():
+    payload = _fake_open_meteo_payload(12)
+    filtered = _parse_open_meteo(payload, "ecmwf_ifs025",
+                                 variables=["wind_speed_100m"])
+    assert all("temperature_2m" not in c for c in filtered.columns)
+    assert any("wind_speed_100m" in c for c in filtered.columns)
+
+
+def test_parse_open_meteo_unfiltered_by_default():
+    """Absent an explicit request the parser stays permissive, so existing
+    callers that pass no lead list are unaffected."""
+    payload = _fake_open_meteo_payload(6)
+    assert len(_parse_open_meteo(payload, "gfs_global").columns) == 3
+
+
 def test_parse_open_meteo_column_naming_and_index():
     df = _parse_open_meteo(_fake_open_meteo_payload(24), "ecmwf_ifs025")
     assert list(df.columns) == [

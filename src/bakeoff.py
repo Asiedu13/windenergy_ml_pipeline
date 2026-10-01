@@ -420,6 +420,9 @@ def main() -> None:
                     help="Override forecast.horizon_hours. Leads shorter than "
                          "the horizon are dropped by the lead guard.")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--per-fold", action="store_true",
+                    help="Also write {stem}_folds.csv, one row per "
+                         "(model, feature_set, fold, seed). Phase A only.")
     args = ap.parse_args()
 
     config = load_config(args.config)
@@ -470,6 +473,18 @@ def main() -> None:
     out = Path(args.out) if args.out else reports / f"{stem}.md"
     out.write_text("\n".join(parts), encoding="utf-8")
     agg.to_csv(reports / f"{stem}.csv", index=False)
+
+    if args.per_fold:
+        # `summarise` averages folds away, which hides that fold difficulty varies
+        # by ~46% across the year — the fact that motivates rolling origins at all.
+        # RunRecord already carries `fold`, so this is an output path, not new work.
+        pd.DataFrame([{
+            "model": r.model, "tier": r.tier, "feature_set": r.feature_set,
+            "fold": r.fold, "seed": r.seed, "horizon": r.horizon,
+            "mae": r.mae, "rmse": r.rmse, "r2": r.r2, "skill": r.skill,
+        } for r in records]).to_csv(reports / f"{stem}_folds.csv", index=False)
+        logger.info("Wrote %s_folds.csv (%d rows)", stem, len(records))
+
     logger.info("Wrote %s and %s.csv (%.1f min)", out, stem, (time.time() - t0) / 60)
     print("\n".join(parts))
 
