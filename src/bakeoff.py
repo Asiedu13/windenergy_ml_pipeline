@@ -403,9 +403,72 @@ def run_phase_b(config: Config, algos: list[str], seeds: list[int],
                 logger.info("PHASE-B %-9s %-12s seed=%-5d MAE=%.4f R2=%+.4f (%.1f min)",
                             algo, feature_set, seed, m.mae, m.r2, rows[-1]["minutes"])
                 pd.DataFrame(rows).to_csv(
-                    ensure_dir("outputs/reports") / "bakeoff_deep.csv", index=False
+                    ensure_dir(Path(config.paths.outputs) / "reports")
+                    / "bakeoff_deep.csv", index=False
                 )
     return pd.DataFrame(rows)
+
+
+def run_phase_a_and_report(
+    config: Config, feature_sets: list[str], seeds: list[int],
+    n_folds: int = DEFAULT_N_FOLDS, per_fold: bool = False,
+    out: str | Path | None = None,
+) -> tuple[pd.DataFrame, Path]:
+    """Run phase A and write its report, CSV and optional per-fold table.
+
+    Extracted from `main` so the multi-site runner (v6, `src.multisite`) drives
+    the same code path rather than carrying a second copy of the report
+    formatting. One formatter means a per-site table cannot drift from the
+    published single-site one, which is the comparison the whole study rests on.
+
+    Returns (aggregate frame, path to the written markdown).
+    """
+    records = run_phase_a(config, feature_sets, seeds, n_folds)
+    agg = summarise(records)
+
+    horizon = int(config.forecast.horizon_hours)
+    parts = [
+        f"# Bakeoff — classical vs ML, horizon {horizon} h",
+        "",
+        f"- site: **{config.site.name}** "
+        f"({config.site.latitude:.4f}, {config.site.longitude:.4f}), "
+        f"hub **{config.site.hub_height_m:g} m**",
+        f"- window: **{config.data.start} → {config.data.end}** "
+        f"({config.data.source} truth), horizon **{horizon} h**",
+        f"- folds: **{n_folds} rolling-origin**, seeds: **{seeds}** "
+        "(deterministic models run once per fold)",
+        "- lower MAE is better; skill is `1 − MAE/MAE_persistence`, higher better",
+        f"- **NWP lead guard active:** only `_d{{N}}` columns with `24·N ≥ {horizon}` "
+        "are used, so every forecast feature was issued at or before the feature time",
+        "",
+    ]
+    for fs in feature_sets:
+        parts.append(render_table(agg, fs))
+        parts.append(significance_matrix(records, fs, horizon))
+        parts.append("")
+
+    # Horizon-tagged filenames so a sweep does not overwrite its own earlier runs.
+    stem = "bakeoff" if horizon == 24 else f"bakeoff_h{horizon}"
+    # Resolve from config, not a literal: the multi-site runner (v6) points
+    # `paths.outputs` at outputs/sites/<name>, and with a hardcoded path all 17
+    # sites would write over each other's bakeoff.csv. Single-site runs are
+    # unaffected — `paths.outputs` defaults to "outputs".
+    reports = ensure_dir(Path(config.paths.outputs) / "reports")
+    out_path = Path(out) if out else reports / f"{stem}.md"
+    out_path.write_text("\n".join(parts), encoding="utf-8")
+    agg.to_csv(reports / f"{stem}.csv", index=False)
+
+    if per_fold:
+        # `summarise` averages folds away, which hides that fold difficulty varies
+        # by ~46% across the year — the fact that motivates rolling origins at all.
+        # RunRecord already carries `fold`, so this is an output path, not new work.
+        pd.DataFrame([{
+            "model": r.model, "tier": r.tier, "feature_set": r.feature_set,
+            "fold": r.fold, "seed": r.seed, "horizon": r.horizon,
+            "mae": r.mae, "rmse": r.rmse, "r2": r.r2, "skill": r.skill,
+        } for r in records]).to_csv(reports / f"{stem}_folds.csv", index=False)
+        logger.info("Wrote %s_folds.csv (%d rows)", stem, len(records))
+    return agg, out_path
 
 
 def main() -> None:
@@ -446,47 +509,12 @@ def main() -> None:
         return
 
     t0 = time.time()
-    records = run_phase_a(config, feature_sets, seeds, args.folds)
-    agg = summarise(records)
-
-    horizon = int(config.forecast.horizon_hours)
-    parts = [
-        f"# Bakeoff — classical vs ML, horizon {horizon} h",
-        "",
-        f"- window: **{config.data.start} → {config.data.end}** "
-        f"({config.data.source} truth), horizon **{horizon} h**",
-        f"- folds: **{args.folds} rolling-origin**, seeds: **{seeds}** "
-        "(deterministic models run once per fold)",
-        "- lower MAE is better; skill is `1 − MAE/MAE_persistence`, higher better",
-        f"- **NWP lead guard active:** only `_d{{N}}` columns with `24·N ≥ {horizon}` "
-        "are used, so every forecast feature was issued at or before the feature time",
-        "",
-    ]
-    for fs in feature_sets:
-        parts.append(render_table(agg, fs))
-        parts.append(significance_matrix(records, fs, horizon))
-        parts.append("")
-
-    # Horizon-tagged filenames so a sweep does not overwrite its own earlier runs.
-    stem = "bakeoff" if horizon == 24 else f"bakeoff_h{horizon}"
-    reports = ensure_dir("outputs/reports")
-    out = Path(args.out) if args.out else reports / f"{stem}.md"
-    out.write_text("\n".join(parts), encoding="utf-8")
-    agg.to_csv(reports / f"{stem}.csv", index=False)
-
-    if args.per_fold:
-        # `summarise` averages folds away, which hides that fold difficulty varies
-        # by ~46% across the year — the fact that motivates rolling origins at all.
-        # RunRecord already carries `fold`, so this is an output path, not new work.
-        pd.DataFrame([{
-            "model": r.model, "tier": r.tier, "feature_set": r.feature_set,
-            "fold": r.fold, "seed": r.seed, "horizon": r.horizon,
-            "mae": r.mae, "rmse": r.rmse, "r2": r.r2, "skill": r.skill,
-        } for r in records]).to_csv(reports / f"{stem}_folds.csv", index=False)
-        logger.info("Wrote %s_folds.csv (%d rows)", stem, len(records))
-
-    logger.info("Wrote %s and %s.csv (%.1f min)", out, stem, (time.time() - t0) / 60)
-    print("\n".join(parts))
+    _, out = run_phase_a_and_report(
+        config, feature_sets, seeds, args.folds,
+        per_fold=args.per_fold, out=args.out,
+    )
+    logger.info("Wrote %s (%.1f min)", out, (time.time() - t0) / 60)
+    print(out.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

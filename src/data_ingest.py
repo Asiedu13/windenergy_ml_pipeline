@@ -26,11 +26,22 @@ Caches are split into three families so v1 data is not re-downloaded:
     era5_{site}_{YYYY}-{MM}.nc    — original 7 single-level variables (v1)
     era5x_{site}_{YYYY}-{MM}.nc   — extra single-level variables (v2)
     era5pl_{site}_{YYYY}-{MM}.nc  — pressure-level variables (v2)
+
+The multi-site extension (v6, `source: era5_regional`) adds a fourth family keyed
+by month rather than site, because one bounding-box download serves every site in
+it — CDS charges per field, not per grid cell, so 17 sites cost one site's
+requests. See `_fetch_era5_regional` and docs/13_multi_site_extension.md.
+    era5gh_core_{YYYY}-{MM}.nc      — the 7 v1 variables over the whole bbox
+    era5gh_extra_{YYYY}-{MM}.nc     — v2 extras over the bbox
+    era5gh_pressure_{YYYY}-{MM}.nc  — pressure levels over the bbox
+    era5gh_lsm.nc                   — land-sea mask, one hour, reused forever
+    era5gh_manifest.json            — the bbox these files were built for
 """
 
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -56,6 +67,10 @@ logger = get_logger(__name__)
 # here rather than assuming.
 SOURCE_WIND_HEIGHT_M = {
     "era5": 100.0,
+    # Same product, different download geometry — listed explicitly rather than
+    # left to DEFAULT_SOURCE_WIND_HEIGHT_M, because an implicit default is what
+    # caused the v1 error this table exists to prevent.
+    "era5_regional": 100.0,
     "nasa_power": 50.0,
 }
 DEFAULT_SOURCE_WIND_HEIGHT_M = 100.0
@@ -166,6 +181,36 @@ ERA5_EXTRA_VARS = [
 ERA5_PRESSURE_VARS = ["u_component_of_wind", "v_component_of_wind", "geopotential"]
 ERA5_PRESSURE_LEVELS = ["850", "500"]
 
+# Regional (multi-site) cache family. Keyed by MONTH ONLY, deliberately: these
+# files are shared by every site in the bbox, which is the entire reason 17 sites
+# cost one site's download. The per-site `era5_{name}_*` families above are
+# untouched and still valid.
+#
+# ⚠️ The bbox is NOT in the filename, so a cache built for one bbox would be
+# silently reused for another. `_fetch_era5_regional` therefore writes a sidecar
+# manifest and refuses to mix bboxes — the same class of defect as the Open-Meteo
+# `lead_days` leak (defect 9), where a cache key encoded less than the request.
+REGIONAL_CORE_PREFIX = "era5gh_core"
+REGIONAL_EXTRA_PREFIX = "era5gh_extra"
+REGIONAL_PRESSURE_PREFIX = "era5gh_pressure"
+REGIONAL_LSM_NAME = "era5gh_lsm.nc"
+REGIONAL_MANIFEST_NAME = "era5gh_manifest.json"
+
+
+@dataclass(frozen=True)
+class RegionalExtract:
+    """How to crop a regional ERA5 grid down to a single site.
+
+    Passed to the monthly loaders by the regional path only. When it is None they
+    behave exactly as they always have — whole grid into `_centre_and_spatial` —
+    which is what keeps the published Anloga results byte-reproducible.
+    """
+    half: int = 1
+    min_land_fraction: float = 0.5
+    lsm: np.ndarray | None = None
+    mask_lats: np.ndarray | None = None
+    mask_lons: np.ndarray | None = None
+
 
 def _fetch_era5(site: SiteConfig, start: str, end: str, cache_dir: Path) -> pd.DataFrame:
     """Fetch ERA5 single-level + extras + pressure-levels for the site.
@@ -251,6 +296,186 @@ def _fetch_era5(site: SiteConfig, start: str, end: str, cache_dir: Path) -> pd.D
     return _load_era5_all(core_paths, extra_paths, pressure_paths, site, start, end)
 
 
+def _bbox_area(bbox: dict[str, float]) -> list[float]:
+    """{north, west, south, east} -> the [N, W, S, E] list CDS wants."""
+    missing = {"north", "west", "south", "east"} - set(bbox)
+    if missing:
+        raise ValueError(
+            f"data.bbox is missing {sorted(missing)}; needed for source "
+            f"'era5_regional'. See sites/ghana_16.yaml for the Ghana box."
+        )
+    return [float(bbox["north"]), float(bbox["west"]),
+            float(bbox["south"]), float(bbox["east"])]
+
+
+def _check_regional_manifest(cache_dir: Path, area: list[float]) -> None:
+    """Refuse to mix bboxes inside one regional cache.
+
+    ⚠️ The regional filenames carry only the month, because the files are shared
+    by every site in the box — that sharing is the whole point. The cost is that
+    nothing in the name says *which* box, so a cache built for one bbox would be
+    silently reused for another and every spatial column would quietly describe
+    the wrong neighbourhood.
+
+    This is exactly the shape of defect 9 (`lead_days` stopped being binding once
+    the cache widened): **a cache key that encodes less than the request does**.
+    That one was found only because a re-run moved 20 published figures. Having
+    paid for the lesson once, the manifest is written here rather than after.
+    """
+    path = Path(cache_dir) / REGIONAL_MANIFEST_NAME
+    if not path.exists():
+        path.write_text(json.dumps({"area": area}, indent=2), encoding="utf-8")
+        logger.info("Wrote regional cache manifest %s for area %s", path, area)
+        return
+    recorded = json.loads(path.read_text(encoding="utf-8")).get("area")
+    if recorded != area:
+        raise RuntimeError(
+            f"Regional ERA5 cache in {cache_dir} was built for area {recorded}, "
+            f"but this run asks for {area}. The `era5gh_*` filenames do not "
+            f"encode the bbox, so reusing them would silently mix grids. Either "
+            f"restore the original bbox or move the existing era5gh_* files "
+            f"aside."
+        )
+
+
+def fetch_regional_archive(
+    start: str, end: str, cache_dir: Path, bbox: dict[str, float],
+) -> tuple[list[Path], list[Path], list[Path]]:
+    """Download the shared bbox archive once. Site-independent, idempotent.
+
+    Separate from `_fetch_era5_regional` because the download is **not** per-site
+    — every site reads the same files — and the multi-site runner needs to do it
+    exactly once, before any site is processed, rather than discovering it
+    mid-way through site 1.
+
+    Returns the (core, extra, pressure) path lists for the month range, whether or
+    not each file was downloaded on this call. Safe to re-run: existing files are
+    skipped, which is also how a part-finished multi-day download resumes.
+
+    ⚠️ **Never run two of these at once.** `path.exists()` is the only
+    re-download guard, so two processes pick the same missing month and can write
+    the same path simultaneously. This happened on 2026-08-10 (RESULTS.md).
+    """
+    import cdsapi
+
+    ensure_dir(cache_dir)
+    area = _bbox_area(bbox)
+    _check_regional_manifest(cache_dir, area)
+    client = cdsapi.Client()
+
+    # The mask is constant in value, so one hour covers the whole archive.
+    lsm_path = Path(cache_dir) / REGIONAL_LSM_NAME
+    if not lsm_path.exists():
+        _retrieve_with_retry(
+            client, "reanalysis-era5-single-levels",
+            {"product_type": "reanalysis", "variable": ["land_sea_mask"],
+             "year": "2024", "month": "06", "day": "01", "time": ["12:00"],
+             "area": area, "format": "netcdf"},
+            str(lsm_path), label="land-sea mask (one-off)",
+        )
+
+    months = _year_month_range(start, end)
+    n = len(months)
+    core_paths: list[Path] = []
+    extra_paths: list[Path] = []
+    pressure_paths: list[Path] = []
+    failures: list[tuple[str, str]] = []
+
+    for i, (year, month) in enumerate(months, start=1):
+        tag = f"{year}-{month:02d}"
+        core = Path(cache_dir) / f"{REGIONAL_CORE_PREFIX}_{tag}.nc"
+        extra = Path(cache_dir) / f"{REGIONAL_EXTRA_PREFIX}_{tag}.nc"
+        press = Path(cache_dir) / f"{REGIONAL_PRESSURE_PREFIX}_{tag}.nc"
+        core_paths.append(core)
+        extra_paths.append(extra)
+        pressure_paths.append(press)
+
+        if not core.exists():
+            if not _retrieve_with_retry(
+                client, "reanalysis-era5-single-levels",
+                _era5_single_request(ERA5_CORE_VARS, year, month, area),
+                str(core), label=f"regional core {tag} ({i}/{n})",
+            ):
+                failures.append(("core", tag))
+        if not extra.exists():
+            if not _retrieve_with_retry(
+                client, "reanalysis-era5-single-levels",
+                _era5_single_request(ERA5_EXTRA_VARS, year, month, area),
+                str(extra), label=f"regional extras {tag} ({i}/{n})",
+            ):
+                failures.append(("extras", tag))
+        if not press.exists():
+            if not _retrieve_with_retry(
+                client, "reanalysis-era5-pressure-levels",
+                _era5_pressure_request(
+                    ERA5_PRESSURE_VARS, ERA5_PRESSURE_LEVELS, year, month, area,
+                ),
+                str(press), label=f"regional pressure {tag} ({i}/{n})",
+            ):
+                failures.append(("pressure", tag))
+
+    if failures:
+        by_family: dict[str, list[str]] = {}
+        for fam, tag in failures:
+            by_family.setdefault(fam, []).append(tag)
+        for fam, tags in by_family.items():
+            logger.warning(
+                "Regional ERA5 %s: %d/%d months failed and will be missing from "
+                "features: %s", fam, len(tags), n, ", ".join(tags),
+            )
+        if any(fam == "core" for fam, _ in failures):
+            raise RuntimeError(
+                f"Regional ERA5 core downloads failed for "
+                f"{len([f for f in failures if f[0] == 'core'])} months; cannot "
+                f"continue. Re-run to retry."
+            )
+    return core_paths, extra_paths, pressure_paths
+
+
+def _fetch_era5_regional(site: SiteConfig, start: str, end: str, cache_dir: Path,
+                         bbox: dict[str, float], window: int = 1,
+                         min_land_fraction: float = 0.5) -> pd.DataFrame:
+    """ERA5 for one site, extracted from a cache shared across the whole bbox.
+
+    Why this exists rather than a wider `pad` on `_fetch_era5`
+    ---------------------------------------------------------
+    The per-site fetcher issues one CDS request per (month x family) around one
+    point, so each site costs its own download: 468 requests for the 2010-2025
+    archive, and the v5 logs measured ~19 min per request end to end. Seventeen
+    sites that way is roughly **99 days** of continuous downloading, which does
+    not merely inconvenience the study, it ends it.
+
+    **CDS charges per field — variables x times x levels — not per grid cell.**
+    So one request covering all of Ghana costs the same as one covering two
+    cells; only the payload grows. The regional cache is therefore keyed by month
+    alone and every site reads from it, turning 17 downloads into 1.
+
+    Two consequences worth stating plainly:
+
+    * **The spatial columns change.** The per-site `pad = 0.2` collapses to a
+      1(lat)x2(lon) patch, which makes every `_grad_ns` identically zero and
+      every `_std` exactly `|_grad_ew| / 2` — ten of 36 tidy columns carrying no
+      information (see `_centre_and_spatial`). A regional grid gives a genuine
+      3x3, so those columns become real. That is a fix, but it means this path
+      produces a *different feature set*, not a drop-in replacement.
+    * **Cell selection is not just nearest.** Coastal sites can land offshore,
+      where lower roughness inflates wind speed invisibly. `select_site_cell`
+      snaps onto land; see its docstring and docs/13 section 3.
+    """
+    core_paths, extra_paths, pressure_paths = fetch_regional_archive(
+        start, end, cache_dir, bbox)
+
+    mask = load_land_sea_mask(Path(cache_dir))
+    extract = RegionalExtract(
+        half=window, min_land_fraction=min_land_fraction,
+        lsm=mask[0] if mask else None,
+        mask_lats=mask[1] if mask else None,
+        mask_lons=mask[2] if mask else None,
+    )
+    return _load_era5_all(core_paths, extra_paths, pressure_paths, site,
+                          start, end, extract=extract)
+
+
 def _retrieve_with_retry(client, dataset: str, request: dict, target_path: str,
                          label: str, max_attempts: int = 5, wait_seconds: int = 300) -> bool:
     """Retry a CDS retrieve on transient/CDS-side failures.
@@ -321,17 +546,21 @@ def _era5_pressure_request(variables: list[str], levels: list[str], year: int,
 def _load_era5_all(
     core_paths: list[Path], extra_paths: list[Path], pressure_paths: list[Path],
     site: SiteConfig, start: str, end: str,
+    extract: RegionalExtract | None = None,
 ) -> pd.DataFrame:
-    core = pd.concat([_load_era5_single_month(p, site) for p in core_paths]).sort_index()
+    core = pd.concat([_load_era5_single_month(p, site, extract)
+                      for p in core_paths]).sort_index()
     core = core[~core.index.duplicated(keep="first")]
 
-    extras_frames = [_load_era5_extra_month(p, site) for p in extra_paths if p.exists()]
+    extras_frames = [_load_era5_extra_month(p, site, extract)
+                     for p in extra_paths if p.exists()]
     if extras_frames:
         extras = pd.concat(extras_frames).sort_index()
         extras = extras[~extras.index.duplicated(keep="first")]
         core = core.join(extras, how="left")
 
-    pressure_frames = [_load_era5_pressure_month(p, site) for p in pressure_paths if p.exists()]
+    pressure_frames = [_load_era5_pressure_month(p, site, extract)
+                       for p in pressure_paths if p.exists()]
     if pressure_frames:
         press = pd.concat(pressure_frames).sort_index()
         press = press[~press.index.duplicated(keep="first")]
@@ -418,6 +647,158 @@ def _grid_arr(ds, var: str) -> np.ndarray | None:
     return arr
 
 
+# ---------------------------------------------------------------------------
+# Regional ERA5: site cell selection and window extraction
+# ---------------------------------------------------------------------------
+
+def load_land_sea_mask(cache_dir: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray] | None:
+    """Return (lsm, lats, lons) from the one-off regional mask, or None.
+
+    `land_sea_mask` is constant in value, so it is fetched once for a single hour
+    over the bbox (`era5gh_lsm.nc`, a few KB) rather than per month. Returns None
+    when the file is absent, which callers must treat as "cannot verify" rather
+    than "it is land".
+    """
+    path = Path(cache_dir) / REGIONAL_LSM_NAME
+    if not path.exists():
+        return None
+    ds = _open_dataset(path)
+    lat_name, lon_name, _ = _coord_names(ds)
+    lsm = np.asarray(ds["lsm"].values)
+    while lsm.ndim > 2:
+        lsm = lsm[0]
+    return lsm, np.asarray(ds[lat_name].values), np.asarray(ds[lon_name].values)
+
+
+def select_site_cell(lats: np.ndarray, lons: np.ndarray, site: SiteConfig,
+                     lsm: np.ndarray | None = None,
+                     mask_lats: np.ndarray | None = None,
+                     mask_lons: np.ndarray | None = None,
+                     min_land_fraction: float = 0.5) -> tuple[int, int]:
+    """Pick the grid cell representing `site`: nearest, then snapped onto land.
+
+    ⚠️ **Nearest is not always right, and the failure is silent.** ERA5 sea cells
+    carry far lower surface roughness and correspondingly higher wind speeds, so a
+    coastal site whose nearest cell lands offshore reports an *inflated* resource
+    while looking entirely self-consistent. Cape Coast is the live case: at
+    5.11 N it sits 0.11 deg from the ERA5 row at 5.00 and 0.14 deg from 5.25 — a
+    margin of 0.030 deg — and the coastline there runs near 5.10 N, so plain
+    nearest-cell selection puts it in the Gulf of Guinea.
+
+    So when a mask is supplied and the nearest cell is below
+    `min_land_fraction`, this snaps to the closest cell that qualifies, searching
+    outward, and logs the snap. With no mask it returns the nearest cell and warns
+    once — "cannot verify" is not "verified".
+
+    The threshold is pre-registered in docs/13 §3 and fixed before any resource
+    figure exists; choosing it after seeing which sites rank well would be
+    fitting the geography to the result.
+    """
+    i = int(np.abs(lats - site.latitude).argmin())
+    j = int(np.abs(lons - site.longitude).argmin())
+    if lsm is None or mask_lats is None or mask_lons is None:
+        logger.warning(
+            "%s: no land-sea mask available, using nearest cell (%.2f, %.2f) "
+            "unverified — a coastal site may be sitting on water",
+            site.name, lats[i], lons[j],
+        )
+        return i, j
+
+    mi = int(np.abs(mask_lats - site.latitude).argmin())
+    mj = int(np.abs(mask_lons - site.longitude).argmin())
+    if float(lsm[mi, mj]) >= min_land_fraction:
+        return i, j
+
+    best: tuple[int, int] | None = None
+    best_dist = np.inf
+    for di in range(-3, 4):
+        for dj in range(-3, 4):
+            mii, mjj = mi + di, mj + dj
+            if not (0 <= mii < len(mask_lats) and 0 <= mjj < len(mask_lons)):
+                continue
+            if float(lsm[mii, mjj]) < min_land_fraction:
+                continue
+            dist = float(np.hypot(
+                (mask_lats[mii] - site.latitude) * 111.0,
+                (mask_lons[mjj] - site.longitude) * 111.0
+                * np.cos(np.radians(mask_lats[mii])),
+            ))
+            if dist < best_dist:
+                best, best_dist = (mii, mjj), dist
+    if best is None:
+        raise RuntimeError(
+            f"{site.name}: no cell within 3 cells of ({site.latitude}, "
+            f"{site.longitude}) has land fraction >= {min_land_fraction}. "
+            f"Check the coordinate — this is an ocean location."
+        )
+
+    target_lat, target_lon = mask_lats[best[0]], mask_lons[best[1]]
+    logger.info(
+        "%s: nearest cell (%.2f, %.2f) has land fraction %.3f < %.2f — snapped "
+        "to (%.2f, %.2f) at %.0f km, land fraction %.3f",
+        site.name, lats[i], lons[j], float(lsm[mi, mj]), min_land_fraction,
+        target_lat, target_lon, best_dist, float(lsm[best]),
+    )
+    return (int(np.abs(lats - target_lat).argmin()),
+            int(np.abs(lons - target_lon).argmin()))
+
+
+def _cropper(ds, site: SiteConfig, extract: RegionalExtract | None):
+    """Build the per-dataset crop function used by the monthly loaders.
+
+    Returns identity when `extract` is None, which is the per-site path and must
+    stay bit-for-bit what it was — every published Anloga figure depends on it.
+    Otherwise returns a closure that crops any (time, lat, lon) array to the
+    site's window, resolving the site cell **once** per file rather than per
+    variable.
+    """
+    if extract is None:
+        return lambda arr: arr
+
+    lat_name, lon_name, _ = _coord_names(ds)
+    lats = np.asarray(ds[lat_name].values)
+    lons = np.asarray(ds[lon_name].values)
+    i, j = select_site_cell(
+        lats, lons, site,
+        lsm=extract.lsm, mask_lats=extract.mask_lats, mask_lons=extract.mask_lons,
+        min_land_fraction=extract.min_land_fraction,
+    )
+    n_lat, n_lon = len(lats), len(lons)
+
+    def crop(arr: np.ndarray | None) -> np.ndarray | None:
+        return _window_slice(arr, i, j, extract.half, n_lat, n_lon)
+
+    return crop
+
+
+def _window_slice(arr: np.ndarray | None, i: int, j: int, half: int,
+                  n_lat: int, n_lon: int) -> np.ndarray | None:
+    """Crop a (time, lat, lon) array to the (2*half+1)^2 window centred on (i, j).
+
+    Clamped at the grid edge, so a site near the bbox boundary yields a smaller
+    window rather than an error — but the bbox in `sites/ghana_16.yaml` is sized
+    so that every Ghanaian site has room for a full 3x3, and that is asserted in
+    the tests rather than left to chance.
+
+    The centre of the returned window is the site's own cell, which is what makes
+    `_centre_and_spatial`'s `arr[:, n_lat // 2, n_lon // 2]` pick the right cell
+    downstream without changing that function at all.
+    """
+    if arr is None or arr.ndim < 3:
+        return arr
+    i0, i1 = max(0, i - half), min(n_lat, i + half + 1)
+    j0, j1 = max(0, j - half), min(n_lon, j + half + 1)
+    # Keep the site cell at the window centre even when clamped, otherwise
+    # `_centre_and_spatial` would silently return a neighbour.
+    if i - i0 != i1 - 1 - i:
+        k = min(i - i0, i1 - 1 - i)
+        i0, i1 = i - k, i + k + 1
+    if j - j0 != j1 - 1 - j:
+        k = min(j - j0, j1 - 1 - j)
+        j0, j1 = j - k, j + k + 1
+    return arr[:, i0:i1, j0:j1]
+
+
 def _centre_and_spatial(arr: np.ndarray, lat_axis: int = -2,
                         lon_axis: int = -1) -> tuple[np.ndarray, dict[str, np.ndarray]]:
     """Given a (time, lat, lon) array, return (centre-cell series, spatial stats).
@@ -465,14 +846,21 @@ def _centre_and_spatial(arr: np.ndarray, lat_axis: int = -2,
     return centre, stats
 
 
-def _load_era5_single_month(path: Path, site: SiteConfig) -> pd.DataFrame:
-    """Load one monthly NetCDF of v1 core variables → per-cell + spatial stats."""
+def _load_era5_single_month(path: Path, site: SiteConfig,
+                            extract: RegionalExtract | None = None) -> pd.DataFrame:
+    """Load one monthly NetCDF of v1 core variables → per-cell + spatial stats.
+
+    `extract=None` (the per-site path) reads the whole grid, exactly as before.
+    Supplied (the regional path), the grid is first cropped to the site's window
+    so `_centre_and_spatial` sees a patch centred on that site.
+    """
     ds = _open_dataset(path)
     _, _, time_name = _coord_names(ds)
     times = _times_utc(ds, time_name)
+    crop = _cropper(ds, site, extract)
 
     def _grid(var: str) -> np.ndarray | None:
-        return _grid_arr(ds, var)
+        return crop(_grid_arr(ds, var))
 
     u10 = _grid("u10"); v10 = _grid("v10")
     u100 = _grid("u100"); v100 = _grid("v100")
@@ -518,14 +906,16 @@ def _load_era5_single_month(path: Path, site: SiteConfig) -> pd.DataFrame:
     return pd.DataFrame(data, index=times).rename_axis("timestamp")
 
 
-def _load_era5_extra_month(path: Path, site: SiteConfig) -> pd.DataFrame:
+def _load_era5_extra_month(path: Path, site: SiteConfig,
+                           extract: RegionalExtract | None = None) -> pd.DataFrame:
     ds = _open_dataset(path)
     _, _, time_name = _coord_names(ds)
     times = _times_utc(ds, time_name)
+    crop = _cropper(ds, site, extract)
 
-    gust = _grid_arr(ds, "fg10")  # 10m wind gust
-    d2m = _grid_arr(ds, "d2m")    # 2m dewpoint (K)
-    blh = _grid_arr(ds, "blh")    # boundary layer height (m)
+    gust = crop(_grid_arr(ds, "fg10"))  # 10m wind gust
+    d2m = crop(_grid_arr(ds, "d2m"))    # 2m dewpoint (K)
+    blh = crop(_grid_arr(ds, "blh"))    # boundary layer height (m)
 
     def _centre(x):
         if x is None:
@@ -539,10 +929,12 @@ def _load_era5_extra_month(path: Path, site: SiteConfig) -> pd.DataFrame:
     }, index=times).rename_axis("timestamp")
 
 
-def _load_era5_pressure_month(path: Path, site: SiteConfig) -> pd.DataFrame:
+def _load_era5_pressure_month(path: Path, site: SiteConfig,
+                              extract: RegionalExtract | None = None) -> pd.DataFrame:
     ds = _open_dataset(path)
     _, _, time_name = _coord_names(ds)
     times = _times_utc(ds, time_name)
+    crop = _cropper(ds, site, extract)
 
     if "pressure_level" in ds.coords:
         level_name = "pressure_level"
@@ -554,7 +946,7 @@ def _load_era5_pressure_month(path: Path, site: SiteConfig) -> pd.DataFrame:
     def _grid_at_level(var: str, level: int) -> np.ndarray | None:
         if var not in ds.variables or level_name is None:
             return None
-        return np.asarray(ds[var].sel({level_name: level}).values)
+        return crop(np.asarray(ds[var].sel({level_name: level}).values))
 
     def _centre(x):
         if x is None:
@@ -906,6 +1298,14 @@ def load_weather(config: Config) -> pd.DataFrame:
     source = config.data.source.lower()
     if source == "era5":
         df = _fetch_era5(config.site, config.data.start, config.data.end, cache_dir)
+    elif source == "era5_regional":
+        # Multi-site path: one bbox download shared by every site. See
+        # `_fetch_era5_regional` for why, and docs/13 for the measurements.
+        df = _fetch_era5_regional(
+            config.site, config.data.start, config.data.end, cache_dir,
+            bbox=config.data.bbox, window=config.data.window,
+            min_land_fraction=config.data.min_land_fraction,
+        )
     elif source == "nasa_power":
         df = _fetch_nasa_power(config.site, config.data.start, config.data.end, cache_dir)
     else:

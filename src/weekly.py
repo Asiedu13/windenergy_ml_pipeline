@@ -44,6 +44,7 @@ import argparse
 import re
 from dataclasses import dataclass, field
 from functools import lru_cache
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -299,7 +300,11 @@ def run(config_path: str, test_split: float = 0.2, seed: int = 42) -> pd.DataFra
     df = pd.DataFrame(rows)
     if not df.empty:
         df["skill_vs_clim"] = 1.0 - df["xgboost"] / df["climatology"]
-        out = ensure_dir("outputs/reports") / "weekly_leads.csv"
+        # Resolve from config rather than a literal, so a per-site run (v6,
+        # `src.multisite`, which sets paths.outputs to outputs/sites/<name>)
+        # cannot overwrite another site's table. Single-site runs are unaffected:
+        # paths.outputs defaults to "outputs".
+        out = ensure_dir(Path(config.paths.outputs) / "reports") / "weekly_leads.csv"
         df.to_csv(out, index=False)
         logger.info("Wrote %s", out)
     return df

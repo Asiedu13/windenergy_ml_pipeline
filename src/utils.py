@@ -26,6 +26,19 @@ class DataConfig:
     start: str
     end: str
     cache_dir: str
+    # Regional ERA5 (source: era5_regional) — one bounding box shared by every
+    # site, as {north, west, south, east}. The point of it is cost: CDS charges
+    # per field, not per grid cell, so one Ghana-wide request costs the same as
+    # one two-cell request and 17 sites come out of a single download pass.
+    # See docs/13_multi_site_extension.md §4.
+    bbox: dict[str, float] = field(default_factory=dict)
+    # Half-width of the extraction window around a site's cell, in cells.
+    # 1 -> 3x3. Only used by era5_regional; the per-site path is unaffected.
+    window: int = 1
+    # Minimum land fraction for a site's selected ERA5 cell. Coastal sites whose
+    # nearest cell lands offshore otherwise report an inflated resource, because
+    # sea cells carry much lower roughness. See docs/13 §3.
+    min_land_fraction: float = 0.5
 
 
 @dataclass
