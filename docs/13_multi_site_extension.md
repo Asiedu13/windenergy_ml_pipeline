@@ -227,6 +227,46 @@ would take ~2,150 h against monthly's ~192 h.
 size.** The `chunk="year"` code path is retained for a smaller bbox or a changed quota, and
 `src/data_ingest.py` carries the measurements so nobody re-derives this from the field count.
 
+### 4c. Gate 0's time budget failed, and the reorder that follows from it
+
+**The gate asked for ≤7 days and the archive needs ~8.9.** Measured with the account to itself
+and nothing competing: **25 min/request**, 515 requests remaining → **214 h**. Size is
+comfortable (≈2.7 GB against 25 GB); only the time half fails.
+
+| When | Rate | Note |
+|:---|---:|:---|
+| Probe, 1 request | 3.0 min | what Gate 0 was passed on |
+| First 12 requests | 5.4 min | still looked fine |
+| Requests ~40–55 | ~20 min | degrading |
+| During the concurrent probe | 268 min | self-inflicted, §4b |
+| **Alone, 2026-10-02** | **25 min** | the number to plan with |
+
+**The cause of 5.4 → 25 min is not established.** Candidates are CDS-side load or a priority
+penalty for sustained submission; a direct check showed `accepted → running` in 12 s, which
+argues against a queue-admission penalty but does not rule out slower job generation. Local
+throughput also varies by an order of magnitude between samples (69 kB/s to 660 kB/s), though
+at any of those speeds a 6.4 MB file is well under 2 minutes of transfer and so cannot be the
+main term. **This is left as unexplained rather than attributed**, because two confident
+explanations have already been wrong here.
+
+**What follows.** Sequencing stops being an optimisation and becomes necessary, so the fetch
+runs in two passes:
+
+| Pass | Range | Requests | Serves |
+|---:|:---|---:|:---|
+| 1 | 2024-03 → 2025-12 | 66 (~26 h) | the **24 h forecast ladder**, which is what tests thesis §4.9.3's prediction |
+| 2 | 2010-01 → 2025-12 | the remainder | the **monthly resource climatology** |
+
+Pass 2 skips whatever pass 1 fetched, so this costs nothing and discards no downloaded month.
+It is purely an ordering change: no scientific claim, window, or pre-registered quantity moves,
+and reverting to one chronological pass means deleting a block from the launcher.
+
+**The honest reading of this gate.** It was a real gate and it caught a real problem — the
+archive genuinely does not fit the budget. What it did *not* do is catch it early, because it
+was satisfied by one measurement of a quantity that varies 8× across the run. A budget gate
+needs a sustained sample, not a single draw; that is the same error as the 29 h estimate in §4
+and the second time it has cost this phase a day.
+
 ### 4b. ⚠️ Never run a second CDS job while the archive is downloading
 
 **CDS limits concurrent jobs per account, and the archive is starved by anything that competes
@@ -346,7 +386,7 @@ Run in order; stop at the first failure.
 
 | # | Gate | Pass criterion | Status |
 |---:|:---|:---|:---|
-| 0 | **CDS probe** | One monthly Ghana-bbox request is accepted (cost cap is field-based as claimed); measured size and wall time extrapolate to ≤ ~25 GB and ≤ ~7 days for 156 months × 3 families | ✅ **PASS 2026-10-01** — 6.3 MB, 3.0 min, ≈2.9 GB / ≈1.0 day. §4 has the table; §3a has the land-mask result, which is where the interesting outcome was |
+| 0 | **CDS probe** | One monthly Ghana-bbox request is accepted (cost cap is field-based as claimed); measured size and wall time extrapolate to ≤ ~25 GB and ≤ ~7 days for 156 months × 3 families | ⚠️ **Passed on size, FAILED on time.** Size is fine (≈2.7 GB vs 25 GB). The time half passed on a single 3.0 min request and **does not hold at scale** — see §4c |
 | 1 | **Anloga equivalence** | Anloga extracted from the bbox reproduces the per-site cache's **centre-cell** columns exactly; spatial columns differ, and `_grad_ns` is **no longer identically zero** | ⚠️ **FAILED as written; the claim it tested passed.** The criterion was mis-specified — see §7a |
 | 2 | **Land mask** | Every site's selected cell has land fraction ≥ 0.5, or carries a recorded exemption; every snap is logged | ⚠️ **PASS with one exemption** — Cape Coast and Accra snapped as predicted; **Anloga failed at 0.124 and is exempted, not corrected** (§3a). The criterion was amended to admit a recorded exemption, which is a change made *after* seeing the result and is flagged as such here rather than hidden |
 | 3 | **Defect-9 regression** | `python -m src.bakeoff --config config_bakeoff.yaml --per-fold` still reproduces xgboost 0.8037, mos_multi 0.8412, persistence 1.3183 and the 46.2% fold spread | ⏳ pending |
