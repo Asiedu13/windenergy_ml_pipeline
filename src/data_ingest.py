@@ -196,24 +196,34 @@ REGIONAL_PRESSURE_PREFIX = "era5gh_pressure"
 REGIONAL_LSM_NAME = "era5gh_lsm.nc"
 REGIONAL_MANIFEST_NAME = "era5gh_manifest.json"
 
-# Truncation floors for the regional families, passed to `_retrieve_with_retry`
-# as `min_bytes`. A download killed mid-request can leave a short file behind, and
-# `path.exists()` is the only re-download guard in this module — so without a floor
-# a partial month would be treated as complete forever.
+# Truncation floors for the regional families, PER MONTH OF COVERAGE, passed to
+# `_retrieve_with_retry` as `min_bytes`. A download killed mid-request can leave a
+# short file behind, and `path.exists()` is the only re-download guard in this
+# module — so without a floor a partial file would be treated as complete forever.
 #
-# Calibrated against the smallest legitimate files observed (February, 28 days):
-# core 5.87 MB, extra 2.68 MB, pressure 4.71 MB. Month-length variation is only
-# ~10% (28/31 days), so a floor near half the February size cannot false-positive
-# on a real month while still catching a gross truncation or an error page written
-# to the target.
+# Calibrated against the smallest legitimate monthly files observed (February,
+# 28 days): core 5.87 MB, extra 2.68 MB, pressure 4.71 MB. Month-length variation
+# is only ~10% (28/31 days), so a floor near half the February size cannot
+# false-positive on a real month while still catching a gross truncation or an
+# error page written to the target.
+#
+# ⚠️ **Scale these by the file's coverage, never apply them flat.** A yearly file
+# is ~12x a monthly one, so a monthly floor would pass a yearly file that is 92%
+# truncated. `regional_min_bytes()` does the scaling; call it rather than indexing
+# this dict directly.
 #
 # Subtler truncation is caught elsewhere and harder: a partially-written NetCDF
 # fails to open in `_open_dataset` rather than yielding plausible wrong numbers.
-REGIONAL_MIN_BYTES = {
+REGIONAL_MIN_BYTES_PER_MONTH = {
     REGIONAL_CORE_PREFIX: 2_500_000,
     REGIONAL_EXTRA_PREFIX: 1_200_000,
     REGIONAL_PRESSURE_PREFIX: 2_000_000,
 }
+
+
+def regional_min_bytes(prefix: str, months: int = 1) -> int:
+    """Truncation floor for a regional file covering `months` months."""
+    return REGIONAL_MIN_BYTES_PER_MONTH[prefix] * months
 
 
 @dataclass(frozen=True)
@@ -376,13 +386,20 @@ def _drop_truncated_regional_files(cache_dir: Path) -> list[Path]:
     so callers can log it.
     """
     removed: list[Path] = []
-    for prefix, floor in REGIONAL_MIN_BYTES.items():
+    for prefix in REGIONAL_MIN_BYTES_PER_MONTH:
         for path in sorted(Path(cache_dir).glob(f"{prefix}_*.nc")):
+            # Coverage comes from the name: `..._2010-07.nc` is one month,
+            # `..._2010.nc` is twelve. Getting this wrong in the lenient
+            # direction would pass a yearly file that is 92% truncated.
+            stem = path.stem[len(prefix) + 1:]
+            months = 1 if "-" in stem else 12
+            floor = regional_min_bytes(prefix, months)
             size = path.stat().st_size
             if size < floor:
                 logger.warning(
-                    "Regional cache: %s is %d bytes (floor %d) — truncated, "
-                    "deleting so it is re-requested", path.name, size, floor,
+                    "Regional cache: %s is %d bytes (floor %d for %d month(s)) "
+                    "— truncated, deleting so it is re-requested",
+                    path.name, size, floor, months,
                 )
                 path.unlink()
                 removed.append(path)
@@ -394,8 +411,30 @@ def _drop_truncated_regional_files(cache_dir: Path) -> list[Path]:
     return removed
 
 
+def _regional_chunks(start: str, end: str, chunk: str
+                     ) -> list[tuple[str, int, int | list[int]]]:
+    """Split a date range into download units: (tag, year, month-or-months).
+
+    `chunk="month"` gives one unit per calendar month, tagged `YYYY-MM`.
+    `chunk="year"` gives one unit per calendar year, tagged `YYYY`, carrying only
+    the months of that year actually inside the range — so a range starting
+    2024-03 asks for months 3..12 of 2024 rather than silently widening.
+    """
+    months = _year_month_range(start, end)
+    if chunk == "month":
+        return [(f"{y}-{m:02d}", y, m) for y, m in months]
+    if chunk != "year":
+        raise ValueError(f"data.chunk must be 'month' or 'year', got {chunk!r}")
+
+    by_year: dict[int, list[int]] = {}
+    for y, m in months:
+        by_year.setdefault(y, []).append(m)
+    return [(str(y), y, ms) for y, ms in sorted(by_year.items())]
+
+
 def fetch_regional_archive(
     start: str, end: str, cache_dir: Path, bbox: dict[str, float],
+    chunk: str = "month",
 ) -> tuple[list[Path], list[Path], list[Path]]:
     """Download the shared bbox archive once. Site-independent, idempotent.
 
@@ -404,12 +443,31 @@ def fetch_regional_archive(
     exactly once, before any site is processed, rather than discovering it
     mid-way through site 1.
 
-    Returns the (core, extra, pressure) path lists for the month range, whether or
-    not each file was downloaded on this call. Safe to re-run: existing files are
+    Returns the (core, extra, pressure) path lists for the range, whether or not
+    each file was downloaded on this call. Safe to re-run: existing files are
     skipped, which is also how a part-finished multi-day download resumes.
 
+    **`chunk` is "month" because that is the only size CDS accepts here.**
+    Monthly needs 576 requests for 2010-2025 and the per-request cost is dominated
+    by CDS queue time rather than payload — measured 5.4 min for the first twelve
+    requests, degrading to ~20 min by the fiftieth as sustained submission cost
+    queue priority, which extrapolates past the pre-registered 7-day budget. So a
+    larger chunk was attempted, and **rejected**:
+
+        6 months  19.7M values  ->  403 "cost limits exceeded"
+        4 months  13.1M values  ->  403 "cost limits exceeded"
+        1 month    3.3M values  ->  accepted (the working baseline)
+
+    The arithmetic that motivated it was wrong: a year of core is 61,320 fields
+    against the 121,000 cap `RESULTS.md` records, but that cap came from the
+    project's **2-cell** requests and this bbox is **630 cells**. CDS's cost
+    includes spatial extent, so field count alone does not predict acceptance.
+
+    `chunk="year"` is retained for a smaller bbox or a future quota change. Do not
+    set it for the Ghana box without re-probing. See docs/13 section 4a.
+
     ⚠️ **Never run two of these at once.** `path.exists()` is the only
-    re-download guard, so two processes pick the same missing month and can write
+    re-download guard, so two processes pick the same missing unit and can write
     the same path simultaneously. This happened on 2026-08-10 (RESULTS.md).
     """
     import cdsapi
@@ -431,15 +489,17 @@ def fetch_regional_archive(
             str(lsm_path), label="land-sea mask (one-off)",
         )
 
-    months = _year_month_range(start, end)
-    n = len(months)
+    units = _regional_chunks(start, end, chunk)
+    n = len(units)
+    logger.info("Regional archive: %d %s unit(s) x 3 families = %d requests",
+                n, chunk, n * 3)
     core_paths: list[Path] = []
     extra_paths: list[Path] = []
     pressure_paths: list[Path] = []
     failures: list[tuple[str, str]] = []
 
-    for i, (year, month) in enumerate(months, start=1):
-        tag = f"{year}-{month:02d}"
+    for i, (tag, year, month) in enumerate(units, start=1):
+        n_months = 1 if isinstance(month, int) else len(month)
         core = Path(cache_dir) / f"{REGIONAL_CORE_PREFIX}_{tag}.nc"
         extra = Path(cache_dir) / f"{REGIONAL_EXTRA_PREFIX}_{tag}.nc"
         press = Path(cache_dir) / f"{REGIONAL_PRESSURE_PREFIX}_{tag}.nc"
@@ -452,7 +512,7 @@ def fetch_regional_archive(
                 client, "reanalysis-era5-single-levels",
                 _era5_single_request(ERA5_CORE_VARS, year, month, area),
                 str(core), label=f"regional core {tag} ({i}/{n})",
-                min_bytes=REGIONAL_MIN_BYTES[REGIONAL_CORE_PREFIX],
+                min_bytes=regional_min_bytes(REGIONAL_CORE_PREFIX, n_months),
             ):
                 failures.append(("core", tag))
         if not extra.exists():
@@ -460,7 +520,7 @@ def fetch_regional_archive(
                 client, "reanalysis-era5-single-levels",
                 _era5_single_request(ERA5_EXTRA_VARS, year, month, area),
                 str(extra), label=f"regional extras {tag} ({i}/{n})",
-                min_bytes=REGIONAL_MIN_BYTES[REGIONAL_EXTRA_PREFIX],
+                min_bytes=regional_min_bytes(REGIONAL_EXTRA_PREFIX, n_months),
             ):
                 failures.append(("extras", tag))
         if not press.exists():
@@ -470,7 +530,7 @@ def fetch_regional_archive(
                     ERA5_PRESSURE_VARS, ERA5_PRESSURE_LEVELS, year, month, area,
                 ),
                 str(press), label=f"regional pressure {tag} ({i}/{n})",
-                min_bytes=REGIONAL_MIN_BYTES[REGIONAL_PRESSURE_PREFIX],
+                min_bytes=regional_min_bytes(REGIONAL_PRESSURE_PREFIX, n_months),
             ):
                 failures.append(("pressure", tag))
 
@@ -480,13 +540,13 @@ def fetch_regional_archive(
             by_family.setdefault(fam, []).append(tag)
         for fam, tags in by_family.items():
             logger.warning(
-                "Regional ERA5 %s: %d/%d months failed and will be missing from "
+                "Regional ERA5 %s: %d/%d unit(s) failed and will be missing from "
                 "features: %s", fam, len(tags), n, ", ".join(tags),
             )
         if any(fam == "core" for fam, _ in failures):
             raise RuntimeError(
                 f"Regional ERA5 core downloads failed for "
-                f"{len([f for f in failures if f[0] == 'core'])} months; cannot "
+                f"{len([f for f in failures if f[0] == 'core'])} unit(s); cannot "
                 f"continue. Re-run to retry."
             )
     return core_paths, extra_paths, pressure_paths
@@ -494,7 +554,8 @@ def fetch_regional_archive(
 
 def _fetch_era5_regional(site: SiteConfig, start: str, end: str, cache_dir: Path,
                          bbox: dict[str, float], window: int = 1,
-                         min_land_fraction: float = 0.5) -> pd.DataFrame:
+                         min_land_fraction: float = 0.5,
+                         chunk: str = "year") -> pd.DataFrame:
     """ERA5 for one site, extracted from a cache shared across the whole bbox.
 
     Why this exists rather than a wider `pad` on `_fetch_era5`
@@ -523,7 +584,7 @@ def _fetch_era5_regional(site: SiteConfig, start: str, end: str, cache_dir: Path
       snaps onto land; see its docstring and docs/13 section 3.
     """
     core_paths, extra_paths, pressure_paths = fetch_regional_archive(
-        start, end, cache_dir, bbox)
+        start, end, cache_dir, bbox, chunk=chunk)
 
     mask = load_land_sea_mask(Path(cache_dir))
     extract = RegionalExtract(
@@ -603,13 +664,38 @@ def _retrieve_with_retry(client, dataset: str, request: dict, target_path: str,
     return False
 
 
-def _era5_single_request(variables: list[str], year: int, month: int,
+def _months_arg(month: int | list[int]) -> list[str]:
+    """Normalise a month or list of months to CDS's zero-padded strings.
+
+    Accepting a list is what makes a whole-year request possible. **CDS costs a
+    request in fields** — variables × times × levels — **not in grid cells or
+    calendar span**, and the cap is 121,000:
+
+        core      7 vars x 8760 h           =  61,320
+        extras    3 vars x 8760 h           =  26,280
+        pressure  3 vars x 2 levels x 8760  =  52,560
+
+    All three clear the cap for a full year, so one yearly request replaces twelve
+    monthly ones. That matters because the cost of a request here is dominated by
+    CDS queue time (measured 5-25 min, degrading with sustained submission) rather
+    than by payload, so cutting the request count ~12x is the single biggest
+    available saving. See docs/13 section 4a.
+
+    RESULTS.md's note that "multi-year single requests trip the 121k cost cap"
+    stands and is why the chunk is a year rather than the whole archive: two years
+    of core would be 122,640 fields, just over.
+    """
+    months = [month] if isinstance(month, int) else list(month)
+    return [f"{m:02d}" for m in months]
+
+
+def _era5_single_request(variables: list[str], year: int, month: int | list[int],
                          area: list[float]) -> dict:
     return {
         "product_type": "reanalysis",
         "variable": variables,
         "year": str(year),
-        "month": f"{month:02d}",
+        "month": _months_arg(month),
         "day": [f"{d:02d}" for d in range(1, 32)],
         "time": [f"{h:02d}:00" for h in range(24)],
         "area": area,
@@ -618,13 +704,13 @@ def _era5_single_request(variables: list[str], year: int, month: int,
 
 
 def _era5_pressure_request(variables: list[str], levels: list[str], year: int,
-                            month: int, area: list[float]) -> dict:
+                            month: int | list[int], area: list[float]) -> dict:
     return {
         "product_type": "reanalysis",
         "variable": variables,
         "pressure_level": levels,
         "year": str(year),
-        "month": f"{month:02d}",
+        "month": _months_arg(month),
         "day": [f"{d:02d}" for d in range(1, 32)],
         "time": [f"{h:02d}:00" for h in range(24)],
         "area": area,
@@ -1398,6 +1484,7 @@ def load_weather(config: Config) -> pd.DataFrame:
             config.site, config.data.start, config.data.end, cache_dir,
             bbox=config.data.bbox, window=config.data.window,
             min_land_fraction=config.data.min_land_fraction,
+            chunk=config.data.chunk,
         )
     elif source == "nasa_power":
         df = _fetch_nasa_power(config.site, config.data.start, config.data.end, cache_dir)

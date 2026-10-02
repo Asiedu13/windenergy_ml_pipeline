@@ -144,7 +144,8 @@ def cmd_fetch(reg: dict[str, Any], args: argparse.Namespace) -> None:
     logger.info("This is ONE download shared by all %d sites. Do not start a "
                 "second ingest process.", len(reg["sites"]))
     core, extra, press = fetch_regional_archive(
-        args.start, args.end, Path(args.cache_dir), reg["bbox"])
+        args.start, args.end, Path(args.cache_dir), reg["bbox"],
+        chunk=args.chunk)
     have = sum(p.exists() for p in core + extra + press)
     logger.info("Archive complete: %d/%d files present",
                 have, len(core) + len(extra) + len(press))
@@ -350,6 +351,10 @@ def main() -> None:
     ap.add_argument("--folds", type=int, default=BAKEOFF_N_FOLDS)
     ap.add_argument("--seeds", type=int, nargs="+", default=None)
     ap.add_argument("--horizon", type=int, default=None)
+    ap.add_argument("--chunk", default="month", choices=["month", "year"],
+                    help="Download unit for `fetch`. 'month' is the only size "
+                         "CDS accepts for the Ghana bbox — a yearly request is "
+                         "rejected with 'cost limits exceeded'. See docs/13 §4a.")
     args = ap.parse_args()
 
     reg = load_registry(Path(args.registry))

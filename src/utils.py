@@ -39,6 +39,15 @@ class DataConfig:
     # nearest cell lands offshore otherwise report an inflated resource, because
     # sea cells carry much lower roughness. See docs/13 §3.
     min_land_fraction: float = 0.5
+    # Download unit for era5_regional: "month" or "year".
+    #
+    # ⚠️ **"month" is the default because it is the only size CDS actually
+    # accepts for this bbox.** A yearly request was rejected with "cost limits
+    # exceeded" (measured 2026-10-01): CDS's cost includes spatial extent, and at
+    # 630 cells a year is far over the limit — 6 and 4 months are rejected too.
+    # "year" is retained only for a smaller bbox or a future quota change; do not
+    # set it for the Ghana box without re-probing. See docs/13 §4a.
+    chunk: str = "month"
 
 
 @dataclass

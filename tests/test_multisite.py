@@ -22,16 +22,25 @@ import pytest
 import yaml
 
 from src.data_ingest import (
+    ERA5_CORE_VARS,
+    ERA5_EXTRA_VARS,
+    ERA5_PRESSURE_LEVELS,
+    ERA5_PRESSURE_VARS,
     REGIONAL_CORE_PREFIX,
     REGIONAL_EXTRA_PREFIX,
     REGIONAL_LSM_NAME,
-    REGIONAL_MIN_BYTES,
+    REGIONAL_MIN_BYTES_PER_MONTH,
     REGIONAL_PRESSURE_PREFIX,
     RegionalExtract,
     _bbox_area,
     _check_regional_manifest,
+    _era5_pressure_request,
+    _era5_single_request,
+    _months_arg,
+    _regional_chunks,
     _retrieve_with_retry,
     _window_slice,
+    regional_min_bytes,
     select_site_cell,
 )
 from src.multisite import load_registry, site_config
@@ -252,6 +261,77 @@ def test_manifest_refuses_a_different_bbox(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# Download chunking
+# ---------------------------------------------------------------------------
+
+def test_months_arg_accepts_a_single_month_or_a_list():
+    assert _months_arg(7) == ["07"]
+    assert _months_arg([1, 2, 12]) == ["01", "02", "12"]
+
+
+def test_monthly_chunks_are_one_unit_per_calendar_month():
+    units = _regional_chunks("2024-03-01", "2024-05-31", "month")
+    assert [u[0] for u in units] == ["2024-03", "2024-04", "2024-05"]
+    assert [u[2] for u in units] == [3, 4, 5]
+
+
+def test_yearly_chunks_group_by_year_and_do_not_widen_the_range():
+    """A range starting mid-year must ask for that year's months only.
+
+    Widening to a full year would quietly download data outside the configured
+    window and, worse, make the file's coverage disagree with its name.
+    """
+    units = _regional_chunks("2024-03-01", "2025-02-28", "year")
+    assert [u[0] for u in units] == ["2024", "2025"]
+    assert units[0][2] == [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    assert units[1][2] == [1, 2]
+
+
+def test_chunk_mode_must_be_month_or_year():
+    with pytest.raises(ValueError, match="month.*year|chunk"):
+        _regional_chunks("2024-01-01", "2024-02-28", "fortnight")
+
+
+def test_request_builders_pass_a_month_list_through():
+    req = _era5_single_request(ERA5_CORE_VARS, 2012, [1, 2, 3], _bbox_area(GHANA_BBOX))
+    assert req["year"] == "2012"
+    assert req["month"] == ["01", "02", "03"]
+    assert len(req["time"]) == 24 and len(req["day"]) == 31
+    preq = _era5_pressure_request(ERA5_PRESSURE_VARS, ERA5_PRESSURE_LEVELS,
+                                  2012, 5, _bbox_area(GHANA_BBOX))
+    assert preq["month"] == ["05"]
+    assert preq["pressure_level"] == ERA5_PRESSURE_LEVELS
+
+
+def test_floors_scale_with_coverage():
+    """A flat monthly floor would pass a yearly file that is 92% truncated."""
+    one = regional_min_bytes(REGIONAL_CORE_PREFIX, 1)
+    twelve = regional_min_bytes(REGIONAL_CORE_PREFIX, 12)
+    assert one == REGIONAL_MIN_BYTES_PER_MONTH[REGIONAL_CORE_PREFIX]
+    assert twelve == one * 12
+
+
+def test_startup_validation_infers_coverage_from_the_filename(tmp_path):
+    """`..._2010-07.nc` is one month; `..._2010.nc` is twelve.
+
+    A multi-month file just above the *monthly* floor is badly truncated and must
+    be caught; the same size in a monthly file is fine.
+    """
+    from src.data_ingest import _drop_truncated_regional_files
+
+    monthly = tmp_path / f"{REGIONAL_CORE_PREFIX}_2010-07.nc"
+    yearly = tmp_path / f"{REGIONAL_CORE_PREFIX}_2011.nc"
+    size = regional_min_bytes(REGIONAL_CORE_PREFIX, 1) + 1_000
+    monthly.write_bytes(b"x" * size)
+    yearly.write_bytes(b"x" * size)
+
+    removed = _drop_truncated_regional_files(tmp_path)
+
+    assert removed == [yearly], "yearly file above only the monthly floor must go"
+    assert monthly.exists(), "monthly file above its own floor must stay"
+
+
+# ---------------------------------------------------------------------------
 # Truncation guard — a short file must not become permanent
 # ---------------------------------------------------------------------------
 
@@ -389,7 +469,7 @@ def test_regional_floors_sit_below_the_smallest_observed_real_files():
         REGIONAL_EXTRA_PREFIX: 2_678_400,
         REGIONAL_PRESSURE_PREFIX: 4_711_800,
     }
-    for prefix, floor in REGIONAL_MIN_BYTES.items():
+    for prefix, floor in REGIONAL_MIN_BYTES_PER_MONTH.items():
         smallest = observed_feb[prefix]
         assert floor < smallest * 0.75, f"{prefix}: floor too close to a real file"
         assert floor > smallest * 0.25, f"{prefix}: floor too low to catch much"

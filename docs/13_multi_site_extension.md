@@ -157,9 +157,21 @@ continuous downloading. That is not a scheduling problem to be worked around; it
 study.
 
 **The `area` parameter is already a bounding box** ([`../src/data_ingest.py`](../src/data_ingest.py)
-`_fetch_era5`), and **CDS cost is field-based** — variables × times × levels — **not area
-based. So one request covering all of Ghana costs the same as one request covering two
-cells.** Only the payload grows.
+`_fetch_era5`), and **a monthly request covering all of Ghana is accepted at the same request
+count as one covering two cells** — measured, Gate 0 below. Only the payload grows.
+
+> ⚠️ **Correction, 2026-10-01.** An earlier revision of this paragraph said "CDS cost is
+> field-based — variables × times × levels — **not** area based". **That is wrong**, and it was
+> an over-generalisation from the single accepted monthly request below. CDS's cost does
+> include spatial extent: a whole-*year* Ghana request was later rejected with *"cost limits
+> exceeded — your request is too large"*, even though its field count (7 × 8784 = 61,488) sits
+> under the 121,000 cap that `RESULTS.md` records. That cap figure came from the project's
+> earlier **2-cell** requests, and this bbox is **630 cells**, so it does not transfer.
+>
+> What survives is the part that matters for feasibility: **one monthly 630-cell request is
+> accepted and costs one request**, so 17 sites still come out of one download pass rather
+> than seventeen. What does not survive is any inference that the time span can be widened
+> freely. The largest accepted chunk was established by measurement, not arithmetic — §4a.
 
 ```
 bbox (N, W, S, E) = 11.5, -3.5, 4.25, 1.5
@@ -181,6 +193,62 @@ bbox**, none touches an edge.
 | Land-sea mask (one-off) | — | 25 KB, 38 s |
 | Grid shape | 30 × 21 = 630 | **30 × 21 = 630, confirmed** |
 | Full archive | 468 requests, ~20 GB / ~6 days | **576 requests, ≈3.6 GB / ≈29 h** |
+
+### 4a. Chunk size — a month is the limit, measured twice over
+
+Monthly chunking needs 576 requests, and with per-request cost running 5–20 min that
+extrapolates past the pre-registered 7-day budget. So a larger chunk was tried. **It does not
+work, for two independent reasons, and both were established by measurement after an argument
+from arithmetic failed.**
+
+**Reason 1 — CDS rejects it on cost.**
+
+| Chunk | Core fields | Values (fields × 630 cells) | Verdict |
+|---:|---:|---:|:---|
+| 12 months | 61,320 | 38.6 M | ❌ `403 cost limits exceeded` |
+| 6 months | 31,248 | 19.7 M | ❌ `403 cost limits exceeded` |
+| 4 months | 20,832 | 13.1 M | ❌ `403 cost limits exceeded` |
+| **3 months** | 15,624 | 9.8 M | ✅ accepted |
+| 1 month | 5,208 | 3.3 M | ✅ accepted — the baseline |
+
+The yearly attempt was predicted to succeed because 61,320 fields sits under the 121,000 cap
+`RESULTS.md` records. **That prediction was wrong and the reasoning behind it was wrong**: the
+121k figure was measured on the project's **2-cell** per-site requests, and this bbox is **630
+cells**. CDS's cost includes spatial extent, so a field count alone does not predict
+acceptance. §4's earlier claim that cost is "not area based" has been corrected.
+
+**Reason 2 — even the accepted chunk is far slower, not faster.** The 3-month request returned
+18.3 MB in **672 minutes**. Against ~20 min for a monthly request carrying a third of the data,
+that is roughly **30× worse per unit of data**. CDS queue time scales sharply with request
+cost, so a bigger request is punished rather than rewarded. Extrapolated, quarterly chunking
+would take ~2,150 h against monthly's ~192 h.
+
+**Conclusion: `chunk="month"` is not a default to be improved on, it is the only workable
+size.** The `chunk="year"` code path is retained for a smaller bbox or a changed quota, and
+`src/data_ingest.py` carries the measurements so nobody re-derives this from the field count.
+
+### 4b. ⚠️ Never run a second CDS job while the archive is downloading
+
+**CDS limits concurrent jobs per account, and the archive is starved by anything that competes
+with it.** While the 3-month probe above was in flight, the archive completed **3 requests in
+13.4 hours** — an apparent 268 min/request — and recovered as soon as the probe finished. The
+archive was queued behind the project's own probe.
+
+This was diagnosed only after two wrong hypotheses, both of which looked plausible and neither
+of which survived a direct check:
+
+- *"CDS is fair-use throttling us."* No: when measured directly, a request went
+  `accepted → running` in **12 seconds**.
+- *"The network has degraded."* Partly true and not the cause: general throughput measured
+  202 kB/s and DNS resolved 5/5 on demand, but a 6.4 MB monthly file is only ~32 s of transfer
+  at that speed. The 26 logged DNS failures cost 120 s each and are a real nuisance, not a
+  13-hour stall.
+
+**The operating rule, stronger than the one in §10:** the existing warning says never run two
+*ingests* concurrently, because `path.exists()` is the only re-download guard. That is about
+correctness. This is about throughput — **any** CDS request, including a one-off probe writing
+to unrelated paths, takes capacity the archive needs. Probe before starting the archive, or
+stop the archive first.
 
 **On the request count.** The budget said 468 (156 months × 3 families), taking 156 from the
 per-site Anloga cache. 2010-01 → 2025-12 is actually **192 months**; the per-site cache holds
