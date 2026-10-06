@@ -548,6 +548,41 @@ same as detaching from the console, and method 2 only fixed the first. On Window
 that must survive an interactive session needs to escape *both*, and only the scheduler does
 that.
 
+**And a scheduled task you have to start by hand is not enough either.** On 2026-10-02 18:26
+the machine slept or shut down, which killed both the python process and the task's own
+launcher — there is no `pass 1 exited` marker in the log, only the start. **Nothing restarted
+it and it sat dead for four days**, discovered only when someone next asked. Progress at that
+point was 14 of 66 forecast-window requests.
+
+So the task now **repeats every 30 minutes** and runs a watchdog rather than a bare launcher,
+because there are two failure modes and starting-if-absent only covers one:
+
+| Mode | Symptom | Action |
+|:---|:---|:---|
+| **Dead** | no `multisite` python process | start it |
+| **Stalled** | process alive, no progress for ≥120 min | kill it, then start it |
+
+The stalled case is not hypothetical. cdsapi runs its own retry loop of **up to 500 attempts ×
+120 s = 16.7 h**, and during a DNS outage it sits there looking perfectly healthy — the log tail
+on 2026-10-02 shows `attempt 37 of 500`. Our own `_retrieve_with_retry` never fires, because
+cdsapi never raises. 120 minutes is the threshold because the slowest observed rate is ~37
+min/request, so a merely slow request is never mistaken for a stalled one.
+
+**Two bugs in that watchdog were caught by dry-running its decision rather than trusting it**,
+and both would have been worse than no watchdog at all:
+
+1. **Staleness measured from file mtime alone.** A just-started process has not written a file
+   yet, so the newest mtime can be days old while the process is healthy — the watchdog would
+   have killed the download it exists to protect, every cycle, forever. The clock now runs from
+   whichever is later, newest file *or* process start, so a fresh process gets a full grace
+   period.
+2. **A mangled glob** (`data\raw\...` lost to escaping) made `$newest` always null, silently
+   degrading the rule to "kill any process older than 120 minutes". It would have looked like
+   it worked.
+
+All three decision paths were then verified against the live cache, and the healthy path was
+confirmed end-to-end by firing the task and checking the download's PID was unchanged.
+
 Register and start it with (the script path must be short — `schtasks /TR` caps at 261 chars,
 which a scratchpad path exceeds, so use `Register-ScheduledTask`):
 
