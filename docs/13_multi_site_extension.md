@@ -532,7 +532,7 @@ day. 576 × 5.66 min ≈ **54 h**. Still inside the pre-registered ≤7 day gate
 tracking at ~4.7 MB/file → ≈2.7 GB. **A single request is not a sample.** Recorded here rather
 than quietly amended in §4, where the 3.0 min measurement stays as what it was.
 
-### It died twice, and neither cause was CDS
+### It has died five times, and not once because of CDS
 
 Three launch methods, two of which failed. Recorded in full because the next person to resume
 this will reach for the first one.
@@ -541,7 +541,7 @@ this will reach for the first one.
 |---:|:---|:---|
 | 1 | `Start-Process` from the agent shell | ❌ Died **17:43 at 2010-07** (7/192). The harness kills its process tree at session end. |
 | 2 | WMI `Win32_Process.Create` | ❌ Died **22:16 at 2011-04** (16/192). Survived the job-object teardown, but still had a **console** attached and took a `Ctrl+C` — the log ends in a literal `^C`. |
-| 3 | **Scheduled Task** | ✅ Running. Task Scheduler gives it **no console and no parent shell**, so neither failure mode applies. |
+| 3 | **Scheduled Task** | ✅ Running — but only when started from *outside* the agent's sandbox. See §10a; that caveat cost two of the five deaths. |
 
 **The lesson is narrower than "use a scheduled task".** Detaching from the parent is not the
 same as detaching from the console, and method 2 only fixed the first. On Windows a long job
@@ -583,12 +583,61 @@ and both would have been worse than no watchdog at all:
 All three decision paths were then verified against the live cache, and the healthy path was
 confirmed end-to-end by firing the task and checking the download's PID was unchanged.
 
-Register and start it with (the script path must be short — `schtasks /TR` caps at 261 chars,
-which a scratchpad path exceeds, so use `Register-ScheduledTask`):
+### 10a. Deaths 2 and 5 were the same cause, and the watchdog could not have caught either
+
+**Measured 2026-10-06.** Starting the task with `Start-ScheduledTask` from a *sandboxed* agent
+tool call killed it in **under a second**, with `LastTaskResult = 3221225786` =
+`0xC000013A` = `STATUS_CONTROL_C_EXIT` — before python had even imported. The log shows the
+launch marker followed immediately by a literal `^C`. **The identical call with the sandbox
+disabled left the worker running.** So:
+
+- the agent's shell sandbox kills processes **created during** a sandboxed call, no matter who
+  the nominal parent is — Task Scheduler's RPC-launched process is not exempt;
+- it does **not** touch a process that was already running (verified directly: a harmless
+  sandboxed call left PID 3324 downloading).
+
+That retroactively explains death 2, whose `^C` was read at the time as "a console took a
+Ctrl+C". The console was incidental. **Deaths 2 and 5 were one cause wearing two costumes**, and
+the §10 lesson above — *detaching from the parent is not detaching from the console* — while
+true in itself, was not what killed method 2. Left standing above as what was believed then; the
+correction is here, not there.
+
+⚠️ **Never start this task, or any long worker, from a sandboxed tool call.** Nothing in the
+exit code says "sandbox"; it says Ctrl+C, which sends you looking at consoles.
+
+**And the watchdog as committed in `7f58e4c` could not have caught any of this**, for a reason
+unrelated to the sandbox. The task is `MultipleInstances = IgnoreNew`, and that watchdog
+**blocked** in `& cmd.exe` for the entire download. So every 30-minute firing was *refused*
+while the download lived — which is to say the stall check was unreachable in exactly the
+circumstances it was written for. It would have been exercised only after the download had
+already finished or died. The "verified end-to-end" claim above was true but shallow: firing the
+task once while nothing else was running cannot detect a self-blocking supervisor.
+
+So the script is now a **non-blocking supervisor**: it checks health, launches the worker
+*detached*, and exits in seconds, so the task returns to `Ready` and the next firing really does
+run. Three consequences worth stating:
+
+1. **The pass is chosen by counting files, not by sequencing two blocking calls.** It counts the
+   66 forecast-window files (22 months × 3 families) and requests pass 1 while any is missing,
+   pass 2 once none is. A restart at any point therefore resumes in the right place without the
+   supervisor having to stay alive to remember where it was. (Ledger at 11:02: **17 of 66**.)
+2. **Detach is WMI `Win32_Process.Create`, not `Start-Process`** — a `Start-Process` child sits
+   in the task's tree. This is method 2 again, which is fine now that its real cause is known:
+   issued from the task's own powershell, no sandbox is involved.
+3. **`Stop-ScheduledTask` does not kill the worker.** Observed during the cutover: it terminated
+   the task's top-level powershell and left `cmd.exe` and python orphaned but running. Useful —
+   the in-flight request was not lost — but it means stopping the task is *not* how you stop the
+   download. Kill the python PID.
+
+The supervisor is [scripts/era5gh_resume.ps1](../scripts/era5gh_resume.ps1), **in the repo**.
+It lived in `%TEMP%` for its first four days, which meant the only copy of the thing keeping a
+two-day download alive was in a directory Windows is free to clear. Register and start it with
+(use `Register-ScheduledTask`, not `schtasks /TR`, which caps the command at 261 chars — a
+scratchpad path exceeds that, which is how it ended up in `%TEMP%`):
 
 ```powershell
 $action = New-ScheduledTaskAction -Execute "powershell.exe" `
-  -Argument '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "<short path>\era5gh_resume.ps1"' `
+  -Argument '-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "<repo>\scripts\era5gh_resume.ps1"' `
   -WorkingDirectory "<repo>"
 Register-ScheduledTask -TaskName "era5gh_archive" -Action $action -Settings (
   New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
@@ -596,6 +645,9 @@ Register-ScheduledTask -TaskName "era5gh_archive" -Action $action -Settings (
     -RestartInterval (New-TimeSpan -Minutes 5))
 Start-ScheduledTask -TaskName "era5gh_archive"
 ```
+
+⚠️ That last line must be run **outside the agent's sandbox** — see §10a. Inside it, the task
+dies in under a second with `0xC000013A` and the log gains a bare `^C`.
 
 `-RestartCount 3` means the scheduler itself retries if the process dies, which is a third
 layer under the in-process `_retrieve_with_retry` loop and the on-resume cache validation.
