@@ -19,6 +19,7 @@ from src.traditional import (
     MultiModelMOS,
     NaivePersistence,
     SingleModelMOS,
+    dead_columns,
     is_dead_column,
 )
 
@@ -251,6 +252,83 @@ def test_operational_feature_set_excludes_every_reanalysis_column():
     study = select_features(cols, "study")
     assert "wind_speed_100m" in study
     assert "temperature_c_grad_ns" not in study      # dead column, dropped in both
+
+
+# ---------------------------------------------------------------------------
+# dead_columns: name vs value
+#
+# `is_dead_column` matches on name suffix, which was correct for the per-site
+# ERA5 request (a 1x2 patch really does zero `_grad_ns` and make `_std` exactly
+# |_grad_ew|/2). The v6 regional 3x3 patch revives all ten — measured on the real
+# caches, 5/5 `_grad_ns` non-zero and 0/5 `_std` still collinear — and the
+# name-based rule discards them anyway. `value` exists to measure what that costs.
+# ---------------------------------------------------------------------------
+
+def _spatial_frame(grad_ns_live: bool, std_collinear: bool) -> pd.DataFrame:
+    rng = np.random.default_rng(0)
+    ew = rng.normal(0, 2.0, 200)
+    return pd.DataFrame({
+        "wind_speed_100m": rng.normal(6, 1.5, 200),
+        "wind_speed_100m_grad_ew": ew,
+        "wind_speed_100m_grad_ns": (rng.normal(0, 1.0, 200) if grad_ns_live
+                                    else np.zeros(200)),
+        "wind_speed_100m_std": (np.abs(ew) / 2 if std_collinear
+                                else rng.normal(1, 0.3, 200)),
+    })
+
+
+def test_name_mode_withholds_by_suffix_regardless_of_the_data():
+    """The default must not depend on the data, or published figures move."""
+    live = _spatial_frame(grad_ns_live=True, std_collinear=False)
+    assert dead_columns(live.columns, live, mode="name") == frozenset(
+        {"wind_speed_100m_grad_ns", "wind_speed_100m_std"})
+
+
+def test_value_mode_withholds_the_per_site_patch_columns():
+    """On 1x2 data `value` and `name` must agree — otherwise switching modes
+    would silently re-base the published per-site results."""
+    degenerate = _spatial_frame(grad_ns_live=False, std_collinear=True)
+    by_value = dead_columns(degenerate.columns, degenerate, mode="value")
+    by_name = dead_columns(degenerate.columns, degenerate, mode="name")
+    assert by_value == by_name
+
+
+def test_value_mode_keeps_the_columns_a_3x3_patch_revives():
+    revived = _spatial_frame(grad_ns_live=True, std_collinear=False)
+    assert dead_columns(revived.columns, revived, mode="value") == frozenset()
+
+
+def test_value_mode_needs_data_and_rejects_an_unknown_mode():
+    cols = ["wind_speed_100m_grad_ns"]
+    with pytest.raises(ValueError, match="needs training rows"):
+        dead_columns(cols, None, mode="value")
+    with pytest.raises(ValueError, match="Unknown dead-column mode"):
+        dead_columns(cols, None, mode="whatever")
+
+
+def test_select_features_uses_a_supplied_dead_set():
+    cols = ["wind_speed_100m", "wind_speed_100m_grad_ns", "hour_sin"]
+    assert select_features(cols, "study", dead=frozenset()) == cols
+    assert "wind_speed_100m_grad_ns" not in select_features(cols, "study")
+
+
+def test_fold_context_live_columns_defaults_to_the_name_rule():
+    """`dead_cols=None` must behave exactly as the hardcoded filter did.
+
+    The filter was applied in three places — the feature mask plus `ridge` and
+    the tree models independently — so a mode reaching only some of them would
+    half-apply and no output would say so.
+    """
+    X = _spatial_frame(grad_ns_live=True, std_collinear=False)
+    y = pd.Series(np.zeros(len(X)))
+    base = dict(X_train=X, y_train=y, X_test=X, y_test=y,
+                hub_train=y, hub_test=y, nwp_cols=[], seed=42)
+
+    default = FoldContext(**base)
+    assert "wind_speed_100m_grad_ns" not in default.live_columns()
+
+    explicit = FoldContext(**base, dead_cols=frozenset())
+    assert "wind_speed_100m_grad_ns" in explicit.live_columns()
 
 
 def test_diebold_mariano_sign_and_significance():

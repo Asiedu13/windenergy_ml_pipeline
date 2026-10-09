@@ -106,6 +106,24 @@ class NWPConfig:
 
 
 @dataclass
+class FeaturesConfig:
+    """How the feature mask decides which columns are degenerate.
+
+    ``name``  — suffix match on `_grad_ns`/`_std`. The default, and what every
+                published figure used. Correct for the per-site ERA5 request,
+                whose 1x2 patch really does make those columns degenerate.
+    ``value`` — judge each column on the training data instead. The v6 regional
+                3x3 patch revives all ten (measured: 5/5 `_grad_ns` non-zero,
+                0/5 `_std` still collinear), which `name` discards anyway.
+
+    Off by default because flipping it re-bases published results; see
+    docs/13 section 3 and redo/09 section 9.3.
+    """
+
+    dead_columns: str = "name"
+
+
+@dataclass
 class PathsConfig:
     outputs: str = "outputs"
     processed: str = "data/processed"
@@ -120,6 +138,7 @@ class Config:
     model: ModelConfig
     paths: PathsConfig
     nwp: NWPConfig = field(default_factory=NWPConfig)
+    features: FeaturesConfig = field(default_factory=FeaturesConfig)
     raw: dict[str, Any] = field(default_factory=dict)
 
     def hash(self) -> str:
@@ -139,6 +158,7 @@ def load_config(path: str | os.PathLike) -> Config:
         model=ModelConfig(**raw["model"]),
         paths=PathsConfig(**raw.get("paths", {})),
         nwp=NWPConfig(**raw.get("nwp", {})),
+        features=FeaturesConfig(**raw.get("features", {})),
         raw=raw,
     )
 

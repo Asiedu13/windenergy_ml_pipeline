@@ -40,7 +40,7 @@ from __future__ import annotations
 
 import argparse
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 
 import numpy as np
@@ -55,6 +55,7 @@ from .traditional import (
     DETERMINISTIC,
     FoldContext,
     build_registry,
+    dead_columns,
     is_dead_column,
 )
 from .utils import Config, ensure_dir, get_logger, load_config, set_seed
@@ -108,9 +109,17 @@ def make_rolling_folds(n_rows: int, n_folds: int = DEFAULT_N_FOLDS,
 # Feature masks
 # ---------------------------------------------------------------------------
 
-def select_features(cols: list[str], feature_set: str) -> list[str]:
-    """Apply the study/operational mask and drop the degenerate spatial columns."""
-    live = [c for c in cols if not is_dead_column(c)]
+def select_features(cols: list[str], feature_set: str,
+                    dead: frozenset[str] | None = None) -> list[str]:
+    """Apply the study/operational mask and drop the degenerate spatial columns.
+
+    `dead` is a pre-resolved set from `traditional.dead_columns`. Omitting it
+    keeps the name-based rule every published figure was produced with.
+    """
+    if dead is None:
+        live = [c for c in cols if not is_dead_column(c)]
+    else:
+        live = [c for c in cols if c not in dead]
     if feature_set == "study":
         return live
     if feature_set == "operational":
@@ -191,10 +200,28 @@ def run_phase_a(config: Config, feature_sets: list[str], seeds: list[int],
     nwp_cols_all = [c for c in cols if c.startswith("nwp_")]
 
     folds = make_rolling_folds(len(X_all), n_folds)
+
+    # Resolve the dead-column set ONCE, on the earliest fold's training block.
+    #
+    # That block is a prefix of every later fold's training data, so the decision
+    # is leak-free for all of them and the feature count stays constant across
+    # folds — deciding per fold would make folds incomparable, which is exactly
+    # what the rolling-origin protocol exists to prevent.
+    mode = config.features.dead_columns
+    dead = dead_columns(
+        cols, X_all.iloc[: folds[0].train_end] if mode == "value" else None,
+        mode=mode)
     logger.info(
-        "horizon %d h | feature frame: %d rows x %d cols (%d NWP); %d rolling folds",
+        "horizon %d h | feature frame: %d rows x %d cols (%d NWP); %d rolling "
+        "folds | dead-column mode '%s' withholds %d",
         horizon, len(X_all), len(cols), len(nwp_cols_all), len(folds),
+        mode, len(dead),
     )
+    if mode != "name":
+        logger.warning(
+            "dead_columns='%s' is NOT the published setting; results from this "
+            "run are not comparable to the v5 tables. See docs/13 section 3.",
+            mode)
     for f in folds:
         logger.info(
             "  %s: train %d rows -> test %d rows [%s .. %s]",
@@ -204,7 +231,7 @@ def run_phase_a(config: Config, feature_sets: list[str], seeds: list[int],
 
     records: list[RunRecord] = []
     for feature_set in feature_sets:
-        keep = select_features(cols, feature_set)
+        keep = select_features(cols, feature_set, dead=dead)
         X = X_all[keep]
         nwp_cols = [c for c in keep if c.startswith("nwp_")]
         logger.info("=== feature set '%s': %d columns ===", feature_set, len(keep))
@@ -217,6 +244,7 @@ def run_phase_a(config: Config, feature_sets: list[str], seeds: list[int],
                 X_test=X.iloc[te], y_test=y_all.iloc[te],
                 hub_train=hub_all.iloc[tr], hub_test=hub_all.iloc[te],
                 nwp_cols=nwp_cols,
+                dead_cols=dead,
             )
             y_te = y_all.iloc[te].to_numpy(dtype=float)
 
@@ -373,6 +401,16 @@ def run_phase_b(config: Config, algos: list[str], seeds: list[int],
         if algo == "tft":
             assert int(cfg.get("n_epochs")) == 60, "TFT epoch budget is not 60"
 
+    # Phase B stays on the name-based mask. Refusing rather than quietly using a
+    # different mask from phase A, because the two phases are read side by side
+    # and a silent mismatch there is the kind of thing nothing downstream catches.
+    if config.features.dead_columns != "name":
+        raise SystemExit(
+            f"Phase B does not support dead_columns="
+            f"{config.features.dead_columns!r}; it is phase A only, and deep "
+            f"models are out of scope for the v6 study (docs/13 section 5)."
+        )
+
     rows = []
     for feature_set in feature_sets:
         keep = select_features(cols, feature_set)
@@ -440,6 +478,12 @@ def run_phase_a_and_report(
         "- lower MAE is better; skill is `1 − MAE/MAE_persistence`, higher better",
         f"- **NWP lead guard active:** only `_d{{N}}` columns with `24·N ≥ {horizon}` "
         "are used, so every forecast feature was issued at or before the feature time",
+        # Stated on every report, not only the non-default ones: a reader
+        # comparing two tables needs to see which mask each used without having
+        # to know that one of them is a default.
+        f"- dead-column mode: **`{config.features.dead_columns}`**"
+        + ("" if config.features.dead_columns == "name" else
+           " — ⚠️ **not the published setting**, not comparable to the v5 tables"),
         "",
     ]
     for fs in feature_sets:
@@ -486,11 +530,21 @@ def main() -> None:
     ap.add_argument("--per-fold", action="store_true",
                     help="Also write {stem}_folds.csv, one row per "
                          "(model, feature_set, fold, seed). Phase A only.")
+    ap.add_argument("--dead-columns", default=None, choices=["name", "value"],
+                    help="How to decide which spatial columns are degenerate. "
+                         "'name' (default) is what every published figure used. "
+                         "'value' judges each column on the training data, which "
+                         "revives the ten columns the v6 regional 3x3 patch makes "
+                         "informative — NOT comparable to the v5 tables. "
+                         "See docs/13 section 3.")
     args = ap.parse_args()
 
     config = load_config(args.config)
     if args.horizon is not None:
         config.forecast.horizon_hours = int(args.horizon)
+    if args.dead_columns is not None:
+        config.features = replace(config.features,
+                                  dead_columns=args.dead_columns)
     bk = config.raw.get("bakeoff", {})
     seeds = args.seeds or bk.get("seeds", DEFAULT_SEEDS)
     feature_sets = (["study", "operational"] if args.features == "both"

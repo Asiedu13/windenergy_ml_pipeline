@@ -31,6 +31,7 @@ v1–v4 (docs/10 §4). `NaivePersistence` below fixes that by construction.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
 
 import numpy as np
@@ -60,6 +61,62 @@ def is_dead_column(col: str) -> bool:
     return col.endswith(DEAD_COLUMN_SUFFIXES)
 
 
+def dead_columns(cols: Iterable[str], X: pd.DataFrame | None = None,
+                 mode: str = "name") -> frozenset[str]:
+    """The columns to withhold from every model, as a resolved set of names.
+
+    Two modes, because the name-based rule stopped being true.
+
+    ``name`` (default, and what every published figure was produced with)
+        Suffix match on `DEAD_COLUMN_SUFFIXES`. Correct for the per-site ERA5
+        request, whose 1 lat x 2 lon patch really does make `_grad_ns`
+        identically zero and `_std` exactly `|_grad_ew| / 2`.
+
+    ``value``
+        Withhold a column only if it is degenerate **in the data at hand**:
+        constant, or numerically equal to `|_grad_ew| / 2`. Measured on the real
+        caches, the v6 regional 3x3 patch revives all ten — 5/5 `_grad_ns`
+        non-zero and 0/5 `_std` still collinear, against 0/5 and 5/5 per-site —
+        so `name` discards ten genuinely informative columns there. See
+        docs/13 section 3.
+
+    ⚠️ **`value` must be given training rows only.** Deciding which columns to
+    keep by looking at a test fold would leak, and it would leak in the
+    flattering direction. `run_phase_a` passes the earliest fold's training
+    block, which is a prefix of every later fold's, so one decision is valid for
+    all folds and the feature count stays constant across them — otherwise folds
+    stop being comparable, which is the thing the protocol exists to protect.
+
+    `name` is the default everywhere on purpose: flipping it re-bases published
+    results, and that must be an explicit, recorded choice rather than a
+    side effect of running on a different source.
+    """
+    cols = list(cols)
+    if mode == "name":
+        return frozenset(c for c in cols if is_dead_column(c))
+    if mode != "value":
+        raise ValueError(
+            f"Unknown dead-column mode {mode!r}; expected 'name' or 'value'.")
+    if X is None:
+        raise ValueError("mode='value' needs training rows to judge deadness.")
+
+    dead: set[str] = set()
+    for col in cols:
+        if col not in X.columns:
+            continue
+        s = pd.to_numeric(X[col], errors="coerce")
+        if not np.isfinite(s.to_numpy(dtype=float)).any() or s.std() == 0:
+            dead.add(col)
+            continue
+        if col.endswith("_std"):
+            ew = col[: -len("_std")] + "_grad_ew"
+            if ew in X.columns:
+                other = pd.to_numeric(X[ew], errors="coerce").abs() / 2
+                if (s - other).abs().max() < 1e-9:
+                    dead.add(col)
+    return frozenset(dead)
+
+
 @dataclass
 class FoldContext:
     """Everything a predictor may look at for one (fold, seed) combination.
@@ -76,6 +133,20 @@ class FoldContext:
     hub_test: pd.Series
     nwp_cols: list[str]        # every nwp_* column present
     seed: int
+    # Columns to withhold, already resolved by `dead_columns`. None means "decide
+    # by name", which is what every published figure used.
+    #
+    # This is carried on the context rather than re-derived inside each model
+    # because `is_dead_column` was being applied in THREE places — the feature
+    # mask plus `ridge` and the tree models independently — and a mode that only
+    # reached one of them would silently half-apply.
+    dead_cols: frozenset[str] | None = None
+
+    def live_columns(self) -> list[str]:
+        """Training columns with the dead ones removed."""
+        dead = (self.dead_cols if self.dead_cols is not None
+                else {c for c in self.X_train.columns if is_dead_column(c)})
+        return [c for c in self.X_train.columns if c not in dead]
 
     @property
     def primary_lead(self) -> int:
@@ -391,7 +462,7 @@ class RidgeAll:
         self.alpha_: float | None = None
 
     def fit_predict(self, ctx: FoldContext) -> np.ndarray:
-        cols = [c for c in ctx.X_train.columns if not is_dead_column(c)]
+        cols = ctx.live_columns()
         scaler = StandardScaler().fit(ctx.X_train[cols].to_numpy(dtype=float))
         tr = scaler.transform(ctx.X_train[cols].to_numpy(dtype=float))
         te = scaler.transform(ctx.X_test[cols].to_numpy(dtype=float))
@@ -422,7 +493,7 @@ class GradientBoosting:
 
     def fit_predict(self, ctx: FoldContext) -> np.ndarray:
         from .stage1_windspeed import _make_regressor
-        cols = [c for c in ctx.X_train.columns if not is_dead_column(c)]
+        cols = ctx.live_columns()
         model = _make_regressor(self.algo, ctx.seed)
         model.fit(ctx.X_train[cols], ctx.y_train)
         return np.asarray(model.predict(ctx.X_test[cols]), dtype=float)
