@@ -90,6 +90,16 @@ climatology* (0.0437 vs 0.0405 CF), inverting the 24 h regime. A 30-day outlook 
 with a resource-climatology product rather than a forecast.
 → [10](10_monthly_ceiling.md), [11](11_monthly_results.md)
 
+**9. The single-site conclusions generalise — across 17 sites, R² varies by less than 0.1.**
+The published 24 h ladder run unchanged at Ghana's 16 regional capitals plus Anloga: the sanity
+floor holds **17/17** on both feature sets, the classical–ML gap stays under **7.5%**
+everywhere, and the operational result survives at **under 1.3% at 15 of 17 sites**. Thesis
+§4.9.3's own prediction gets a **split verdict** — the direction is solid (15 of 17 positive,
+sign test p ≈ 0.0003, concentrated in the northern savannah) but **no single site's penalty
+clears its own seed sd**. Also: **raw MAE must not be ranked across sites** — normalised by mean
+wind, Anloga's second-worst MAE is the *best* result.
+→ [13](13_multi_site_generalisation.md)
+
 ## Contents
 
 | File | What it holds | Redo stage evidenced |
@@ -106,6 +116,7 @@ with a resource-climatology product rather than a forecast.
 | [10_monthly_ceiling.md](10_monthly_ceiling.md) | **Monthly scale.** The variance decomposition that reframed "monthly model", the 13.1% outlook ceiling, and why persistence is inadmissible here | [04](../04_stage4_ceiling_analysis.md), [05](../05_stage5_baselines_and_protocol.md) |
 | [11_monthly_results.md](11_monthly_results.md) | **Monthly measured.** The P50/P75/P90 resource product, the exceedance-estimator correction, and the 30-day outlook with its interval | [05](../05_stage5_baselines_and_protocol.md), [08](../08_stage8_deployment_rehearsal.md) |
 | [12_monthly_outlook_power.md](12_monthly_outlook_power.md) | **The outlook re-powered.** Why 11's test could not have worked, the pre-registered MDE, the model ladder it unlocked, and two findings that reach back into [09](09_weekly_forecast_results.md) | [05](../05_stage5_baselines_and_protocol.md), [08](../08_stage8_deployment_rehearsal.md) |
+| [13_multi_site_generalisation.md](13_multi_site_generalisation.md) | **17 sites.** The 24 h ladder across Ghana's 16 regional capitals plus Anloga, the verdict on thesis §4.9.3, and why raw MAE must not be ranked across sites | [05](../05_stage5_baselines_and_protocol.md), [09](../09_stage9_writeup_and_hygiene.md) |
 
 ## Provenance
 

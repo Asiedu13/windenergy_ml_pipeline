@@ -112,6 +112,18 @@ powershell -c "Get-Content outputs/logs/era5gh_archive.log -Tail 5"
 python -m src.multisite cells      # which cell each site resolved to, and its land fraction
 ```
 
+**Status 2026-10-09 — this is now a *used* input, not a planned one.** The **forecast window
+(2024-03 → 2025-12) is complete** and the 24 h ladder has run at all 17 sites off it
+([`../redo/results/13`](../redo/results/13_multi_site_generalisation.md)). The **long archive is
+not complete**, so the monthly resource climatology has not run and **no capacity factor exists
+for any of the 16 capitals.** Check coverage with the commands above rather than trusting a
+count written here.
+
+⚠️ **A forecast run will never download.** `fetch_regional_archive(download=False)` plus a
+preflight in `multisite.cmd_forecast` make a missing month a hard stop, because the default
+`--start` previously reached past the cached window and silently turned a training run into a
+432-request CDS ingest. See [13 §10](13_multi_site_extension.md).
+
 **Why the backfill was stopped (2026-08-10).** It ran from 2026-08-08 to 2026-08-10 and
 reached 2016-07. It was then halted because the learning curve in
 [07_findings_and_analysis.md](07_findings_and_analysis.md) showed more history is worth
@@ -271,6 +283,21 @@ cost of a full re-ingest — see [03_data_sources.md](03_data_sources.md) and
 > `wind_speed_850hpa_std`) agree only to 8.0e-05 and 8.9e-06 relative, because `np.std` over a
 > 2-cell float32 array of `sqrt(u²+v²)` rounds where a raw field does not. Functionally
 > collinear either way — the substantive claim is unchanged.
+
+> ⚠️ **"Fixed" overstates it — superseded 2026-10-09.** Everything in the box above is true of
+> the **tidy frame** and false of **what any model receives**. `is_dead_column`
+> ([`../src/traditional.py`](../src/traditional.py)) matches on the `_grad_ns` / `_std` **name
+> suffix** and withholds all ten unconditionally, so the `study` feature set keeps 26 columns on
+> the regional path exactly as on the per-site one. The revived columns were never reaching a
+> model, and nothing in the outputs said so — both paths even report the same 104-column
+> feature frame.
+>
+> Measured rather than argued: a `features.dead_columns: value` mode was added and run at two
+> sites. **Every model's MAE moved less than its own seed sd (22 of 22 rows, both sites), with
+> inconsistent sign**, and the `operational` arm moved by exactly 0.0000 — as it must, having no
+> spatial columns at all. So the 630-cell download bought spatial realism in the data and **no
+> measurable forecast skill at 24 h**, and `name` remains the default so published figures stay
+> comparable. See [13 §4d](13_multi_site_extension.md).
 
 ---
 

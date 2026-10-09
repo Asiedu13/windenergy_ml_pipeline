@@ -531,9 +531,13 @@ another architecture.
 >   [`09`](../redo/results/09_weekly_forecast_results.md),
 >   [`10`](../redo/results/10_monthly_ceiling.md)
 >
-> Threats **1, 2, 5, 7, 8 stand unchanged.** Two threats specific to v5's NWP arm — the
+> Threats **1, 5, 7, 8 stand unchanged.** Two threats specific to v5's NWP arm — the
 > ERA5/ECMWF shared lineage, and assumed lead-time semantics — are listed in
 > [`12_next_steps_v2.md`](12_next_steps_v2.md) §Threats rather than duplicated here.
+>
+> ⚠️ **Threat 2 is no longer deferred — measured 2026-10-09.** The same pipeline ran at
+> **Ghana's 16 regional capitals plus Anloga**, and it answers threat 2's own two questions
+> directly. See the note under threat 2 below.
 
 **1. No real SCADA validation.** The whole pipeline is validated against a
 physics-derived reference that uses the *same power curve* both sides of the
@@ -551,6 +555,32 @@ is a one-line config change). But we don't know whether the *conclusions*
 generalise. If we ran the same pipeline at Takoradi or Ada Foah, would
 XGBoost still win by the same margin? Would the top features be similar?
 Deferred to future work.
+
+> ✅ **MEASURED 2026-10-09 — no longer deferred.** The 24 h ladder ran unchanged at **Ghana's
+> 16 regional capitals plus Anloga** (including Sekondi-Takoradi, one of the two sites named
+> above), off one shared Ghana-wide ERA5 box. Threat 2 asked two questions and both now have
+> answers:
+>
+> - *"Would XGBoost still win by the same margin?"* — **Mostly, but not everywhere.** XGBoost
+>   wins at **11 of 17** sites; **`ridge` wins at 6**, including 4 of the 5 far-northern ones.
+>   The margin over classical MOS is stable and small throughout (≤ **7.46%**, median 5.16%).
+> - *"Do the conclusions generalise?"* — **Yes, more strongly than expected.** The sanity floor
+>   holds **17/17** on both feature sets and **R² varies by under 0.1** (0.537–0.634) across
+>   ~800 km and three climatic zones.
+>
+> Two qualifications this document should carry:
+>
+> 1. **v5's deployability result weakens slightly away from Anloga.** Dropping latency-blocked
+>    reanalysis features costs Anloga nothing (+0.03%) but is positive at **15 of 17** sites,
+>    worst at damongo **+3.45%**. The direction is significant by sign test (p ≈ 0.0003) while
+>    **no single site's penalty clears its own seed sd** — so this is a consistent weak cost,
+>    not a break. See [`13` §6c](13_multi_site_extension.md).
+> 2. **Raw MAE must not be ranked across sites.** Normalised by mean wind, Anloga's
+>    second-worst MAE is the **best** result. Threat 1 also still applies at all 17 — truth is
+>    ERA5 everywhere, so none of this validates absolute yield.
+>
+> **Resource generalisation remains unmeasured** — no capacity factor exists for any of these
+> sites yet. → [`../redo/results/13`](../redo/results/13_multi_site_generalisation.md)
 
 **3. Test window is one contiguous period.** The 20% hold-out is the last 20% of
 the timeline (roughly late-2023). If late-2023 was atypical (unusual weather

@@ -426,6 +426,72 @@ are measured**, precisely so the floor cannot later be chosen to flatter whateve
 finding is that the Anloga conclusions generalise across Ghana's climatic zones — which is a
 stronger claim than the project can currently make, and it is reportable as such.
 
+### 6c. Verdicts — measured 2026-10-09, all 17 sites
+
+The four predictions above are left exactly as written. These are the outcomes.
+
+| # | Prediction | Verdict |
+|---:|:---|:---|
+| 1 | NWP gain holds in direction at all 16 | ✅ **Holds.** Every site's NWP-using models beat both no-NWP references; the ladder's tier-2 arm wins at 17/17 |
+| 2 | `mos_multi` within ~10% of `xgboost` | ✅ **Holds.** Max gap **7.46% (Accra)**, median 5.16% |
+| 3 | The operational-vs-study result breaks somewhere | ⚠️ **Not refuted, and not confirmed.** See below — this one needs both halves stated |
+| 4 | Only coastal sites clear the viability floor | ⏳ **Open.** Needs capacity factors; the archive for the climatology is 144/576 (§10) |
+
+**Prediction 2's prior was backwards, which is worth more than the pass.** The stated
+reasoning was that "a noisier low-wind target could widen it". The *narrowest* gaps are the
+northern sites — nalerigu **2.17%**, bolgatanga **2.44%**, wa **3.12%** — and the widest is
+coastal Accra at 7.46%. Classical multi-model MOS is relatively **stronger** in the low-wind
+interior, not weaker. The prediction passed for the wrong reason.
+
+#### Prediction 3 in full, because one number alone would misrepresent it
+
+The criterion was *"refuted if degradation stays ≤ 0 at all 16"*. It does not:
+
+| | |
+|:---|:---|
+| Sites with a positive penalty | **15 of 17** (techiman 0.00%, sunyani −0.06%) |
+| Anloga reference | **+0.03%** |
+| Largest | **damongo +3.45%**, **tamale +2.55%**, cape_coast +1.61% |
+| Sign test over the 16 non-zero sites | **p ≈ 0.0003** |
+| Penalties exceeding that site's own seed sd | **0 of 17** (damongo 0.0266 vs sd 0.0569) |
+
+So the **direction** is solid and concentrated exactly where thesis §4.9.3 predicted — the
+northern savannah — while **no individual site's magnitude clears its own noise floor**.
+
+⚠️ **The pre-registration never quantified "materially more".** That is a defect in how the
+criterion was written, not a result, and it is recorded here rather than resolved in whichever
+direction suits the outcome. Under a sign-test reading the prediction is supported; under a
+per-site significance reading it is not reached. The defensible claim is the narrow one:
+**dropping reanalysis features is consistently but slightly costly away from Anloga, with the
+cost concentrated in the north.** It is *not* "the deployability result breaks" — at 15 of 17
+sites the penalty is under 1.3%, which keeps a latency-free operational system viable
+everywhere measured.
+
+#### Two findings no prediction anticipated
+
+Flagged as **exploratory**: these were not pre-registered, so they are hypotheses for a future
+study and not results this one tested.
+
+1. **`ridge` beats both gradient-boosting models at 6 of 17 sites** — ho, cape_coast, and
+   **4 of the 5 far-northern** sites (damongo, tamale, nalerigu, bolgatanga; `wa` goes to
+   xgboost). The same region carries the largest ERA5 penalties *and* the narrowest MOS gaps,
+   so three independent signals point the same way: the north appears to favour simpler, more
+   linear models. Nothing in §6b anticipated a model-family split by climatic zone.
+2. **Climatology beats persistence at 13 of 17 sites, and the four exceptions are exactly the
+   four northernmost** (tamale, nalerigu, bolgatanga, wa). The reference ladder itself reorders
+   by climatic zone.
+
+#### ⚠️ Raw MAE is not comparable across these sites
+
+MAE spans 0.5453 (accra) to 0.9031 (wa), a factor of 1.66 — and most of that is how windy the
+site is, not how predictable. Normalised by mean wind speed the spread collapses to
+0.128–0.211, and the ranking **inverts at the top**: Anloga's 0.8006, the second-worst raw MAE
+in the study, is the **best** normalised result at 0.128, because its mean wind is 6.24 m/s
+against 3.3–4.4 everywhere else. (Its cell is also 88% water, §3a, which smooths the series.)
+
+**Any cross-site table must carry mean wind or the normalised column.** A bare MAE ranking
+would read as "the model is worst at Anloga", which is the opposite of what the data says.
+
 ## 7. Verification gates — pass criteria fixed in advance
 
 Run in order; stop at the first failure.
@@ -436,7 +502,7 @@ Run in order; stop at the first failure.
 | 1 | **Anloga equivalence** | Anloga extracted from the bbox reproduces the per-site cache's **centre-cell** columns exactly; spatial columns differ, and `_grad_ns` is **no longer identically zero** | ⚠️ **FAILED as written; the claim it tested passed.** The criterion was mis-specified — see §7a |
 | 2 | **Land mask** | Every site's selected cell has land fraction ≥ 0.5, or carries a recorded exemption; every snap is logged | ⚠️ **PASS with one exemption** — Cape Coast and Accra snapped as predicted; **Anloga failed at 0.124 and is exempted, not corrected** (§3a). The criterion was amended to admit a recorded exemption, which is a change made *after* seeing the result and is flagged as such here rather than hidden |
 | 3 | **Defect-9 regression** | `python -m src.bakeoff --config config_bakeoff.yaml --per-fold` still reproduces xgboost 0.8037, mos_multi 0.8412, persistence 1.3183 and the 46.2% fold spread | ✅ **PASS, 4/4 exact** (2026-10-09). xgboost **0.8037**, mos_multi **0.8412**, persistence **1.3183**, persistence fold spread **46.2%** (1.1129 → 1.6274). Re-verified after the `dead_columns` refactor landed, to confirm the default path had not moved. **Note on the fourth figure:** the 46.2% is the *persistence* fold-difficulty spread — [`../redo/results/06`](../redo/results/06_what_the_protocol_caught.md)'s "46% difficulty spread". Computing it on xgboost instead gives 38.7%, which is a different quantity; the gate wording does not say which model, and this records the reading used |
-| 4 | **Sanity floor, all 16** | Every site's best model beats **both** persistence and climatology on its own folds | ⏳ pending |
+| 4 | **Sanity floor, all 16** | Every site's best model beats **both** persistence and climatology on its own folds | ✅ **PASS, 34/34 site-arms** (17 sites × 2 feature sets, 2026-10-09, zero site failures). Skill vs persistence **0.246–0.388** (median 0.314), margin over climatology **0.241–0.403**. The margin is nowhere narrow: the worst case — damongo on the `operational` arm — still beats persistence by **24.6%**. On the `study` arm alone the range is 0.271–0.388. Skill is `mean(1 − MAE/MAE_pers)` over folds, the definition `bakeoff.md` prints; the ratio-of-means definition gives 0.249–0.393, and mixing the two is how an earlier draft of this row got its numbers wrong |
 | 5 | **Anloga end-to-end** | The 17th site reproduces the published 24 h table through the new runner | ✅ **PASS** (2026-10-09). **19 of 22 rows identical to 4 dp.** All 11 `operational` rows match exactly — that arm carries no ERA5 spatial columns, so it *cannot* differ, which is the mechanism check. The three movers are the three models that read spatial features: xgboost −0.0031 (−0.39%), lightgbm −0.0020, ridge +0.0024. Every classical and reference arm unchanged. Max deviation is **0.39%, against a seed sd of 0.1023** — ULP round-off (§7a), not new information (§4d). Also confirmed: 15,912 rows, identical fold boundaries, **zero download attempts** |
 | 6 | **Tests** | `pytest -q` green; currently 149 | ✅ **PASS** — 149 unchanged (the per-site path is untouched) **plus 38 new** in `tests/test_multisite.py` covering the regional code: bbox request building, nearest-cell lookup, the land snap, the Anloga exemption, window clamping at a grid edge, `extract=None` identity, the manifest guard, registry validation and the resolved-config round trip |
 

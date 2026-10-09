@@ -549,6 +549,15 @@ worth nothing; this one was not rewritten.
   horizon where persistence is strong, reanalysis features could matter considerably more.
 - Deep models were **not** run on the operational feature set.
 
+> ✅ **The "one site" caveat has since been tested — see §4.15.** The 24 h ladder was run
+> unchanged at Ghana's 16 regional capitals plus Anloga. The prediction in the third bullet
+> above gets a **split verdict**: dropping reanalysis features is costlier away from Anloga at
+> **15 of 17** sites and the cost concentrates in the northern savannah exactly as predicted
+> (sign test p ≈ 0.0003), but **no single site's penalty exceeds its own seed standard
+> deviation**, so the magnitude is not established at any individual site. The bullet is left
+> as written; §4.15 carries the measurement. **The horizon half remains untested** — §4.15 is
+> 24 h only.
+
 ---
 
 ## 4.10 Multi-day forecasting (24 h to 168 h)
@@ -1059,6 +1068,14 @@ These are stated plainly because several constrain the claims materially.
 - **One site, one turbine, one truth source.** Nothing here transfers to another location
   without re-measurement, and §4.9's operational finding in particular is expected to be
   site-specific: at a location with weaker NWP skill, reanalysis features could matter greatly.
+
+  > ✅ **Partly retired by §4.15.** The 24 h forecast results were re-measured at 17 sites and
+  > the conclusions hold (R² 0.537–0.634, sanity floor 17/17). The expectation in this bullet
+  > was **directionally correct but small**: the reanalysis penalty is positive at 15 of 17
+  > sites and largest in the north, yet below each site's own seed sd. **One turbine and one
+  > truth source still stand** — all 17 sites use the same machine and are scored against ERA5
+  > — and so does the limitation for **power, resource and capacity factor**, none of which
+  > were re-measured anywhere.
 - **Quantile intervals are not calibrated** and should not be used for decision-making in
   their current form.
 
@@ -1083,9 +1100,117 @@ Ranked by expected value relative to effort:
 
 ---
 
-## 4.15 Summary
+## 4.15 Multi-site generalisation: seventeen sites across Ghana
 
-**Table 4.23 — Summary of the four systems**
+Every result to this point comes from one coastal site, and §4.9.3 and §4.14.4 both record that
+as a limitation. This section tests it. The 24 h ladder was run **unchanged** — the same four
+rolling-origin folds, five seeds, Diebold–Mariano test and report formatter — at **Ghana's 16
+regional capitals plus Anloga**, extracted from one shared Ghana-wide ERA5 bounding box. The
+protocol, predictions and pass criteria were fixed in writing before any of it ran.
+
+Seventeen sites, 2024-03-01 → 2025-12-31, zero run failures.
+
+**Table 4.23 — 24 h hub wind-speed forecast across 17 Ghanaian sites, `study` features**
+
+| Site | Region | Mean wind (m s⁻¹) | Best model | MAE (m s⁻¹) | sd | MAE / wind | R² | Skill vs persistence |
+|:---|:---|---:|:---|---:|---:|---:|---:|---:|
+| Accra | Greater Accra | 4.09 | XGBoost | 0.5453 | 0.0617 | 0.133 | 0.588 | 0.379 |
+| Koforidua | Eastern | 3.58 | XGBoost | 0.5467 | 0.0616 | 0.153 | 0.604 | 0.376 |
+| Ho | Volta | 3.32 | Ridge | 0.5663 | 0.0657 | 0.170 | 0.598 | 0.346 |
+| Cape Coast | Central | 3.99 | Ridge | 0.5694 | 0.0733 | 0.143 | 0.565 | 0.355 |
+| Sekondi-Takoradi | Western | 4.04 | XGBoost | 0.5952 | 0.0669 | 0.147 | 0.544 | 0.354 |
+| Kumasi | Ashanti | 3.59 | XGBoost | 0.5983 | 0.0573 | 0.167 | 0.614 | 0.338 |
+| Sefwi Wiawso | Western North | 3.38 | XGBoost | 0.6103 | 0.0784 | 0.180 | 0.577 | 0.315 |
+| Goaso | Ahafo | 3.48 | XGBoost | 0.6377 | 0.0640 | 0.183 | 0.562 | 0.307 |
+| Sunyani | Bono | 3.65 | XGBoost | 0.6663 | 0.0626 | 0.183 | 0.601 | 0.314 |
+| Dambai | Oti | 3.31 | XGBoost | 0.6879 | 0.0620 | 0.208 | 0.537 | 0.312 |
+| Techiman | Bono East | 3.92 | XGBoost | 0.6992 | 0.0748 | 0.178 | 0.634 | 0.306 |
+| Damongo | Savannah | 3.66 | Ridge | 0.7712 | 0.0569 | 0.211 | 0.556 | 0.271 |
+| *Anloga* | *Volta (reference)* | *6.24* | *XGBoost* | *0.8006* | *0.0986* | ***0.128*** | *0.589* | *0.388* |
+| Tamale | Northern | 4.16 | Ridge | 0.8479 | 0.0536 | 0.204 | 0.587 | 0.304 |
+| Nalerigu | North East | 4.30 | Ridge | 0.8586 | 0.0807 | 0.200 | 0.547 | 0.307 |
+| Bolgatanga | Upper East | 4.39 | Ridge | 0.8601 | 0.0923 | 0.196 | 0.566 | 0.313 |
+| Wa | Upper West | 4.29 | XGBoost | 0.9031 | 0.0457 | 0.211 | 0.567 | 0.307 |
+
+### 4.15.1 The conclusions generalise
+
+**Every site's best model beats both persistence and climatology on its own folds — all 34
+site-arms**, that is 17 sites on each of the `study` and `operational` feature sets. The weakest
+margin is Damongo on the operational arm, which still improves on persistence by **24.6%**
+(27.1% on the study arm shown in Table 4.23). Skill here is the mean across folds of
+1 − MAE/MAE_persistence, the quantity reported throughout this chapter.
+
+More informative than any single error is how little the *skill* moves. Across roughly 800 km
+and three climatic zones — coastal savannah, forest interior and northern Sahel — **R² spans
+only 0.537 to 0.634.** MAE spans a factor of 1.66; R² spans a factor of 1.18.
+
+The classical–machine-learning comparison of §4.8 also holds everywhere: multi-model MOS stays
+within **7.46%** of XGBoost at worst (Accra), median 5.16%. The finding that the project's gain
+is predominantly an *information* effect rather than a machine-learning effect is therefore not
+an artefact of the reference site.
+
+### 4.15.2 Mean absolute error must not be ranked across sites
+
+The MAE column spans 0.5453 to 0.9031, and most of that range reflects how windy a site is
+rather than how predictable it is. Normalising by mean wind speed compresses the spread and
+**inverts the ranking at the top**: Anloga holds the second-worst raw MAE in the table and the
+**best** normalised error, 0.128 against a worst case of 0.211, because its mean wind is
+6.24 m s⁻¹ against 3.3–4.4 m s⁻¹ elsewhere.
+
+A bare MAE ranking would therefore read as "the model performs worst at Anloga", which is the
+opposite of what the data shows. Anloga's ERA5 cell is also 88% water, which smooths the series
+further; that cell was deliberately not relocated, for the reasons given in §4.14.4.
+
+### 4.15.3 The §4.9.3 prediction receives a split verdict
+
+§4.9.3 predicted that reanalysis features would matter more where NWP skill is weaker. Removing
+every latency-blocked reanalysis feature:
+
+- **15 of 17 sites show a positive penalty**, against +0.03% at Anloga. The largest are
+  **Damongo at +3.45%** and **Tamale at +2.55%** — northern savannah sites, which is precisely
+  where §4.9.3 directed attention. A sign test over the 16 non-zero sites gives **p ≈ 0.0003**.
+- **No site's penalty exceeds its own seed standard deviation** — 0 of 17. Damongo's 0.0266
+  m s⁻¹ penalty sits against a seed sd of 0.0569.
+
+The direction is therefore established and the magnitude is not. The pre-registered criterion
+did not quantify "materially more", which is a weakness in how the criterion was written and is
+recorded as such rather than resolved in whichever direction favours the result. The defensible
+statement is the narrow one: **removing reanalysis features is consistently but slightly costly
+away from Anloga, with the cost concentrated in the north.** §4.9's operational finding survives
+in its broad form, since the penalty remains below 1.3% at 15 of 17 sites.
+
+### 4.15.4 Two observations that were not predicted
+
+These were not pre-registered and are reported as hypotheses rather than findings.
+
+**Ridge regression beats both gradient-boosting implementations at 6 of 17 sites**, including
+four of the five far-northern sites (Damongo, Tamale, Nalerigu, Bolgatanga; Wa goes to XGBoost).
+Three independent signals agree in that region: ridge wins, the reanalysis penalty is largest,
+and the MOS gap is *narrowest* (Nalerigu 2.17%, Bolgatanga 2.44%). The northern sites appear to
+favour simpler, more linear models. No prediction anticipated a model-family split by climatic
+zone, and establishing it would require its own pre-registered study.
+
+**Climatology outperforms persistence at 13 of 17 sites, and the four exceptions are the four
+northernmost.** Even the reference ladder reorders by climatic zone.
+
+### 4.15.5 What this section does not establish
+
+- **Nothing about resource or viability.** No capacity factor was computed for any of these
+  sites; the long reanalysis archive required for a monthly climatology is incomplete, and no
+  resource figure should be quoted from this section.
+- **One horizon.** This is 24 h only. §4.9.3's other clause — a shorter horizon where
+  persistence is strong — remains untested.
+- **Reanalysis truth throughout.** Every site is scored against ERA5, so this measures
+  agreement with a reanalysis rather than with observations. None of the 17 sites has a met mast
+  or SCADA feed, so the validation limitation in §4.14.4 applies in full at all of them.
+- **No deep models.** Excluded in advance: approximately 206 h of computation against a
+  measured 5.1% deficit relative to tree ensembles.
+
+---
+
+## 4.16 Summary
+
+**Table 4.24 — Summary of the four systems**
 
 | System | Horizon | Headline result | Basis | Status |
 |:---|:---|:---|:---|:---|

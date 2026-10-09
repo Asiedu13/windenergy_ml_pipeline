@@ -870,6 +870,81 @@ was built for.
 
 ---
 
+## v6 — does it generalise? 17 Ghanaian sites (2026-10-09)
+
+⚠️ **Window 2024-03-01 → 2025-12-31, so v6 is comparable to v5 and *not* to v1–v4** (those are
+on 2020–2023). Pre-registered before any run in
+[`docs/13_multi_site_extension.md`](docs/13_multi_site_extension.md); full result in
+[`redo/results/13`](redo/results/13_multi_site_generalisation.md).
+
+Every headline in v1–v5 came from one coastal site. v6 runs the **published 24 h ladder,
+unchanged** — same 4 rolling folds, 5 seeds, DM test, report formatter — at Ghana's **16
+regional capitals plus Anloga**, off one shared Ghana-wide ERA5 bounding box.
+
+| | Result |
+|:---|:---|
+| **Sanity floor** | ✅ **34/34 site-arms** (17 sites × 2 feature sets). Every site's best model beats *both* persistence and climatology on its own folds; weakest margin **+24.6%** (damongo, `operational`) |
+| **MAE range** | 0.5453 (accra) → 0.9031 (wa), a factor of **1.66** — `study` arm |
+| **R² range** | **0.537 → 0.634** — under 0.1 across ~800 km and three climatic zones |
+| **Skill vs persistence** | `study` **0.271 → 0.388**; both arms 0.246 → 0.388, median 0.314 |
+| **Classical–ML gap** | `mos_multi` within **7.46%** of xgboost at worst; median 5.16% |
+| **Best model** | xgboost at 11 sites, **ridge at 6** |
+| **Site failures** | 0 |
+
+**The stability is the finding, not any individual MAE.**
+
+### ⚠️ Raw MAE must not be ranked across these sites
+
+Most of the 1.66× MAE spread is how windy a site is, not how predictable. Normalised by mean
+wind the ranking **inverts at the top** — Anloga has the second-worst raw MAE (0.8006) and the
+**best** normalised error (**0.128** vs 0.211 worst), because its mean wind is 6.24 m/s against
+3.3–4.4 elsewhere, and its ERA5 cell is 88% water
+([`docs/13` §3a](docs/13_multi_site_extension.md)). A bare MAE ranking reads as "worst at
+Anloga", the opposite of the truth.
+
+### Thesis §4.9.3 gets a split verdict
+
+§4.9.3 predicted reanalysis features would matter more where NWP skill is weaker. Dropping
+every latency-blocked reanalysis feature:
+
+- **15 of 17 sites show a positive penalty** against Anloga's +0.03%; largest **damongo
+  +3.45%** and **tamale +2.55%** — the northern savannah, exactly where §4.9.3 pointed. Sign
+  test over the 16 non-zero sites, **p ≈ 0.0003**.
+- **0 of 17 penalties exceed that site's own seed sd.**
+
+So the direction is solid and no single magnitude clears noise. **The pre-registration never
+quantified "materially more"** — a defect in the criterion's wording, recorded rather than
+resolved in whichever direction suits the outcome. v5's deployability claim survives in the
+broad form: the penalty is under 1.3% at 15 of 17 sites.
+
+### Exploratory, not pre-registered
+
+- **`ridge` beats both gradient-boosting models at 6 of 17 sites**, including 4 of the 5
+  far-northern ones. The same region carries the largest reanalysis penalties *and* the
+  narrowest MOS gaps — three signals that the north favours simpler, more linear models.
+- **Climatology beats persistence at 13 of 17 sites; the 4 exceptions are the 4 northernmost.**
+
+### Not measured
+
+**Resource and viability are unmeasured.** The long archive the monthly climatology needs is at
+**144 of 576 files** — no capacity factor exists for any of these sites and none should be
+quoted. Deep models were excluded by pre-registration (12.9 h × 17 ≈ 206 h vs a 5.1% deficit).
+Truth is ERA5 everywhere, so this measures agreement with a reanalysis, not with a mast.
+
+### Two defects the v6 build surfaced
+
+1. **A training run could silently start a 432-request CDS download.** `--start` defaulted to
+   the archive range on *every* `src.multisite` command, and `site_config` resolves
+   `start or config.data.start`, so the template's window was unreachable and
+   `fetch_regional_archive` downloads what is missing. Fixed two ways — `resolve_window`, and
+   `fetch_regional_archive(download=False)` behind a hard preflight (`b919157`).
+2. **`--out` moved the report but overwrote the CSV in place**, so a side-experiment replaced
+   two sites' headline CSVs while leaving their reports untouched — a mismatched pair under one
+   name. Caught by an mtime that did not match its own report; both sites re-run and all 17
+   verified report-to-CSV (`1caf2a8`).
+
+---
+
 ## Consistent takeaways across iterations
 
 1. **The two-stage architecture beats physics-only** whenever Stage 1 beats persistence
