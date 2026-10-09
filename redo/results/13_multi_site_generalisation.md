@@ -15,6 +15,23 @@ the v1–v4 tables in [`../../RESULTS.md`](../../RESULTS.md), which are on 2020�
 comparable to [02](02_classical_vs_ml.md) and [03](03_operational_vs_study.md), which share
 this window.
 
+**The folds are identical at all 17 sites — verified, not assumed.** Every site produced
+15,912 rows and the same four test blocks, checked by extracting every fold line from the batch
+log and confirming it reduces to exactly four distinct values:
+
+| Fold | Train rows | Test rows | Test period |
+|:---|---:|---:|:---|
+| fold1 | 7,004 | 2,227 | 2024-12-24 → 2025-03-27 |
+| fold2 | 9,231 | 2,227 | 2025-03-27 → 2025-06-28 |
+| fold3 | 11,458 | 2,227 | 2025-06-28 → 2025-09-29 |
+| fold4 | 13,685 | 2,227 | 2025-09-29 → 2025-12-30 |
+
+Definitions and rationale are in [01](01_protocol.md) and not restated here. **This table is
+what licenses the cross-site comparison**: a per-site difference in fold boundaries would make
+every column below incomparable, and nothing in the per-site reports would have revealed it.
+Each block is roughly a quarter, so fold numbers read as seasons — which is why the per-fold
+spread in §"Seasonal variation" below is a seasonal statement rather than noise.
+
 ## The question
 
 Every headline number in this project came from one coastal site. The thesis said so, and said
@@ -79,9 +96,24 @@ must not be mixed in one table.*
 R² varies by less than 0.1 across seventeen sites spanning ~800 km and three climatic zones.
 That stability, not any individual MAE, is the finding.
 
-**3. The classical–ML gap stays small everywhere** — `mos_multi` within **7.46%** of xgboost at
-worst (Accra), median 5.16%. [02](02_classical_vs_ml.md)'s conclusion — that the project's gain
-is an *information* effect rather than a machine-learning one — is not an Anloga artefact.
+**3. The ceiling argument replicates 17 times, in both directions.** This is the part that
+transfers most cleanly from [02](02_classical_vs_ml.md) and [05](05_ceiling_and_information.md).
+
+| Comparison | Range across 17 sites | Reading |
+|:---|:---|:---|
+| `mos_multi` (21-param OLS) vs `xgboost` | **+2.17% … +7.46%**, median 5.16% | the problem is **not model-limited** anywhere |
+| `mos_single` (one calibrated NWP model) vs `xgboost` | **+14.56% … +30.58%**, median ~18% | but the pipeline is **not redundant** either |
+
+The two together are more informative than either alone. A 21-parameter linear fit reaches
+within a few percent of gradient boosting at **every** site, so [05](05_ceiling_and_information.md)'s
+conclusion — the binding constraint is information, not model class — is not an Anloga artefact.
+Yet multi-model combination plus ML still beats bias-correcting a single NWP model by a median
+~18%, so the combination earns its place.
+
+**Practical consequence:** further model sophistication has almost nothing left to win here;
+better *inputs* (higher-resolution NWP, more ensemble members, on-site observation) are where
+the remaining error lives. That is [stage 4](../04_stage4_ceiling_analysis.md)'s
+ceiling-before-model-selection rule, now evidenced across 17 sites rather than one.
 
 **4. The operational result survives, with a caveat.** Dropping every latency-blocked
 reanalysis feature costs **under 1.3% at 15 of 17 sites**. [03](03_operational_vs_study.md)'s
@@ -97,6 +129,50 @@ against 3.3–4.4 everywhere else — and its cell is 88% water
 
 **A bare MAE ranking would read "the model is worst at Anloga", which is the opposite of what
 the data says.** Every cross-site table must carry mean wind or the normalised column.
+
+## Seasonal variation — the headline MAE hides a third of the error
+
+Every MAE in the table above is a mean over four folds, and the folds are not equally hard.
+`xgboost` on the `study` arm, per fold, mean over the five seeds:
+
+| site | fold1 (Jan–Mar) | fold2 (Apr–Jun) | fold3 (Jul–Sep) | fold4 (Oct–Dec) | spread |
+|:---|---:|---:|---:|---:|---:|
+| accra | 0.5130 | **0.6458** | 0.4891 | 0.5331 | 32.0% |
+| anloga | 0.7814 | **0.9570** | 0.6956 | 0.7684 | **37.6%** |
+| sefwi_wiawso | 0.6762 | 0.6869 | 0.5006 | 0.5773 | 37.2% |
+| ho | 0.5698 | 0.6695 | 0.4893 | 0.5416 | 36.8% |
+| sekondi_takoradi | 0.5923 | 0.6937 | 0.5107 | 0.5840 | 35.8% |
+| techiman | 0.8043 | 0.7072 | 0.5994 | 0.6859 | 34.2% |
+| koforidua | 0.5561 | 0.6385 | 0.4763 | 0.5159 | 34.1% |
+| sunyani | 0.7409 | 0.6916 | 0.5734 | 0.6595 | 29.2% |
+| goaso | 0.7156 | 0.6763 | 0.5550 | 0.6041 | 28.9% |
+| bolgatanga | 0.7493 | 0.9058 | 0.8492 | 0.9550 | 27.4% |
+| kumasi | 0.6428 | 0.6511 | 0.5114 | 0.5878 | 27.3% |
+| nalerigu | 0.7803 | 0.8625 | 0.8429 | 0.9820 | 25.8% |
+| cape_coast | 0.5374 | 0.6696 | 0.5347 | 0.5450 | 25.2% |
+| dambai | 0.7897 | 0.6446 | 0.6410 | 0.6763 | 23.2% |
+| damongo | 0.8358 | 0.7281 | 0.7592 | 0.7811 | 14.8% |
+| wa | 0.9348 | 0.8442 | 0.8776 | 0.9558 | 13.2% |
+| tamale | 0.8724 | 0.8442 | 0.7877 | 0.8884 | **12.8%** |
+
+**A single-split evaluation would have been misleading by up to a third.** At Accra the quarterly
+MAE runs 0.4891 to 0.6458; a split landing on fold 3 reports 0.489 and is 24% optimistic against
+the four-fold mean of 0.545. This is the fold-difficulty argument of [01](01_protocol.md)
+reproduced independently at 17 sites.
+
+**An inversion worth noting — and not predicted.** The spread is *smallest* at the sites with
+the largest errors: tamale 12.8%, wa 13.2%, damongo 14.8% are the three northern sites, while
+the widest spreads are southern (anloga 37.6%, sefwi_wiawso 37.2%, ho 36.8%). **The north is
+harder but steadier; the south is easier but far more seasonal.** Exploratory — not
+pre-registered, and a mechanism is not established here.
+
+Two consequences:
+
+- **Any deployed interface must express a season-aware error, not one figure.** A constant
+  "±0.55 m/s" would be wrong for a quarter of the year at most southern sites.
+- Note this interacts with thesis §4.14.4's record that the **quantile intervals are
+  uncalibrated**. Seasonal error variation of this size is precisely what an uncalibrated
+  interval will misstate, and recalibration is the prerequisite for quoting uncertainty at all.
 
 ## Thesis §4.9.3 gets a verdict, and it is a split one
 
