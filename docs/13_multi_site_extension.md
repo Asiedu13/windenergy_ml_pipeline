@@ -315,6 +315,52 @@ carry no independent information.** A Ghana bbox gives a genuine 3×3 patch and 
 for free. But it means the spatial columns **change**, so this is a new feature set rather
 than a drop-in, and it is why Gate 1 expects those columns to differ.
 
+### 4d. ⚠️ The revived columns never reached a model, and they were worth nothing
+
+**Superseding the paragraph above, measured 2026-10-09.** Two corrections, and the second is
+the one that matters.
+
+**First: the revival is real.** Checked on the actual caches rather than argued —
+
+| | `_grad_ns` non-zero | `_std` still exactly `\|_grad_ew\|/2` |
+|:---|---:|---:|
+| per-site (1×2 patch) | 0 of 5 | 5 of 5 |
+| regional (3×3 patch) | **5 of 5** | **0 of 5** |
+
+**Second: no model ever saw them.** `is_dead_column`
+([`../src/traditional.py`](../src/traditional.py)) matches on **name suffix** — every
+`*_grad_ns` and `*_std` is withheld unconditionally — so `study` keeps 26 features on *both*
+paths. The claim "a Ghana bbox fixes this for free" is true of the tidy frame and **false of
+the model input**. Nothing in any output said so; both runs even report the same 104-column
+feature frame, which is what made it invisible.
+
+That also re-explains Gate 5's three movers. They are not the revived columns arriving; they
+are **float32 round-off** in the columns that survive (§7a measured 8 ULP on five columns).
+
+**Third: measuring it closed the question.** A `features.dead_columns: name | value` switch
+was added — `value` judges each column on the earliest fold's training block, so the decision
+is leak-free and the feature count stays constant across folds — and run at two sites against
+the headline:
+
+| site | arm | xgboost | lightgbm | ridge |
+|:---|:---|---:|---:|---:|
+| anloga | operational | 0.0000 | 0.0000 | 0.0000 |
+| anloga | study | −0.0028 | −0.0026 | −0.0042 |
+| cape_coast | operational | 0.0000 | 0.0000 | 0.0000 |
+| cape_coast | study | +0.0003 | −0.0018 | +0.0019 |
+
+(negative = `value` better; 19 of 22 rows identical to 4 dp at both sites)
+
+**Every delta is smaller than that row's own seed sd — 22 of 22, at both sites — and the sign
+is not even consistent across the two.** The `operational` arm is exactly 0.0000 throughout,
+which is the mechanism check: that arm has no spatial columns, so the mode cannot touch it.
+
+**So the 630-cell download bought spatial realism in the data and no measurable forecast
+skill at 24 h.** `name` stays the default. That is now a measured choice rather than an
+oversight, and the cost of keeping published figures comparable is a number — approximately
+zero — instead of an assumption. The headline paragraph above is left as written; this
+section is the correction.
+
 ## 5. Scope — what is and is not being run
 
 **Run:** resource climatology for all 17; the 24 h forecast ladder for all 17, on **both**
@@ -389,9 +435,9 @@ Run in order; stop at the first failure.
 | 0 | **CDS probe** | One monthly Ghana-bbox request is accepted (cost cap is field-based as claimed); measured size and wall time extrapolate to ≤ ~25 GB and ≤ ~7 days for 156 months × 3 families | ⚠️ **Passed on size, FAILED on time.** Size is fine (≈2.7 GB vs 25 GB). The time half passed on a single 3.0 min request and **does not hold at scale** — see §4c |
 | 1 | **Anloga equivalence** | Anloga extracted from the bbox reproduces the per-site cache's **centre-cell** columns exactly; spatial columns differ, and `_grad_ns` is **no longer identically zero** | ⚠️ **FAILED as written; the claim it tested passed.** The criterion was mis-specified — see §7a |
 | 2 | **Land mask** | Every site's selected cell has land fraction ≥ 0.5, or carries a recorded exemption; every snap is logged | ⚠️ **PASS with one exemption** — Cape Coast and Accra snapped as predicted; **Anloga failed at 0.124 and is exempted, not corrected** (§3a). The criterion was amended to admit a recorded exemption, which is a change made *after* seeing the result and is flagged as such here rather than hidden |
-| 3 | **Defect-9 regression** | `python -m src.bakeoff --config config_bakeoff.yaml --per-fold` still reproduces xgboost 0.8037, mos_multi 0.8412, persistence 1.3183 and the 46.2% fold spread | ⏳ pending |
+| 3 | **Defect-9 regression** | `python -m src.bakeoff --config config_bakeoff.yaml --per-fold` still reproduces xgboost 0.8037, mos_multi 0.8412, persistence 1.3183 and the 46.2% fold spread | ✅ **PASS, 4/4 exact** (2026-10-09). xgboost **0.8037**, mos_multi **0.8412**, persistence **1.3183**, persistence fold spread **46.2%** (1.1129 → 1.6274). Re-verified after the `dead_columns` refactor landed, to confirm the default path had not moved. **Note on the fourth figure:** the 46.2% is the *persistence* fold-difficulty spread — [`../redo/results/06`](../redo/results/06_what_the_protocol_caught.md)'s "46% difficulty spread". Computing it on xgboost instead gives 38.7%, which is a different quantity; the gate wording does not say which model, and this records the reading used |
 | 4 | **Sanity floor, all 16** | Every site's best model beats **both** persistence and climatology on its own folds | ⏳ pending |
-| 5 | **Anloga end-to-end** | The 17th site reproduces the published 24 h table through the new runner | ⏳ pending |
+| 5 | **Anloga end-to-end** | The 17th site reproduces the published 24 h table through the new runner | ✅ **PASS** (2026-10-09). **19 of 22 rows identical to 4 dp.** All 11 `operational` rows match exactly — that arm carries no ERA5 spatial columns, so it *cannot* differ, which is the mechanism check. The three movers are the three models that read spatial features: xgboost −0.0031 (−0.39%), lightgbm −0.0020, ridge +0.0024. Every classical and reference arm unchanged. Max deviation is **0.39%, against a seed sd of 0.1023** — ULP round-off (§7a), not new information (§4d). Also confirmed: 15,912 rows, identical fold boundaries, **zero download attempts** |
 | 6 | **Tests** | `pytest -q` green; currently 149 | ✅ **PASS** — 149 unchanged (the per-site path is untouched) **plus 38 new** in `tests/test_multisite.py` covering the regional code: bbox request building, nearest-cell lookup, the land snap, the Anloga exemption, window clamping at a grid edge, `extract=None` identity, the manifest guard, registry validation and the resolved-config round trip |
 
 > 🔖 **On gate 2's amendment.** The pre-registered criterion was "every site's selected cell
