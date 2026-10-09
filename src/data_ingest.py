@@ -434,7 +434,7 @@ def _regional_chunks(start: str, end: str, chunk: str
 
 def fetch_regional_archive(
     start: str, end: str, cache_dir: Path, bbox: dict[str, float],
-    chunk: str = "month",
+    chunk: str = "month", download: bool = True,
 ) -> tuple[list[Path], list[Path], list[Path]]:
     """Download the shared bbox archive once. Site-independent, idempotent.
 
@@ -469,30 +469,45 @@ def fetch_regional_archive(
     ⚠️ **Never run two of these at once.** `path.exists()` is the only
     re-download guard, so two processes pick the same missing unit and can write
     the same path simultaneously. This happened on 2026-08-10 (RESULTS.md).
-    """
-    import cdsapi
 
+    `download=False` makes this a **pure coverage query**: it returns exactly the
+    same path lists without importing `cdsapi`, building a client, or issuing one
+    request, so a caller can ask "what would this range need?" and compare against
+    disk. The manifest and truncation checks still run — they are the right
+    preflight either way. This exists because a *training* run must never be able
+    to start an ingest; see `multisite.cmd_forecast`, where asking for an
+    unavailable month used to begin a 432-request download instead of failing.
+    """
     ensure_dir(cache_dir)
     area = _bbox_area(bbox)
     _check_regional_manifest(cache_dir, area)
     _drop_truncated_regional_files(cache_dir)
-    client = cdsapi.Client()
 
-    # The mask is constant in value, so one hour covers the whole archive.
-    lsm_path = Path(cache_dir) / REGIONAL_LSM_NAME
-    if not lsm_path.exists():
-        _retrieve_with_retry(
-            client, "reanalysis-era5-single-levels",
-            {"product_type": "reanalysis", "variable": ["land_sea_mask"],
-             "year": "2024", "month": "06", "day": "01", "time": ["12:00"],
-             "area": area, "format": "netcdf"},
-            str(lsm_path), label="land-sea mask (one-off)",
-        )
+    client = None
+    if download:
+        import cdsapi
+
+        client = cdsapi.Client()
+
+        # The mask is constant in value, so one hour covers the whole archive.
+        lsm_path = Path(cache_dir) / REGIONAL_LSM_NAME
+        if not lsm_path.exists():
+            _retrieve_with_retry(
+                client, "reanalysis-era5-single-levels",
+                {"product_type": "reanalysis", "variable": ["land_sea_mask"],
+                 "year": "2024", "month": "06", "day": "01", "time": ["12:00"],
+                 "area": area, "format": "netcdf"},
+                str(lsm_path), label="land-sea mask (one-off)",
+            )
 
     units = _regional_chunks(start, end, chunk)
     n = len(units)
-    logger.info("Regional archive: %d %s unit(s) x 3 families = %d requests",
-                n, chunk, n * 3)
+    if download:
+        logger.info("Regional archive: %d %s unit(s) x 3 families = %d requests",
+                    n, chunk, n * 3)
+    else:
+        logger.info("Regional archive: resolving %d %s unit(s) x 3 families "
+                    "without downloading", n, chunk)
     core_paths: list[Path] = []
     extra_paths: list[Path] = []
     pressure_paths: list[Path] = []
@@ -506,6 +521,9 @@ def fetch_regional_archive(
         core_paths.append(core)
         extra_paths.append(extra)
         pressure_paths.append(press)
+
+        if not download:
+            continue
 
         if not core.exists():
             if not _retrieve_with_retry(

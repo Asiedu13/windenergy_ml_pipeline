@@ -71,6 +71,10 @@ DEFAULT_TEMPLATE = "config_bakeoff.yaml"
 # spread and exceedance are only meaningful over many years. The forecast window
 # (2024-03 onward, where the Open-Meteo archive starts) is a subset of this.
 ARCHIVE_START, ARCHIVE_END = "2010-01-01", "2025-12-31"
+# Commands for which the archive range is the right default. `forecast` is
+# deliberately absent: its window belongs to the template, not to this module.
+# See `resolve_window`.
+ARCHIVE_RANGE_COMMANDS = ("fetch", "resource")
 
 
 # ---------------------------------------------------------------------------
@@ -131,6 +135,29 @@ def site_config(reg: dict[str, Any], entry: dict[str, Any],
     config.paths = replace(config.paths,
                            outputs=str(Path("outputs/sites") / entry["name"]))
     return config
+
+
+def resolve_window(command: str, start: str | None,
+                   end: str | None) -> tuple[str | None, str | None]:
+    """Resolve `--start`/`--end` for one command, defaulting per command.
+
+    ⚠️ **`forecast` must default to the template window, not the archive range.**
+    It used to default to `ARCHIVE_START`/`ARCHIVE_END` like everything else, and
+    because `site_config` resolves `start or config.data.start`, a non-None
+    default made `config_bakeoff.yaml`'s `2024-03-01` unreachable. The forecast
+    path then asked `_fetch_era5_regional` for 2010 onward, and
+    `fetch_regional_archive` **downloads what is missing** — so a bare
+    `python -m src.multisite forecast` would quietly begin a 432-request, multi-day
+    CDS ingest instead of training. Returning None here is what lets the template
+    window through.
+
+    `fetch` and `resource` genuinely want the long record: the LOYO climatology,
+    interannual spread and exceedance curves are only meaningful over many years.
+    An explicit flag always wins, for every command.
+    """
+    if command in ARCHIVE_RANGE_COMMANDS:
+        return start or ARCHIVE_START, end or ARCHIVE_END
+    return start, end
 
 
 # ---------------------------------------------------------------------------
@@ -255,6 +282,41 @@ def cmd_resource(reg: dict[str, Any], args: argparse.Namespace) -> None:
                   "monthly_climatology.csv", one)
 
 
+def require_cached_window(reg: dict[str, Any], config: Config,
+                          cache_dir: str = "data/raw") -> None:
+    """Refuse to train unless every month the window needs is already on disk.
+
+    The forecast path reaches `fetch_regional_archive` through
+    `_fetch_era5_regional`, and that function *downloads what is missing*. So an
+    unavailable month does not fail a training run, it silently converts it into a
+    CDS ingest — 432 requests and over a week, discovered only by noticing the run
+    never got to a model. `resolve_window` stops the common case by defaulting the
+    window correctly; this stops the general one, including an explicit `--start`
+    that reaches past the archive.
+
+    Deliberately a hard stop rather than a warning. A partially-covered window
+    would still produce a report, and a report with a quietly different record
+    length is not comparable to the published table or to the other sites, which
+    is the entire point of the exercise.
+    """
+    core, extra, press = fetch_regional_archive(
+        config.data.start, config.data.end, Path(cache_dir), reg["bbox"],
+        chunk=config.data.chunk, download=False,
+    )
+    missing = [p.name for p in (*core, *extra, *press) if not p.exists()]
+    if missing:
+        shown = ", ".join(missing[:6])
+        more = f" (+{len(missing) - 6} more)" if len(missing) > 6 else ""
+        raise SystemExit(
+            f"{len(missing)} of {len(core) + len(extra) + len(press)} regional "
+            f"ERA5 files for {config.data.start}..{config.data.end} are not "
+            f"cached: {shown}{more}.\n"
+            f"Training will NOT download them — run "
+            f"`python -m src.multisite fetch --start {config.data.start} "
+            f"--end {config.data.end}` first, or narrow the window."
+        )
+
+
 def cmd_forecast(reg: dict[str, Any], args: argparse.Namespace) -> None:
     """The 24 h ladder at every site, on the published protocol.
 
@@ -274,6 +336,17 @@ def cmd_forecast(reg: dict[str, Any], args: argparse.Namespace) -> None:
 
     feature_sets = (["study", "operational"] if args.features == "both"
                     else [args.features])
+
+    # Every site shares one window and one cache, so coverage is checked once
+    # here rather than discovered inside site 1 — the same reason
+    # `fetch_regional_archive` is separate from `_fetch_era5_regional`.
+    entries = _site_entries(reg, args.sites)
+    if entries:
+        require_cached_window(
+            reg, site_config(reg, entries[0], template=args.template,
+                             start=args.start, end=args.end),
+            cache_dir=args.cache_dir,
+        )
 
     def one(config: Config) -> dict:
         ensure_dir(Path(config.paths.outputs) / "reports")
@@ -339,8 +412,15 @@ def main() -> None:
     ap.add_argument("--registry", default=str(REGISTRY_PATH))
     ap.add_argument("--template", default=DEFAULT_TEMPLATE)
     ap.add_argument("--cache-dir", default="data/raw")
-    ap.add_argument("--start", default=ARCHIVE_START)
-    ap.add_argument("--end", default=ARCHIVE_END)
+    ap.add_argument("--start", default=None,
+                    help=f"Window start. Defaults to {ARCHIVE_START} for "
+                         f"{'/'.join(ARCHIVE_RANGE_COMMANDS)}; for `forecast` it "
+                         f"defaults to the template's window, which is the "
+                         f"pre-registered study period. See `resolve_window`.")
+    ap.add_argument("--end", default=None,
+                    help=f"Window end. Defaults to {ARCHIVE_END} for "
+                         f"{'/'.join(ARCHIVE_RANGE_COMMANDS)}; for `forecast` it "
+                         f"defaults to the template's window.")
     ap.add_argument("--sites", nargs="*", default=None,
                     help="Restrict to these registry names (default: all).")
     ap.add_argument("--force", action="store_true",
@@ -356,6 +436,7 @@ def main() -> None:
                          "CDS accepts for the Ghana bbox — a yearly request is "
                          "rejected with 'cost limits exceeded'. See docs/13 §4a.")
     args = ap.parse_args()
+    args.start, args.end = resolve_window(args.command, args.start, args.end)
 
     reg = load_registry(Path(args.registry))
     logger.info("Registry: %d sites, bbox %s", len(reg["sites"]), reg["bbox"])

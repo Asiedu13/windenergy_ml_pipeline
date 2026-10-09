@@ -620,3 +620,128 @@ def test_resolved_config_round_trips_through_load_config(tmp_path):
     assert back.turbine.name == config.turbine.name
     assert back.nwp.enabled is True
     assert back.nwp.models == config.nwp.models
+
+
+# ---------------------------------------------------------------------------
+# Window resolution and the no-download guard
+#
+# These two exist because a *training* run must never be able to start an ingest.
+# `--start` used to default to ARCHIVE_START for every command, and since
+# `site_config` resolves `start or config.data.start`, that non-None default made
+# the template's 2024-03 unreachable: a bare `multisite forecast` asked for 2010
+# onward, and `_fetch_era5_regional` -> `fetch_regional_archive` downloads what is
+# missing. Measured against the real cache, that was 432 of 576 files — over a
+# week of CDS requests in place of training, with nothing in the output saying so.
+# ---------------------------------------------------------------------------
+
+def test_forecast_window_defaults_to_the_template_not_the_archive():
+    """The pre-registered study window lives in the template, not in this module.
+
+    The window is not a free choice: the Open-Meteo previous-runs archive is
+    all-null before 2024-03, so the overlap with ERA5 truth *is* the study period.
+    """
+    from src.multisite import resolve_window
+
+    assert resolve_window("forecast", None, None) == (None, None)
+
+    reg = load_registry()
+    entry = next(s for s in reg["sites"] if s["name"] == "anloga")
+    start, end = resolve_window("forecast", None, None)
+    config = site_config(reg, entry, start=start, end=end)
+    assert (config.data.start, config.data.end) == ("2024-03-01", "2025-12-31")
+
+
+@pytest.mark.parametrize("command", ["fetch", "resource"])
+def test_archive_commands_still_default_to_the_long_record(command):
+    """LOYO climatology, interannual spread and exceedance need the full record."""
+    from src.multisite import ARCHIVE_END, ARCHIVE_START, resolve_window
+
+    assert resolve_window(command, None, None) == (ARCHIVE_START, ARCHIVE_END)
+
+
+@pytest.mark.parametrize("command", ["fetch", "resource", "forecast", "cells"])
+def test_an_explicit_window_always_wins(command):
+    from src.multisite import resolve_window
+
+    assert resolve_window(command, "2019-01-01", "2019-12-31") == (
+        "2019-01-01", "2019-12-31")
+
+
+def test_coverage_query_issues_no_request_and_creates_no_file(tmp_path, monkeypatch):
+    """`download=False` must be a pure question about disk.
+
+    `cdsapi` is made un-importable for the duration: if this path ever grows a
+    client the test fails rather than quietly submitting requests from a test run.
+    """
+    import builtins
+
+    from src.data_ingest import fetch_regional_archive
+
+    real_import = builtins.__import__
+
+    def no_cdsapi(name, *args, **kwargs):
+        if name == "cdsapi":
+            raise AssertionError("download=False must not import cdsapi")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", no_cdsapi)
+
+    core, extra, press = fetch_regional_archive(
+        "2024-03-01", "2024-05-31", tmp_path, GHANA_BBOX, download=False)
+
+    assert [p.name for p in core] == [
+        f"{REGIONAL_CORE_PREFIX}_2024-0{m}.nc" for m in (3, 4, 5)]
+    assert len(extra) == len(press) == 3
+    assert not any(p.exists() for p in (*core, *extra, *press))
+    # only the manifest the guard writes on first use — no .nc files
+    assert sorted(p.name for p in tmp_path.iterdir()) == ["era5gh_manifest.json"]
+
+
+def test_coverage_query_returns_the_same_paths_as_a_download_would(tmp_path):
+    """The guard is only meaningful if it asks about the files training reads."""
+    from src.data_ingest import fetch_regional_archive
+
+    a = fetch_regional_archive("2024-03-01", "2024-04-30", tmp_path,
+                               GHANA_BBOX, download=False)
+    b = fetch_regional_archive("2024-03-01", "2024-04-30", tmp_path,
+                               GHANA_BBOX, download=False)
+    assert a == b
+    tags = {p.name.rsplit("_", 1)[1] for group in a for p in group}
+    assert tags == {"2024-03.nc", "2024-04.nc"}
+
+
+def test_training_refuses_a_window_it_would_have_to_download(tmp_path):
+    """A hard stop, not a warning.
+
+    A partially-covered window still produces a report, and a report over a
+    quietly different record length is not comparable to the published table or to
+    the other sites — which is the whole point of the multi-site study.
+    """
+    from src.multisite import require_cached_window
+
+    reg = load_registry()
+    entry = next(s for s in reg["sites"] if s["name"] == "anloga")
+    config = site_config(reg, entry, start="2024-03-01", end="2024-04-30")
+
+    with pytest.raises(SystemExit) as excinfo:
+        require_cached_window(reg, config, cache_dir=str(tmp_path))
+
+    msg = str(excinfo.value)
+    assert "6 of 6" in msg
+    assert "era5gh_core_2024-03.nc" in msg
+    assert "will NOT download" in msg
+    assert "multisite fetch" in msg          # tells you how to fix it
+    assert not list(tmp_path.glob("*.nc"))
+
+
+def test_training_accepts_a_fully_cached_window(tmp_path):
+    from src.multisite import require_cached_window
+
+    reg = load_registry()
+    entry = next(s for s in reg["sites"] if s["name"] == "anloga")
+    config = site_config(reg, entry, start="2024-03-01", end="2024-03-31")
+
+    for prefix, floor in REGIONAL_MIN_BYTES_PER_MONTH.items():
+        (tmp_path / f"{prefix}_2024-03.nc").write_bytes(b"\0" * (floor + 1))
+
+    require_cached_window(reg, config, cache_dir=str(tmp_path))   # must not raise
