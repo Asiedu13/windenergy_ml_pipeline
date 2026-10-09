@@ -15,6 +15,7 @@ Two things here are load-bearing rather than incidental, and are tested as such:
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
 import numpy as np
@@ -745,3 +746,67 @@ def test_training_accepts_a_fully_cached_window(tmp_path):
         (tmp_path / f"{prefix}_2024-03.nc").write_bytes(b"\0" * (floor + 1))
 
     require_cached_window(reg, config, cache_dir=str(tmp_path))   # must not raise
+
+
+# ---------------------------------------------------------------------------
+# Report artefacts must travel together
+# ---------------------------------------------------------------------------
+
+def test_out_moves_the_csv_with_the_report(tmp_path, monkeypatch):
+    """`--out` used to redirect only the markdown.
+
+    The CSVs kept going to `paths.outputs/reports/{stem}.csv`, so pointing
+    `--out` elsewhere while passing a per-site resolved config overwrote that
+    site's headline `bakeoff.csv` in place — leaving a report and a CSV from
+    different runs under the same name with nothing saying so. It happened to
+    anloga and cape_coast on 2026-10-09 and was caught only by an mtime that did
+    not match its own report's.
+    """
+    import pandas as pd
+
+    from src import bakeoff
+    from src.utils import load_config
+
+    config = load_config("config_bakeoff.yaml")
+    config.paths = replace(config.paths, outputs=str(tmp_path / "site"))
+
+    records = [
+        bakeoff.RunRecord(model="xgboost", tier="2 ML", feature_set="study",
+                          fold="fold1", seed=42, horizon=24, mae=0.8,
+                          rmse=1.0, r2=0.5, skill=0.3, seconds=0.1),
+    ]
+    monkeypatch.setattr(bakeoff, "run_phase_a", lambda *a, **k: records)
+
+    elsewhere = tmp_path / "elsewhere" / "anloga.md"
+    _, out_path = bakeoff.run_phase_a_and_report(
+        config, ["study"], [42], n_folds=4, per_fold=True, out=str(elsewhere))
+
+    assert out_path == elsewhere
+    # every artefact lands beside the report...
+    assert (elsewhere.parent / "anloga.csv").exists()
+    assert (elsewhere.parent / "anloga_folds.csv").exists()
+    # ...and nothing is written under the config's own reports dir
+    site_reports = tmp_path / "site" / "reports"
+    assert not list(site_reports.glob("*.csv"))
+
+    df = pd.read_csv(elsewhere.parent / "anloga.csv")
+    assert df.model.tolist() == ["xgboost"]
+
+
+def test_without_out_the_artefacts_stay_under_paths_outputs(tmp_path, monkeypatch):
+    """The per-site default: 17 sites must not write over each other."""
+    from src import bakeoff
+    from src.utils import load_config
+
+    config = load_config("config_bakeoff.yaml")
+    config.paths = replace(config.paths, outputs=str(tmp_path / "site"))
+    monkeypatch.setattr(bakeoff, "run_phase_a", lambda *a, **k: [
+        bakeoff.RunRecord(model="xgboost", tier="2 ML", feature_set="study",
+                          fold="fold1", seed=42, horizon=24, mae=0.8,
+                          rmse=1.0, r2=0.5, skill=0.3, seconds=0.1)])
+
+    _, out_path = bakeoff.run_phase_a_and_report(config, ["study"], [42])
+
+    reports = tmp_path / "site" / "reports"
+    assert out_path == reports / "bakeoff.md"
+    assert (reports / "bakeoff.csv").exists()

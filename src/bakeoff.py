@@ -499,8 +499,24 @@ def run_phase_a_and_report(
     # unaffected — `paths.outputs` defaults to "outputs".
     reports = ensure_dir(Path(config.paths.outputs) / "reports")
     out_path = Path(out) if out else reports / f"{stem}.md"
+
+    # ⚠️ **`out` has to move every artefact, not just the markdown.**
+    #
+    # It used to redirect only `out_path` while the CSVs stayed at
+    # `reports/{stem}.csv`. Pointing `--out` elsewhere while passing a per-site
+    # resolved config therefore wrote the report to the new location and
+    # **overwrote that site's headline `bakeoff.csv` in place** — leaving a
+    # markdown and a CSV from different runs side by side under the same name,
+    # with nothing in either saying so. That happened on 2026-10-09 to anloga and
+    # cape_coast during the dead-column side-experiment, and was caught only
+    # because the CSV's mtime did not match its own report's.
+    #
+    # So the stem and directory both follow `out` when it is given.
+    base_dir = out_path.parent if out else reports
+    base_stem = out_path.stem if out else stem
+    ensure_dir(base_dir)
     out_path.write_text("\n".join(parts), encoding="utf-8")
-    agg.to_csv(reports / f"{stem}.csv", index=False)
+    agg.to_csv(base_dir / f"{base_stem}.csv", index=False)
 
     if per_fold:
         # `summarise` averages folds away, which hides that fold difficulty varies
@@ -510,8 +526,9 @@ def run_phase_a_and_report(
             "model": r.model, "tier": r.tier, "feature_set": r.feature_set,
             "fold": r.fold, "seed": r.seed, "horizon": r.horizon,
             "mae": r.mae, "rmse": r.rmse, "r2": r.r2, "skill": r.skill,
-        } for r in records]).to_csv(reports / f"{stem}_folds.csv", index=False)
-        logger.info("Wrote %s_folds.csv (%d rows)", stem, len(records))
+        } for r in records]).to_csv(
+            base_dir / f"{base_stem}_folds.csv", index=False)
+        logger.info("Wrote %s_folds.csv (%d rows)", base_stem, len(records))
     return agg, out_path
 
 
